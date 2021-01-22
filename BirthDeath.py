@@ -88,7 +88,7 @@ class BirthDeathModel:
             self.UpdateRate()
             eventType = random.random()
             affectedBranch = numpy.random.randint(len(self.liveBranches)) #random.choice(liveBranches)
-            #self.SampleTime(affectedBranch)
+            self.SampleTime(affectedBranch)
             if eventType < self.B_rate[0]/self.totalRate:
                 self.Birth(affectedBranch)
             elif eventType < self.B_rate[0]/self.totalRate + self.D_rate[0]/self.totalRate:
@@ -96,7 +96,6 @@ class BirthDeathModel:
             else:
                 self.Sampling(affectedBranch)
                 sCounter += 1
-            #max_time = self.update_time(liveBranches, ActiveBranch, max_time)
             if len(self.liveBranches) == 0:
                 break
         if self.debug:
