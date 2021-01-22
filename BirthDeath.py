@@ -2,6 +2,11 @@ import numpy
 import random
 import sys
 
+class NodeS: #C-like structure
+    def __init__(self):
+        self.state = 0
+        self.genealogyIndex = -1
+
 class NeutralMutations:
     def __init__(self):
         self.muRate = 0.0
@@ -16,8 +21,8 @@ class BirthDeathModel:
         self.S_rate = _S_rate
         self.Tree = [-1, 0, 0]
         self.genealogy = []
-        self.nodeSampling = [[0], [0], [0]]
-        self.times = [0, 0, 0]
+        self.nodeSampling = [NodeS()]*3
+        self.times = [0]*3
         self.genealogyTimes = []
         self.liveBranches = [1,2]
         self.totalTime = 0.0
@@ -29,46 +34,27 @@ class BirthDeathModel:
         #self.TypeOfMutations = [[0] * len(_M_rate[0])]
 
     def GetGenealogy(self):
-        for i in range(len(self.Tree) - 1, -1, -1):
-            if self.nodeSampling[i][0] == -1:
-                parent = self.Tree[i]
-                while parent != -1:
-                    if self.nodeSampling[parent][0] == 2:
-                        break
-                    elif self.nodeSampling[parent][0] == 1:
-                        self.nodeSampling[parent] = [2]
-                        break
-                    elif self.nodeSampling[parent][0] == 0:
-                        self.nodeSampling[parent] = [1]
-                    parent = self.Tree[parent]
-        if self.debug:
-            print(self.nodeSampling)
-        for i in range(len(self.Tree)):
-            if self.nodeSampling[i][0] == 2 or self.nodeSampling[i][0] == -1:
-                self.nodeSampling[i].append(-1)
-                break
-        if self.debug:
-            print(self.nodeSampling)
         for i in range(len(self.Tree) - 1, 0, -1):
-            if self.nodeSampling[i][0] == -1 or self.nodeSampling[i][0] == 2:
-                child = i
-                parent = self.Tree[child]
-                while self.nodeSampling[parent][0] != 2:
+            if self.nodeSampling[i].state == -1:
+                parent = self.Tree[i]
+                self.nodeSampling[i].genealogyIndex = len(self.genealogy)
+                self.genealogy.append(-1)
+                while parent != -1 and self.nodeSampling[parent].state != 2:
+                    self.nodeSampling[parent].state += 1
+                    if self.nodeSampling[parent].state == 2:
+                        self.nodeSampling[parent].genealogyIndex = len(self.genealogy)
+                        self.genealogy.append(-1)
+                        break
                     parent = self.Tree[parent]
-                self.nodeSampling[child].append(parent)
-        if self.debug:
-                print(self.nodeSampling)
-        newPos = 0
-        for i in range(len(self.Tree)):
-            if len(self.nodeSampling[i]) == 2:
-                self.nodeSampling[i].append(newPos)
-                newPos += 1
         if self.debug:
             print(self.nodeSampling)
-        self.genealogy = [-1] * newPos
-        for i in range(len(self.Tree)):
-            if len(self.nodeSampling[i]) == 3 and self.nodeSampling[i][1] != -1:
-                self.genealogy[self.nodeSampling[i][2]] = self.nodeSampling[self.nodeSampling[i][1]][2]
+
+        for i in range(len(self.Tree) - 1, 0, -1):
+            if self.nodeSampling[i].state == -1 or self.nodeSampling[i].state == 2:
+                parent = self.Tree[i]
+                while parent != -1 and self.nodeSampling[parent].state != 2:
+                    parent = self.Tree[parent]
+                self.genealogy[ self.nodeSampling[i].genealogyIndex ] = self.nodeSampling[parent].genealogyIndex
 
     def SampleTime(self, affectedBranch):
         #Проверить параметр в expo
@@ -82,14 +68,14 @@ class BirthDeathModel:
         for j in range(2):
             self.Tree.append(affectedBranch)
             self.times.append(0)
-            self.nodeSampling.append([0])
+            self.nodeSampling.append( NodeS() )
 
     def Death(self, affectedBranch):
         self.liveBranches[affectedBranch] = self.liveBranches[-1]
         self.liveBranches.pop()
 
     def Sampling(self, affectedBranch):
-        self.nodeSampling[affectedBranch] = [-1]
+        self.nodeSampling[affectedBranch].state = -1
         self.Death(affectedBranch)
 
     def UpdateRate(self):
