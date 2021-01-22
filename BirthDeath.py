@@ -21,7 +21,7 @@ class BirthDeathModel:
         self.S_rate = _S_rate
         self.Tree = [-1, 0, 0]
         self.genealogy = []
-        self.nodeSampling = [NodeS()]*3
+        self.nodeSampling = [NodeS() for _ in range(3)]
         self.times = [0]*3
         self.genealogyTimes = []
         self.liveBranches = [1,2]
