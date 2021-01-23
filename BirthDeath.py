@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import sys
+from math import floor
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -10,6 +11,13 @@ class NodeS: #C-like structure
         self.state = 0
         self.genealogyIndex = -1
 
+class Mutation:
+    def __init__(self, nodeId, time, AS, DS):#AS = ancestral state, DS = derived state
+        self.nodeId = nodeId
+        self.time = time
+        self.AS = AS
+        self.DS = DS
+
 class NeutralMutations:
     def __init__(self):
         self.muRate = 0.0
@@ -18,16 +26,17 @@ class NeutralMutations:
         return self.muRate
 
 class BirthDeathModel:
-    def __init__(self, bRate, dRate, sRate, mRate = 0, **kwargs):
-
+    def __init__(self, bRate, dRate, sRate, mRate = [], **kwargs):
         self.Tree = [-1, 0, 0]
         self.genealogy = []
+        self.mutations = []
         self.nodeSampling = [NodeS() for _ in range(3)]
         self.times = [0]*3
         self.genealogyTimes = []
         #self.liveBranches = [1,2]
-        self.totalTime = 0.0
+        self.currentTime = 0.0
         self.UpdateRate()
+        self.sCounter = 0
         self.debug = False
         if "debug" in kwargs:
             if kwargs["debug"]:
@@ -55,7 +64,7 @@ class BirthDeathModel:
         self.liveBranches[0] += [1,2]
         self.tRate = [0]*self.hapNum
 
-    def CalculateRate(self):
+    def UpdateRate(self):
         self.totalRate = 0
         for i in range(hapNum):
             tRate = self.bRate[i] + self.dRate[i] + self.sRate[i]
@@ -71,6 +80,26 @@ class BirthDeathModel:
         prbs = [ self.bRate[haplotype]/tRate, self.dRate[haplotype]/tRate, self.sRate[haplotype]/tRate ] + [ el/tRate for el in self.mRate[haplotype] ]
         eventType = np.random.choice( range(self.hapNum), p = prbs )
         affectedBranch = np.random.randint(len(self.liveBranches[haplotype]))
+        if eventType == 0:
+            self.Birth(haplotype, affectedBranch)
+        elif eventType == 1:
+            self.Death(haplotype, affectedBranch)
+        elif eventType == 2:
+            self.Sampling(haplotype, affectedBranch)
+            self.sCounter += 1
+        else:
+            self.Mutation(haplotype, affectedBranch, eventType - 3)
+
+    def Mutation(self, haplotype, affectedBranch, mutationType):
+        digit4 = 4**mutationType
+        AS = floor(haplotype/digit4)%4
+        DS = numpy.random.choice(range(3))#TODO non-uniform rates???
+        if DS >= AS:
+            DS += 1
+        self.mutation.append(self.liveBranches[haplotype][affectedBranch], self.currentTime, AS, DS)
+        newHaplotype = haplotype + (DS-AS)*digit4
+        self.liveBranches[newHaplotype].push( self.liveBranches[haplotype][affectedBranch] )
+        self.Death(haplotype, saffectedBranch, False)
 
     def GetGenealogy(self):
         for i in range(len(self.Tree) - 1, 0, -1):
@@ -95,27 +124,29 @@ class BirthDeathModel:
                     parent = self.Tree[parent]
                 self.genealogy[ self.nodeSampling[i].genealogyIndex ] = self.nodeSampling[parent].genealogyIndex
 
-    def SampleTime(self, affectedBranch):
-        #Проверить параметр в expo
+    def SampleTime(self):
         tau = np.random.exponential(self.totalRate)
-        self.totalTime += tau
-        self.times[affectedBranch] = self.totalTime
+        self.currentTime += tau
 
-    def Birth(self, affectedBranch):
-        self.liveBranches.append(len(self.Tree))
-        self.liveBranches[affectedBranch] = len(self.Tree) + 1
+    def Birth(self, haplotype, affectedBranch):
+        parentId = self.liveBranches[haplotype][affectedBranch]
+        self.times[parentId] = self.currentTime
+        self.liveBranches[haplotype].append(len(self.Tree))
+        self.liveBranches[haplotype][affectedBranch] = len(self.Tree) + 1
         for j in range(2):
-            self.Tree.append(affectedBranch)
+            self.Tree.append(parentId)
             self.times.append(0)
             self.nodeSampling.append( NodeS() )
 
-    def Death(self, affectedBranch):
-        self.liveBranches[affectedBranch] = self.liveBranches[-1]
-        self.liveBranches.pop()
+    def Death(self, haplotype, affectedBranch, timeUpdate = True):
+        self.liveBranches[haplotype][affectedBranch] = self.liveBranches[-1]
+        self.liveBranches[haplotype].pop()
+        if timeUpdate:
+            self.times[ self.liveBranches[haplotype][affectedBranch] ] = self.currentTime
 
-    def Sampling(self, affectedBranch):
-        self.nodeSampling[affectedBranch].state = -1
-        self.Death(affectedBranch)
+    def Sampling(self,haplotype, affectedBranch):
+        self.nodeSampling[ self.liveBranches[haplotype][affectedBranch] ].state = -1
+        self.Death(haplotype, affectedBranch)
 
     def UpdateRate(self):
         self.totalRate = self.B_rate[0] + self.D_rate[0] + self.S_rate[0] #TODO
@@ -125,20 +156,13 @@ class BirthDeathModel:
         sCounter = 0
         for j in range(0, iterations):
             self.UpdateRate()
-            eventType = random.random()
-            affectedBranch = np.random.randint(len(self.liveBranches)) #random.choice(liveBranches)
-            self.SampleTime(affectedBranch)
-            if eventType < self.B_rate[0]/self.totalRate:
-                self.Birth(affectedBranch)
-            elif eventType < self.B_rate[0]/self.totalRate + self.D_rate[0]/self.totalRate:
-                self.Death(affectedBranch)
-            else:
-                self.Sampling(affectedBranch)
-                sCounter += 1
+            self.SampleTime()
+            self.GenerateEvent()
             if len(self.liveBranches) == 0:
                 break
         if self.debug:
             print(self.Tree)
             print(self.nodeSampling)
-        if sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
+        if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
+            print("Bo-o-o-oring... Less than two cases were sampled.")
             sys.exit(1)
