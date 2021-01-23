@@ -25,6 +25,17 @@ class NeutralMutations:
     def muRate(self):
         return self.muRate
 
+def fastChoose(a, w, tw = None):
+    if not tw:
+        tw = sum(w)
+    rn = tw*np.random.rand()
+    i = 0
+    total = w[0]
+    while total < rn:
+        i += 1
+        total += w[i]
+    return a[i]
+
 class BirthDeathModel:
     def __init__(self, bRate, dRate, sRate, mRate = [], **kwargs):
         self.Tree = [-1, 0, 0]
@@ -76,10 +87,13 @@ class BirthDeathModel:
             self.totalRate += self.tRate[i]
 
     def GenerateEvent(self):
-        haplotype = np.random.choice( range(self.hapNum), p = [el/self.totalRate for el in self.tRate] )
+        #haplotype = np.random.choice( range(self.hapNum), p = [el/self.totalRate for el in self.tRate] )
+        haplotype = fastChoose(range(self.hapNum), self.tRate, self.totalRate)
         tRate =  self.tRate[haplotype] / len( self.liveBranches[haplotype] )
-        prbs = [ self.bRate[haplotype]/tRate, self.dRate[haplotype]/tRate, self.sRate[haplotype]/tRate ] + [ el/tRate for el in self.mRate[haplotype] ]
-        eventType = np.random.choice( range(3+self.dim), p = prbs )
+        #prbs = [ self.bRate[haplotype]/tRate, self.dRate[haplotype]/tRate, self.sRate[haplotype]/tRate ] + [ el/tRate for el in self.mRate[haplotype] ]
+        #eventType = np.random.choice( range(3+self.dim), p = prbs )
+        prbs = [ self.bRate[haplotype], self.dRate[haplotype], self.sRate[haplotype] ] + self.mRate[haplotype]
+        eventType = fastChoose( range(3+self.dim), prbs , tRate)
         affectedBranch = np.random.randint(len(self.liveBranches[haplotype]))
         #print("EVENT", eventType, haplotype, affectedBranch, len(self.liveBranches[haplotype]), sep = " ")
         if eventType == 0:
@@ -125,6 +139,7 @@ class BirthDeathModel:
                 while parent != -1 and self.nodeSampling[parent].state != 2:
                     parent = self.Tree[parent]
                 self.genealogy[ self.nodeSampling[i].genealogyIndex ] = self.nodeSampling[parent].genealogyIndex
+                self.genealogyTimes[ self.nodeSampling[i].genealogyIndex ] = self.times[i]
 
     def SampleTime(self):
         tau = np.random.exponential(self.totalRate)
@@ -170,3 +185,14 @@ class BirthDeathModel:
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Bo-o-o-oring... Less than two cases were sampled.")
             sys.exit(1)
+        for lb in self.liveBranches:
+            for br in lb:
+                self.times[br] = self.currentTime
+
+    def Report(self):
+        print("Number of lineages of each hyplotype: ", end = "")
+        for el in self.liveBranches:
+            print(len(el), " ", end="")
+        print("")
+        print("Tree size: ", len(self.Tree))
+        print("Number of sampled elements: ", self.sCounter)

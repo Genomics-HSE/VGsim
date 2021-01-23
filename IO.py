@@ -7,7 +7,6 @@ def ReadRates(fn):
 
         line = next(f).rstrip()
         line = line.split(" ")
-        print(line)
         hapFilled = False
         if line[0] == "H":
             hapFilled = True
@@ -31,10 +30,4 @@ def ReadRates(fn):
             dRate.append(line[1])
             sRate.append(line[2])
             mRate.append( line[3:] )
-
-        print(bRate)
-        print(dRate)
-        print(sRate)
-        print(mRate)
-
         return([bRate, dRate, sRate, mRate])
