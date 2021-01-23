@@ -35,7 +35,7 @@ class BirthDeathModel:
         self.genealogyTimes = []
         #self.liveBranches = [1,2]
         self.currentTime = 0.0
-        self.UpdateRate()
+        self.SetRates(bRate, dRate, sRate, mRate)
         self.sCounter = 0
         self.debug = False
         if "debug" in kwargs:
@@ -66,7 +66,7 @@ class BirthDeathModel:
 
     def UpdateRate(self):
         self.totalRate = 0
-        for i in range(hapNum):
+        for i in range(self.hapNum):
             tRate = self.bRate[i] + self.dRate[i] + self.sRate[i]
             if self.dim > 0:
                 for el in self.mRate[i]:
@@ -76,10 +76,11 @@ class BirthDeathModel:
 
     def GenerateEvent(self):
         haplotype = np.random.choice( range(self.hapNum), p = [el/self.totalRate for el in self.tRate] )
-        tRate =  self.tRate[haplotype] / len( self.liveBranches[i] )
+        tRate =  self.tRate[haplotype] / len( self.liveBranches[haplotype] )
         prbs = [ self.bRate[haplotype]/tRate, self.dRate[haplotype]/tRate, self.sRate[haplotype]/tRate ] + [ el/tRate for el in self.mRate[haplotype] ]
-        eventType = np.random.choice( range(self.hapNum), p = prbs )
+        eventType = np.random.choice( range(3+self.dim), p = prbs )
         affectedBranch = np.random.randint(len(self.liveBranches[haplotype]))
+        #print("EVENT", eventType, haplotype, affectedBranch, len(self.liveBranches[haplotype]), sep = " ")
         if eventType == 0:
             self.Birth(haplotype, affectedBranch)
         elif eventType == 1:
@@ -93,7 +94,7 @@ class BirthDeathModel:
     def Mutation(self, haplotype, affectedBranch, mutationType):
         digit4 = 4**mutationType
         AS = floor(haplotype/digit4)%4
-        DS = numpy.random.choice(range(3))#TODO non-uniform rates???
+        DS = np.random.choice(range(3))#TODO non-uniform rates???
         if DS >= AS:
             DS += 1
         self.mutation.append(self.liveBranches[haplotype][affectedBranch], self.currentTime, AS, DS)
@@ -137,9 +138,10 @@ class BirthDeathModel:
             self.Tree.append(parentId)
             self.times.append(0)
             self.nodeSampling.append( NodeS() )
+        print(self.liveBranches[haplotype])
 
     def Death(self, haplotype, affectedBranch, timeUpdate = True):
-        self.liveBranches[haplotype][affectedBranch] = self.liveBranches[-1]
+        self.liveBranches[haplotype][affectedBranch] = self.liveBranches[haplotype][-1]
         self.liveBranches[haplotype].pop()
         if timeUpdate:
             self.times[ self.liveBranches[haplotype][affectedBranch] ] = self.currentTime
@@ -148,8 +150,8 @@ class BirthDeathModel:
         self.nodeSampling[ self.liveBranches[haplotype][affectedBranch] ].state = -1
         self.Death(haplotype, affectedBranch)
 
-    def UpdateRate(self):
-        self.totalRate = self.B_rate[0] + self.D_rate[0] + self.S_rate[0] #TODO
+#    def UpdateRate(self):
+#        self.totalRate = self.B_rate[0] + self.D_rate[0] + self.S_rate[0] #TODO
 
     def SimulatePopulation(self, iterations):
         max_time = 0
