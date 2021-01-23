@@ -36,7 +36,7 @@ class BirthDeathModel:
         #self.liveBranches = [1,2]
         self.currentTime = 0.0
         self.SetRates(bRate, dRate, sRate, mRate)
-        self.sCounter = 0
+        self.sCounter = 0 #sample counter
         self.debug = False
         if "debug" in kwargs:
             if kwargs["debug"]:
@@ -62,6 +62,7 @@ class BirthDeathModel:
         self.mRate = mRate
         self.liveBranches = [[] for _ in range(self.hapNum)]
         self.liveBranches[0] += [1,2]
+        self.lbCounter = 2 #live branch counter
         self.tRate = [0]*self.hapNum
 
     def UpdateRate(self):
@@ -97,10 +98,10 @@ class BirthDeathModel:
         DS = np.random.choice(range(3))#TODO non-uniform rates???
         if DS >= AS:
             DS += 1
-        self.mutation.append(self.liveBranches[haplotype][affectedBranch], self.currentTime, AS, DS)
+        self.mutations.append(Mutation(self.liveBranches[haplotype][affectedBranch], self.currentTime, AS, DS))
         newHaplotype = haplotype + (DS-AS)*digit4
-        self.liveBranches[newHaplotype].push( self.liveBranches[haplotype][affectedBranch] )
-        self.Death(haplotype, saffectedBranch, False)
+        self.liveBranches[newHaplotype].append( self.liveBranches[haplotype][affectedBranch] )
+        self.Death(haplotype, affectedBranch, False)
 
     def GetGenealogy(self):
         for i in range(len(self.Tree) - 1, 0, -1):
@@ -138,13 +139,14 @@ class BirthDeathModel:
             self.Tree.append(parentId)
             self.times.append(0)
             self.nodeSampling.append( NodeS() )
-        print(self.liveBranches[haplotype])
+        self.lbCounter += 1
 
     def Death(self, haplotype, affectedBranch, timeUpdate = True):
-        self.liveBranches[haplotype][affectedBranch] = self.liveBranches[haplotype][-1]
-        self.liveBranches[haplotype].pop()
         if timeUpdate:
             self.times[ self.liveBranches[haplotype][affectedBranch] ] = self.currentTime
+        self.liveBranches[haplotype][affectedBranch] = self.liveBranches[haplotype][-1]
+        self.liveBranches[haplotype].pop()
+        self.lbCounter -= 1
 
     def Sampling(self,haplotype, affectedBranch):
         self.nodeSampling[ self.liveBranches[haplotype][affectedBranch] ].state = -1
@@ -160,7 +162,7 @@ class BirthDeathModel:
             self.UpdateRate()
             self.SampleTime()
             self.GenerateEvent()
-            if len(self.liveBranches) == 0:
+            if self.lbCounter == 0:
                 break
         if self.debug:
             print(self.Tree)
