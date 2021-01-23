@@ -133,6 +133,7 @@ class BirthDeathModel:
         if self.debug:
             print(self.nodeSampling)
 
+        self.genealogyTimes = [0]*len(self.genealogy)
         for i in range(len(self.Tree) - 1, 0, -1):
             if self.nodeSampling[i].state == -1 or self.nodeSampling[i].state == 2:
                 parent = self.Tree[i]
