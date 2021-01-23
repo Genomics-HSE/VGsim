@@ -18,6 +18,11 @@ class Mutation:
         self.AS = AS
         self.DS = DS
 
+class Population:
+    def __init__(self, size = 1000000):
+        self.size = size
+        self.nonImmune = self.size
+
 class NeutralMutations:
     def __init__(self):
         self.muRate = 0.0
@@ -39,6 +44,10 @@ def fastChoose(a, w, tw = None):
 class BirthDeathModel:
     def __init__(self, bRate, dRate, sRate, mRate = [], **kwargs):
         self.Tree = [-1, 0, 0]
+        if "populationSize" in kwargs:
+            self.population = Population(kwargs["populationSize"])
+        else:
+            self.population = Population()
         self.genealogy = []
         self.mutations = []
         self.nodeSampling = [NodeS() for _ in range(3)]
@@ -79,7 +88,7 @@ class BirthDeathModel:
     def UpdateRate(self):
         self.totalRate = 0
         for i in range(self.hapNum):
-            tRate = self.bRate[i] + self.dRate[i] + self.sRate[i]
+            tRate = self.bRate[i]*self.population.nonImmune/self.population.size + self.dRate[i] + self.sRate[i]
             if self.dim > 0:
                 for el in self.mRate[i]:
                     tRate += el
@@ -155,6 +164,7 @@ class BirthDeathModel:
             self.Tree.append(parentId)
             self.times.append(0)
             self.nodeSampling.append( NodeS() )
+        self.population.nonImmune -= 1
         self.lbCounter += 1
 
     def Death(self, haplotype, affectedBranch, timeUpdate = True):
@@ -178,7 +188,7 @@ class BirthDeathModel:
             self.UpdateRate()
             self.SampleTime()
             self.GenerateEvent()
-            if self.lbCounter == 0:
+            if self.lbCounter == 0 or self.population.nonImmune == 0:
                 break
         if self.debug:
             print(self.Tree)

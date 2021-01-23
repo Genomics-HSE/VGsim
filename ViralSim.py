@@ -13,6 +13,8 @@ parser.add_argument('frate',
 
 parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
                     help='number of iternations (default is 1000)')
+parser.add_argument('--populationSize', '-ps', nargs=1, type=int, default=1000000,
+                    help='population size (number of individuals)')
 parser.add_argument('--debug', action='store_true',
                     help='Debug mode, more input enabled')
 
@@ -22,6 +24,8 @@ if isinstance(clargs.frate, list):
     clargs.frate = clargs.frate[0]
 if isinstance(clargs.iterations, list):
     clargs.iterations = clargs.iterations[0]
+if isinstance(clargs.populationSize, list):
+    clargs.populationSize = clargs.populationSize[0]
 if isinstance(clargs.debug, list):
     clargs.debug = clargs.debug[0]
 
@@ -31,7 +35,7 @@ B_rate_data = [25]
 D_rate_data = [9]
 S_rate_data = [1]
 
-tree1 = BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug)
+tree1 = BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug, populationSize = clargs.populationSize)
 t1 = time.time()
 tree1.SimulatePopulation(clargs.iterations)
 t2 = time.time()
