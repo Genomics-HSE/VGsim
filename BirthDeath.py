@@ -41,6 +41,9 @@ def fastChoose(a, w, tw = None):
         total += w[i]
     return a[i]
 
+def fastRandint(n):
+    return floor( n*np.random.rand() )
+
 class BirthDeathModel:
     def __init__(self, bRate, dRate, sRate, mRate = [], **kwargs):
         self.Tree = [-1, 0, 0]
@@ -95,15 +98,19 @@ class BirthDeathModel:
             self.tRate[i] = tRate * len( self.liveBranches[i] )
             self.totalRate += self.tRate[i]
 
-    def GenerateEvent(self):
-        #haplotype = np.random.choice( range(self.hapNum), p = [el/self.totalRate for el in self.tRate] )
-        haplotype = fastChoose(range(self.hapNum), self.tRate, self.totalRate)
-        tRate =  self.tRate[haplotype] / len( self.liveBranches[haplotype] )
-        #prbs = [ self.bRate[haplotype]/tRate, self.dRate[haplotype]/tRate, self.sRate[haplotype]/tRate ] + [ el/tRate for el in self.mRate[haplotype] ]
-        #eventType = np.random.choice( range(3+self.dim), p = prbs )
-        prbs = [ self.bRate[haplotype], self.dRate[haplotype], self.sRate[haplotype] ] + self.mRate[haplotype]
-        eventType = fastChoose( range(3+self.dim), prbs , tRate)
-        affectedBranch = np.random.randint(len(self.liveBranches[haplotype]))
+    def GenerateEvent(self, useNumpy = False):
+        if useNumpy:
+            haplotype = np.random.choice( range(self.hapNum), p = [el/self.totalRate for el in self.tRate] )
+            tRate =  self.tRate[haplotype] / len( self.liveBranches[haplotype] )
+            prbs = [ self.bRate[haplotype]/tRate, self.dRate[haplotype]/tRate, self.sRate[haplotype]/tRate ] + [ el/tRate for el in self.mRate[haplotype] ]
+            eventType = np.random.choice( range(3+self.dim), p = prbs )
+            affectedBranch = np.random.randint(len(self.liveBranches[haplotype]))
+        else:
+            haplotype = fastChoose(range(self.hapNum), self.tRate, self.totalRate)
+            tRate =  self.tRate[haplotype] / len( self.liveBranches[haplotype] )
+            prbs = [ self.bRate[haplotype], self.dRate[haplotype], self.sRate[haplotype] ] + self.mRate[haplotype]
+            eventType = fastChoose( range(3+self.dim), prbs , tRate)
+            affectedBranch = fastRandint(len(self.liveBranches[haplotype]))
         #print("EVENT", eventType, haplotype, affectedBranch, len(self.liveBranches[haplotype]), sep = " ")
         if eventType == 0:
             self.Birth(haplotype, affectedBranch)
