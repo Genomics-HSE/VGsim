@@ -3,7 +3,7 @@
 import argparse
 import sys
 import time
-from BirthDeath import BirthDeathModel
+from BirthDeath import BirthDeathModel, PopulationModel, Population
 from IO import ReadRates
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
@@ -35,7 +35,12 @@ B_rate_data = [25]
 D_rate_data = [9]
 S_rate_data = [1]
 
-tree1 = BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug, populationSize = clargs.populationSize)
+population1 = Population()
+population2 = Population()
+migrRates = [[0.02], [0.01]]
+populationModel = PopulationModel([population1, population2], migrRates)
+
+tree1 = BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug, populationModel= populationModel)
 t1 = time.time()
 tree1.SimulatePopulation(clargs.iterations)
 t2 = time.time()
