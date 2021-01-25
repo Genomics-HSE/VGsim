@@ -1,8 +1,9 @@
 import sys
+from BirthDeath import Population
 
 def ReadRates(fn):
     with open(fn) as f:
-        line = next(f).rstrip()
+        line = next(f).rstrip()#header with version etc
         line = line.split(" ")
 
         line = next(f).rstrip()
@@ -31,3 +32,34 @@ def ReadRates(fn):
             sRate.append(line[2])
             mRate.append( line[3:] )
         return([bRate, dRate, sRate, mRate])
+
+def ReadPopulations(fn):
+    with open(fn) as f:
+        line = next(f).rstrip()#header with version etc
+        line = line.split(" ")
+
+        line = next(f).rstrip()
+        line = line.split(" ")
+        populations = []
+        for line in f:
+            if line[0] == "#":
+                next
+            line = line.rstrip()
+            line = line.split(" ")
+            populations.append( Population(int(line[1]), float(line[2])) )
+        return(populations)
+
+def ReadMigrationRates(fn):
+    with open(fn) as f:
+        line = next(f).rstrip()#header with version etc
+        line = line.split(" ")
+        migrationRates = []
+        for line in f:
+            if line[0] == "#":
+                next
+            line = line.rstrip()
+            line = line.split(" ")
+            migrationRates.append( [float(v) for v in line] )
+        for i in range(len(migrationRates)):
+            migrationRates[i].pop(i)
+        return(migrationRates)

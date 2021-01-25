@@ -19,11 +19,11 @@ class Mutation:
         self.DS = DS
 
 class Population:
-    def __init__(self, size = 1000000):
+    def __init__(self, size = 1000000, contactDensity = 1.0):
         self.size = size
         self.susceptible = self.size
         self.infectious = 0
-        self.contactDensity = 1.0
+        self.contactDensity = contactDensity
 
 class PopulationModel:
     def __init__(self, populations, migrationRates):
@@ -49,6 +49,8 @@ def fastChoose(a, w, tw = None):
 #        if i == len(w):
 #            return -1
         total += w[i]
+    if w[i] == 0.0:
+        print_err("fastChoose() alert: 0-weight sampled")
     return a[i]
 
 def fastRandint(n):
@@ -170,25 +172,11 @@ class BirthDeathModel:
         self.liveBranches[popId][haplotype][affectedBranch] = self.liveBranches[popId][haplotype][-1]
         self.liveBranches[popId][haplotype].pop()
 
-        self.totalRate -= self.tPopRate[popId]
-        self.tPopRate[popId] -= self.tPopHaplotypeRate[popId][haplotype]
-        n = len( self.liveBranches[popId][haplotype] )
-        self.tPopHaplotypeRate[popId][haplotype] = self.tPopHaplotypeRate[popId][haplotype]/(n+1)*n
-        self.tPopRate[popId] += self.tPopHaplotypeRate[popId][haplotype]
-        self.totalRate += self.tPopRate[popId]
-
-        self.totalRate -= self.tPopRate[targetPopId]
-        self.tPopRate[targetPopId] -= self.tPopHaplotypeRate[targetPopId][haplotype]
-        n = len( self.liveBranches[targetPopId][haplotype] )
-        if n == 1:
-            self.totalPopHaplotypeRate(targetPopId, haplotype)
-        else:
-            self.tPopHaplotypeRate[targetPopId][haplotype] = self.tPopHaplotypeRate[targetPopId][haplotype]/(n-1)*n
-        self.tPopRate[targetPopId] += self.tPopHaplotypeRate[targetPopId][haplotype]
-        self.totalRate += self.tPopRate[targetPopId]
-        #print(self.totalRate)
-        #print(self.tPopRate)
-        #print(self.tPopHaplotypeRate)
+        self.totalPopHaplotypeRate(popId, haplotype)
+        self.totalPopHaplotypeRate(targetPopId, haplotype)
+        self.tPopRate[popId] = sum(self.tPopHaplotypeRate[popId])
+        self.tPopRate[targetPopId] = sum(self.tPopHaplotypeRate[targetPopId])
+        self.totalRate = sum( self.tPopRate )
 
     def Mutation(self, popId, haplotype, affectedBranch, mutationType):
         digit4 = 4**mutationType
@@ -204,17 +192,10 @@ class BirthDeathModel:
         self.liveBranches[popId][haplotype][affectedBranch] = self.liveBranches[popId][haplotype][-1]
         self.liveBranches[popId][haplotype].pop()
 
-        self.totalRate -= self.tPopRate[popId]
-        self.tPopRate[popId] -= (self.tPopHaplotypeRate[popId][haplotype] + self.tPopHaplotypeRate[popId][newHaplotype])
-        n = len( self.liveBranches[popId][haplotype] )
-        self.tPopHaplotypeRate[popId][haplotype] = self.tPopHaplotypeRate[popId][haplotype]/(n+1)*n
-        n = len( self.liveBranches[popId][newHaplotype] )
-        if n == 1:
-            self.totalPopHaplotypeRate(popId, newHaplotype)
-        else:
-            self.tPopHaplotypeRate[popId][newHaplotype] = self.tPopHaplotypeRate[popId][newHaplotype]/(n-1)*n
-        self.tPopRate[popId] += (self.tPopHaplotypeRate[popId][haplotype] + self.tPopHaplotypeRate[popId][newHaplotype])
-        self.totalRate += self.tPopRate[popId]
+        self.totalPopHaplotypeRate(popId, haplotype)
+        self.totalPopHaplotypeRate(popId, newHaplotype)
+        self.tPopRate[popId] = sum(self.tPopHaplotypeRate[popId])
+        self.totalRate = sum( self.tPopRate )
 
     def SampleTime(self):
         tau = np.random.exponential(self.totalRate)
@@ -232,12 +213,11 @@ class BirthDeathModel:
         self.populationModel.populations[popId].susceptible -= 1
         self.populationModel.populations[popId].infectious += 1
 
-        self.totalRate -= self.tPopRate[popId]
         for h in range(self.hapNum):
             self.bPopHaplotypeRate[popId][h] = self.BirthRate(popId, h)
             self.totalPopHaplotypeRate(popId, h)
         self.tPopRate[popId] = sum( self.tPopHaplotypeRate[popId] )
-        self.totalRate += self.tPopRate[popId]
+        self.totalRate = sum( self.tPopRate )
 
         self.lbCounter += 1
 
@@ -248,12 +228,9 @@ class BirthDeathModel:
 
         self.populationModel.populations[popId].infectious -= 1
 
-        self.totalRate -= self.tPopRate[popId]
-        self.tPopRate[popId] -= self.tPopHaplotypeRate[popId][haplotype]
-        n = len( self.liveBranches[popId][haplotype] )
-        self.tPopHaplotypeRate[popId][haplotype] = self.tPopHaplotypeRate[popId][haplotype]/(n+1)*n
-        self.tPopRate[popId] += self.tPopHaplotypeRate[popId][haplotype]
-        self.totalRate += self.tPopRate[popId]
+        self.totalPopHaplotypeRate(popId, haplotype)
+        self.tPopRate[popId] = sum(self.tPopHaplotypeRate[popId])
+        self.totalRate = sum( self.tPopRate )
 
         self.lbCounter -= 1
         self.susceptible -= 1

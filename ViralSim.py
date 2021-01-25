@@ -4,17 +4,18 @@ import argparse
 import sys
 import time
 from BirthDeath import BirthDeathModel, PopulationModel, Population
-from IO import ReadRates
+from IO import ReadRates, ReadPopulations, ReadMigrationRates
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
 
 parser.add_argument('frate',
                     help='file with rates')
 
+
 parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
                     help='number of iternations (default is 1000)')
-parser.add_argument('--populationSize', '-ps', nargs=1, type=int, default=1000000,
-                    help='population size (number of individuals)')
+parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
+                    help='number of iternations (default is 1000)')
 parser.add_argument('--debug', action='store_true',
                     help='Debug mode, more input enabled')
 
@@ -24,21 +25,17 @@ if isinstance(clargs.frate, list):
     clargs.frate = clargs.frate[0]
 if isinstance(clargs.iterations, list):
     clargs.iterations = clargs.iterations[0]
-if isinstance(clargs.populationSize, list):
-    clargs.populationSize = clargs.populationSize[0]
 if isinstance(clargs.debug, list):
     clargs.debug = clargs.debug[0]
 
 bRate, dRate, sRate, mRate = ReadRates(clargs.frate)
 
-B_rate_data = [25]
-D_rate_data = [9]
-S_rate_data = [1]
-
-population1 = Population()
-population2 = Population()
-migrRates = [[0.02], [0.01]]
-populationModel = PopulationModel([population1, population2], migrRates)
+if clargs.populationModel == None:
+    populationModel = PopulationModel([Population()], [[]])
+else:
+    populations = ReadPopulations(clargs.populationModel[0])
+    migrationRates = ReadMigrationRates(clargs.populationModel[1])
+    populationModel = PopulationModel(populations, migrRates)
 
 tree1 = BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug, populationModel= populationModel)
 t1 = time.time()
