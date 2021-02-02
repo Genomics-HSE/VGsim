@@ -150,6 +150,17 @@ class BirthDeathModel:
             affectedBranch = fastRandint(len(self.liveBranches[popId][haplotype]))
         #print("EVENT", eventType, haplotype, affectedBranch, len(self.liveBranches[haplotype]), sep = " ")
         if eventType == 0:
+            self.eventType = "B"
+        elif eventType == 1:
+            self.eventType = "D"
+        elif eventType == 2:
+            self.eventType = "S"
+        elif eventType == 3:
+            self.eventType = "Mu"
+        elif eventType == 4:
+            self.eventType = "Mi"
+
+        if eventType == 0:
             self.Birth(popId, haplotype, affectedBranch)
         elif eventType == 1:
             self.Death(popId, haplotype, affectedBranch)
@@ -198,7 +209,7 @@ class BirthDeathModel:
         self.totalRate = sum( self.tPopRate )
 
     def SampleTime(self):
-        tau = np.random.exponential(self.totalRate)
+        tau = np.random.exponential(1.0/self.totalRate)
         self.currentTime += tau
 
     def Birth(self, popId, haplotype, affectedBranch):
@@ -249,6 +260,7 @@ class BirthDeathModel:
             #self.UpdateRate()
             self.SampleTime()
             self.GenerateEvent()
+            self.LogDynamics()
             if self.lbCounter == 0 or self.susceptible == 0:
                 break
         if self.debug:
@@ -286,6 +298,13 @@ class BirthDeathModel:
                     parent = self.Tree[parent]
                 self.genealogy[ self.nodeSampling[i].genealogyIndex ] = self.nodeSampling[parent].genealogyIndex
                 self.genealogyTimes[ self.nodeSampling[i].genealogyIndex ] = self.times[i]
+
+    def LogDynamics(self):
+        lg = str(self.currentTime) + " " + self.eventType
+        for pop in self.liveBranches:
+            for hap in pop:
+                lg += " " + str(len(hap))
+        print(lg)
 
     def Report(self):
         print("Number of lineages of each hyplotype: ", end = "")
