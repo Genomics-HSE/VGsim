@@ -259,8 +259,9 @@ class BirthDeathModel:
         for j in range(0, iterations):
             #self.UpdateRate()
             self.SampleTime()
-            self.GenerateEvent()
-            self.LogDynamics()
+            self.GenerateEvent
+            if self.debug:
+                self.LogDynamics()
             if self.lbCounter == 0 or self.susceptible == 0:
                 break
         if self.debug:
@@ -304,7 +305,7 @@ class BirthDeathModel:
         for pop in self.liveBranches:
             for hap in pop:
                 lg += " " + str(len(hap))
-        print(lg)
+        print_err(lg)
 
     def Report(self):
         print("Number of lineages of each hyplotype: ", end = "")
