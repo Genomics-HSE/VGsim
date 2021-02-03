@@ -137,28 +137,11 @@ class BirthDeathModel:
         else:
             popId = fastChoose( range(len(self.populationModel.populations)), self.tPopRate, self.totalRate)
             haplotype = fastChoose(range(self.hapNum), self.tPopHaplotypeRate[popId], self.tPopRate[popId])
-            if haplotype == -1:
-                for popLB in self.liveBranches:
-                    print( [len(lb) for lb in popLB] )
-                for rts in self.tPopHaplotypeRate:
-                    print( rts )
-                print(self.tPopRate)
-                sys.exit(1)
+
             tRate =  self.tPopHaplotypeRate[popId][haplotype] / len( self.liveBranches[popId][haplotype] )
             prbs = [ self.bPopHaplotypeRate[popId][haplotype], self.dRate[haplotype], self.sRate[haplotype], self.migPopRate[popId] ] + self.mRate[haplotype]
             eventType = fastChoose( range(4+self.dim), prbs , tRate)
             affectedBranch = fastRandint(len(self.liveBranches[popId][haplotype]))
-        #print("EVENT", eventType, haplotype, affectedBranch, len(self.liveBranches[haplotype]), sep = " ")
-        if eventType == 0:
-            self.eventType = "B"
-        elif eventType == 1:
-            self.eventType = "D"
-        elif eventType == 2:
-            self.eventType = "S"
-        elif eventType == 3:
-            self.eventType = "Mu"
-        elif eventType == 4:
-            self.eventType = "Mi"
 
         if eventType == 0:
             self.Birth(popId, haplotype, affectedBranch)
@@ -166,7 +149,6 @@ class BirthDeathModel:
             self.Death(popId, haplotype, affectedBranch)
         elif eventType == 2:
             self.Sampling(popId, haplotype, affectedBranch)
-            self.sCounter += 1
         elif eventType == 3:
             self.Migration(popId, haplotype, affectedBranch)
         else:
@@ -249,6 +231,7 @@ class BirthDeathModel:
     def Sampling(self, popId, haplotype, affectedBranch):
         self.nodeSampling[ self.liveBranches[popId][haplotype][affectedBranch] ].state = -1
         self.Death(popId, haplotype, affectedBranch)
+        self.sCounter += 1
 
 #    def UpdateRate(self):
 #        self.totalRate = self.B_rate[0] + self.D_rate[0] + self.S_rate[0] #TODO
@@ -259,9 +242,7 @@ class BirthDeathModel:
         for j in range(0, iterations):
             #self.UpdateRate()
             self.SampleTime()
-            self.GenerateEvent
-            if self.debug:
-                self.LogDynamics()
+            self.GenerateEvent()
             if self.lbCounter == 0 or self.susceptible == 0:
                 break
         if self.debug:
@@ -301,7 +282,7 @@ class BirthDeathModel:
                 self.genealogyTimes[ self.nodeSampling[i].genealogyIndex ] = self.times[i]
 
     def LogDynamics(self):
-        lg = str(self.currentTime) + " " + self.eventType
+        lg = str(self.currentTime) + " " + str(self.susceptible)
         for pop in self.liveBranches:
             for hap in pop:
                 lg += " " + str(len(hap))
