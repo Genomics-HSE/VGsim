@@ -3,7 +3,7 @@
 import argparse
 import sys
 import time
-from BirthDeath import BirthDeathModel, PopulationModel, Population
+import BirthDeathCython
 from IO import ReadRates, ReadPopulations, ReadMigrationRates
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
@@ -31,13 +31,14 @@ if isinstance(clargs.debug, list):
 bRate, dRate, sRate, mRate = ReadRates(clargs.frate)
 
 if clargs.populationModel == None:
-    populationModel = PopulationModel([Population()], [[]])
+    populationModel = BirthDeathCython.PopulationModel([Population()], [[]])
 else:
     populations = ReadPopulations(clargs.populationModel[0])
     migrationRates = ReadMigrationRates(clargs.populationModel[1])
-    populationModel = PopulationModel(populations, migrationRates)
+    populationModel = BirthDeathCython.PopulationModel(populations, migrationRates)
 
-simulation = BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug, populationModel= populationModel)
+
+simulation = BirthDeathCython.BirthDeathModel(bRate, dRate, sRate, mRate, debug = clargs.debug, populationModel= populationModel)
 t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations)
 t2 = time.time()
