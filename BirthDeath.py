@@ -91,7 +91,7 @@ class BirthDeathModel:
             print_err("BirthDeathModel.SetRates() fatal error: inconsistent dimension")
             sys.exit(1)
         for el in mRate:
-            if len(bRate) != self.hapNum:
+            if len(el) != self.dim:
                 print_err("BirthDeathModel.SetRates() fatal error: inconsistent dimension")
                 sys.exit(1)
         self.InitLiveBranches()
