@@ -283,7 +283,7 @@ class BirthDeathModel:
 
         self.mutations_g = []
         for mut in self.mutations:
-            nid == mut.nodeId
+            nid = mut.nodeId
             if self.nodeSampling[nid].genealogyIndex != -1:
                 self.mutations_g.append( Mutation( self.nodeSampling[i].genealogyIndex, mut.time, mut.AS, mut.DS ) )
 
