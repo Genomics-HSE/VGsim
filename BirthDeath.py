@@ -12,11 +12,12 @@ class NodeS: #C-like structure
         self.genealogyIndex = -1
 
 class Mutation:
-    def __init__(self, nodeId, time, AS, DS):#AS = ancestral state, DS = derived state
+    def __init__(self, nodeId, time, AS, DS, position):#AS = ancestral state, DS = derived state
         self.nodeId = nodeId
         self.time = time
         self.AS = AS
         self.DS = DS
+        self.position = position
 
 class Population:
     def __init__(self, size = 1000000, contactDensity = 1.0):
@@ -177,7 +178,7 @@ class BirthDeathModel:
         DS = np.random.choice(range(3))#TODO non-uniform rates???
         if DS >= AS:
             DS += 1
-        self.mutations.append(Mutation(self.liveBranches[popId][haplotype][affectedBranch], self.currentTime, AS, DS))
+        self.mutations.append(Mutation(self.liveBranches[popId][haplotype][affectedBranch], self.currentTime, AS, DS, mutationType))
         newHaplotype = haplotype + (DS-AS)*digit4
 
         self.liveBranches[popId][newHaplotype].append( self.liveBranches[popId][haplotype][affectedBranch] )
@@ -285,7 +286,7 @@ class BirthDeathModel:
         for mut in self.mutations:
             nid = mut.nodeId
             if self.nodeSampling[nid].genealogyIndex != -1:
-                self.mutations_g.append( Mutation( self.nodeSampling[nid].genealogyIndex, mut.time, mut.AS, mut.DS ) )
+                self.mutations_g.append( Mutation( self.nodeSampling[nid].genealogyIndex, mut.time, mut.AS, mut.DS, mut.position ) )
 
     def LogDynamics(self):
         lg = str(self.currentTime) + " " + str(self.susceptible)
