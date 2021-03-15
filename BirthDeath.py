@@ -285,7 +285,7 @@ class BirthDeathModel:
         for mut in self.mutations:
             nid = mut.nodeId
             if self.nodeSampling[nid].genealogyIndex != -1:
-                self.mutations_g.append( Mutation( self.nodeSampling[i].genealogyIndex, mut.time, mut.AS, mut.DS ) )
+                self.mutations_g.append( Mutation( self.nodeSampling[nid].genealogyIndex, mut.time, mut.AS, mut.DS ) )
 
     def LogDynamics(self):
         lg = str(self.currentTime) + " " + str(self.susceptible)
