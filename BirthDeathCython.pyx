@@ -13,21 +13,26 @@ np.random.seed(1256)
 import sys
 import math
 
+
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
 
 cdef class Event:
     cdef:
         double time
         Py_ssize_t type_, population, haplotype, newHaplotype, newPopulation
 
-    def __init__(self, double time, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
+    def __init__(self, double time, Py_ssize_t type_, Py_ssize_t population,
+                       Py_ssize_t haplotype, Py_ssize_t newHaplotype,
+                       Py_ssize_t newPopulation):
         self.time = time
         self.type_ = type_
         self.population = population
         self.haplotype = haplotype
         self.newHaplotype = newHaplotype
         self.newPopulation = newPopulation
+
 
 cdef class Events:
     cdef: 
@@ -59,7 +64,9 @@ cdef class Events:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
+    cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t population,
+                             Py_ssize_t haplotype, Py_ssize_t newHaplotype,
+                             Py_ssize_t newPopulation):
         self.times[ self.ptr ] = time_
         self.types[ self.ptr ] = type_
         self.populations[ self.ptr ] = population
@@ -71,22 +78,27 @@ cdef class Events:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef Event GetEvent(self, Py_ssize_t e_id):
-        ev = Event( self.times[ e_id ], self.types[ e_id ], self.populations[ e_id ], self.haplotypes[ e_id ], self.newHaplotypes[ e_id ], self.newPopulations[ e_id ])
-        return( ev )
+        ev = Event( self.times[ e_id ], self.types[ e_id ],
+                    self.populations[ e_id ], self.haplotypes[ e_id ],
+                    self.newHaplotypes[ e_id ], self.newPopulations[ e_id ])
+        return ev 
+
 
 class Mutation:
-    def __init__(self, nodeId, time, AS, DS):#AS = ancestral state, DS = derived state
+    def __init__(self, nodeId, time, AS, DS):  #AS = ancestral state, DS = derived state
         self.nodeId = nodeId
         self.time = time
         self.AS = AS
         self.DS = DS
 
+
 class Population:
-    def __init__(self, size = 1000000, contactDensity = 1.0):
+    def __init__(self, size=1000000, contactDensity=1.0):
         self.size = size
         self.susceptible = self.size
         self.infectious = 0
         self.contactDensity = contactDensity
+
 
 cdef class PopulationModel:
     cdef:
@@ -116,12 +128,14 @@ cdef class PopulationModel:
         for i in range(sizePop):
             self.contactDensity[i] = populations[i].contactDensity
 
+
 class NeutralMutations:
     def __init__(self):
         self.muRate = 0.0
 
     def muRate(self):
         return self.muRate
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -140,6 +154,7 @@ cdef (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn):
     if w[i] == 0.0:
         print_err("fastChoose() alert: 0-weight sampled")
     return [ i, ( rn-(total-w[i]) )/w[i] ]
+
 
 cdef class BirthDeathModel:
     cdef:
