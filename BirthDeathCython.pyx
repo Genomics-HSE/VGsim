@@ -1,4 +1,5 @@
 # cython: language_level=3
+# cython: initializedcheck = False
 # distutils: language = c++
 
 cimport cython
