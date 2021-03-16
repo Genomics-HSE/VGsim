@@ -3,7 +3,7 @@
 import argparse
 import sys
 import time
-from BirthDeath import BirthDeathModel, PopulationModel, Population
+from BirthDeathCython import BirthDeathModel, PopulationModel, Population
 from IO import ReadRates, ReadPopulations, ReadMigrationRates
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
