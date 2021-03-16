@@ -3,6 +3,7 @@
 
 cimport cython
 
+from libcpp cimport bool
 from libc.math cimport log, floor
 from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
@@ -438,7 +439,7 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void Death(self, Py_ssize_t popId, Py_ssize_t haplotype, add_event = True):
+    cdef void Death(self, Py_ssize_t popId, Py_ssize_t haplotype, bool add_event = True):
         self.liveBranches[popId][haplotype] -= 1
 
         if add_event:
