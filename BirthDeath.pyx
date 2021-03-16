@@ -229,16 +229,15 @@ cdef class BirthDeathModel:
 
         #self.tmRate = [ sum(mr) for mr in self.mRate ]
         self.tmRate = np.zeros(len(mRate), dtype=float)
-        for i in range(len(mRate)):
-            for j in range(len(mRate[0])):
+        for i in range(len(self.mRate)):
+            for j in range(len(self.mRate[0])):
                 self.tmRate[i] += self.mRate[i][j]
 
 
         #self.migPopRate = [sum(mr) for mr in self.pm_migrationRates]
         self.migPopRate = np.zeros(len(self.pm_migrationRates), dtype=float)
-        a = len(self.pm_migrationRates[0])
         for i in range(len(self.pm_migrationRates)):
-            for j in range(a):
+            for j in range(len(self.pm_migrationRates[0])):
                 self.migPopRate[i] += self.pm_migrationRates[i][j]
 
 
