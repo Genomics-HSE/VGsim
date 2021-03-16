@@ -487,6 +487,7 @@ cdef class BirthDeathModel:
             self.GenerateEvent()
             if self.lbCounter == 0 or self.susceptible == 0:
                 break
+        print("Total number of iterations: ", self.events.ptr)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Bo-o-o-oring... Less than two cases were sampled.")
             sys.exit(1)
