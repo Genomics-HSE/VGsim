@@ -415,14 +415,20 @@ cdef class BirthDeathModel:
         #self.events.append(event)
         self.events.AddEvent(self.currentTime, 0, popId, haplotype, 0, 0)
 
+        cdef double tmp
+
         for h in range(self.hapNum):
             self.birthHapPopRate[popId, h] = self.BirthRate(popId, h)
             self.eventHapPopRate[popId, h, 0] = self.birthHapPopRate[popId, h]
 
             #self.tEventHapPopRate[popId][h] = sum(self.eventHapPopRate[popId][h])
-            self.tEventHapPopRate[popId, h] = 0
-            for i in range(5):
-                self.tEventHapPopRate[popId, h] += self.eventHapPopRate[popId, h, i]
+            #### manually unroll the loop
+            tmp = (self.eventHapPopRate[popId, h, 0] + 
+                   self.eventHapPopRate[popId, h, 1] +
+                   self.eventHapPopRate[popId, h, 2] +
+                   self.eventHapPopRate[popId, h, 3] +
+                   self.eventHapPopRate[popId, h, 4] )
+            self.tEventHapPopRate[popId, h] = tmp
 
             self.HapPopRate(popId, h)
         
