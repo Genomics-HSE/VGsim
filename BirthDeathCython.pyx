@@ -31,7 +31,7 @@ cdef class Event:
         self.newPopulation = newPopulation
 
 cdef class Events:
-    cdef: 
+    cdef:
         double[::1] times
         Py_ssize_t size, ptr
         Py_ssize_t[::1] types, populations, haplotypes, newHaplotypes, newPopulations
@@ -162,7 +162,7 @@ cdef class BirthDeathModel:
     def __init__(self, iterations, bRate, dRate, sRate, mRate = [], **kwargs):
         self.currentTime = 0.0
         self.sCounter = 0 #sample counter
-        self.events = Events(iterations)
+        self.events = Events(iterations+1)
 
         #Set population model
         if "populationModel" in kwargs:
@@ -196,7 +196,7 @@ cdef class BirthDeathModel:
 
         #Set random generator
         self.rndm = RndmWrapper(seed=(1256, 0))
-        
+
         #Set "GetGenealogy"
         self.tree = []
         self.times = []
@@ -204,11 +204,11 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void InitLiveBranches(self):
-        
+
         # for i in range( self.popNum ):
         #     self.liveBranches.append( [0 for _ in range(self.hapNum)] )
         self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int32)
-
+        self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
         self.liveBranches[0, 0] += 2
         self.lbCounter = 2 #live branch counter
         self.pm.susceptible[0] -= 2
@@ -219,7 +219,7 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cdef void SetRates(self, bRate, dRate, sRate, mRate):
         self.bRate, self.dRate, self.sRate = np.asarray(bRate), np.asarray(dRate), np.asarray(sRate)
-        
+
 
         #self.mRate = mRate
         self.mRate = np.zeros((len(mRate), len(mRate[0])), dtype=float)
@@ -343,7 +343,7 @@ cdef class BirthDeathModel:
 
         self.HapPopRate(popId, haplotype)
         self.HapPopRate(targetPopId, haplotype)
-        
+
         #self.popRate[popId] = sum(self.hapPopRate[popId])
         self.popRate[popId] = 0
         for i in range(self.hapNum):
@@ -363,7 +363,7 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     @cython.cdivision(True)
     cdef void Mutation(self, Py_ssize_t popId, Py_ssize_t haplotype):
-        cdef: 
+        cdef:
             Py_ssize_t mutationType, digit4, AS, DS, newHaplotype
 
         mutationType, self.rn = fastChoose1( self.mRate[haplotype], self.tmRate[haplotype], self.rn)
@@ -423,7 +423,7 @@ cdef class BirthDeathModel:
 
             #self.tEventHapPopRate[popId][h] = sum(self.eventHapPopRate[popId][h])
             #### manually unroll the loop
-            tmp = (self.eventHapPopRate[popId, h, 0] + 
+            tmp = (self.eventHapPopRate[popId, h, 0] +
                    self.eventHapPopRate[popId, h, 1] +
                    self.eventHapPopRate[popId, h, 2] +
                    self.eventHapPopRate[popId, h, 3] +
@@ -431,7 +431,7 @@ cdef class BirthDeathModel:
             self.tEventHapPopRate[popId, h] = tmp
 
             self.HapPopRate(popId, h)
-        
+
         #self.popRate[popId] = sum(self.hapPopRate[popId])
         self.popRate[popId] = 0
         for i in range(self.hapNum):
@@ -457,7 +457,7 @@ cdef class BirthDeathModel:
         self.pm.infectious[popId] -= 1
 
         self.HapPopRate(popId, haplotype)
-        
+
         #self.popRate[popId] = sum(self.hapPopRate[popId])
         self.popRate[popId] = 0
         for i in range(self.hapNum):
@@ -506,7 +506,7 @@ cdef class BirthDeathModel:
             liveBranchesS.append( [[] for _ in range(self.hapNum)] )
 
         #for event in reversed(self.events):
-        for e_id in range(self.events.ptr-1, 0, -1):
+        for e_id in range(self.events.ptr-1, -1, -1):
             event = self.events.GetEvent(e_id)
             if event.type_ == 0:
                 lbs = len( liveBranchesS[event.population][event.haplotype] )
