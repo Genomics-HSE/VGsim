@@ -4,7 +4,6 @@
 
 cimport cython
 
-from libcpp cimport bool
 from libc.math cimport log, floor
 from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
@@ -12,7 +11,6 @@ from mc_lib.rndm cimport RndmWrapper
 import numpy as np
 np.random.seed(1256)
 import sys
-import math
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -151,13 +149,12 @@ cdef class BirthDeathModel:
         Events events
         PopulationModel pm
 
+        int[::1] tree
         int[:,::1] liveBranches
 
-        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3
+        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times
         double[:,::1] pm_migrationRates, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate
         double[:,:,::1] eventHapPopRate
-
-        object tree, times
 
     def __init__(self, iterations, bRate, dRate, sRate, mRate = [], **kwargs):
         self.currentTime = 0.0
@@ -196,10 +193,6 @@ cdef class BirthDeathModel:
 
         #Set random generator
         self.rndm = RndmWrapper(seed=(1256, 0))
-
-        #Set "GetGenealogy"
-        self.tree = []
-        self.times = []
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -500,7 +493,18 @@ cdef class BirthDeathModel:
             print("Bo-o-o-oring... Less than two cases were sampled.")
             sys.exit(1)
 
-    def GetGenealogy(self):
+    # @cython.boundscheck(False)
+    # @cython.cdivision(True)
+    cpdef GetGenealogy(self):
+        cdef:
+            Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs
+            double p
+            Event event
+
+        ptrTreeAndTime = 0
+        self.tree = np.empty(2 * self.sCounter - 1, dtype=np.int32)
+        self.times = np.empty(2 * self.sCounter - 1, dtype=float)
+
         liveBranchesS = []
         for i in range( self.popNum ):
             liveBranchesS.append( [[] for _ in range(self.hapNum)] )
@@ -511,34 +515,56 @@ cdef class BirthDeathModel:
             if event.type_ == 0:
                 lbs = len( liveBranchesS[event.population][event.haplotype] )
                 p = lbs*(lbs-1)/self.liveBranches[event.population][event.haplotype]/(self.liveBranches[event.population][event.haplotype]-1)
-                if np.random.rand() < p:
-                    n1 = math.floor( lbs*np.random.rand() )
-                    n2 = math.floor( (lbs-1)*np.random.rand() )
+
+                # if np.random.rand() < p:
+                #     n1 = int(floor( lbs*np.random.rand() ))
+                #     n2 = int(floor( (lbs-1)*np.random.rand() ))
+                if self.rndm.uniform() < p:
+                    n1 = int(floor( lbs*self.rndm.uniform() ))
+                    n2 = int(floor( (lbs-1)*self.rndm.uniform() ))
+
                     if n2 >= n1:
                         n2 += 1
                     id1 = liveBranchesS[event.population][event.haplotype][n1]
                     id2 = liveBranchesS[event.population][event.haplotype][n2]
-                    id3 = len( self.tree )
+
+                    #id3 = len( self.tree )
+                    id3 = ptrTreeAndTime
+
                     liveBranchesS[event.population][event.haplotype][n1] = id3
                     liveBranchesS[event.population][event.haplotype][n2] = liveBranchesS[event.population][event.haplotype][-1]
                     liveBranchesS[event.population][event.haplotype].pop()
                     self.tree[id1] = id3
                     self.tree[id2] = id3
-                    self.tree.append(-1)
-                    self.times.append( event.time )
+
+                    #self.tree.append(-1)
+                    #self.times.append( event.time )
+                    self.tree[ptrTreeAndTime] = -1
+                    self.times[ptrTreeAndTime] = event.time
+                    ptrTreeAndTime += 1
+
                 self.liveBranches[event.population][event.haplotype] -= 1
             elif event.type_ == 1:
                 self.liveBranches[event.population][event.haplotype] += 1
             elif event.type_ == 2:
                 self.liveBranches[event.population][event.haplotype] += 1
-                liveBranchesS[event.population][event.haplotype].append( len(self.tree) )
-                self.tree.append(-1)
-                self.times.append( event.time )
+                liveBranchesS[event.population][event.haplotype].append( ptrTreeAndTime )
+
+                # self.tree.append(-1)
+                # self.times.append( event.time )
+                self.tree[ptrTreeAndTime] = -1
+                self.times[ptrTreeAndTime] = event.time
+                ptrTreeAndTime += 1
+
             elif event.type_ == 3:
                 lbs = len( liveBranchesS[event.newPopulation][event.haplotype] )
                 p = lbs/self.liveBranches[event.newPopulation][event.haplotype]
-                if np.random.rand() < p:
-                    n1 = math.floor( lbs*np.random.rand() )
+
+                # if np.random.rand() < p:
+                #     n1 = int(floor( lbs*np.random.rand() ))
+                if self.rndm.uniform() < p:
+                    n1 = int(floor( lbs*self.rndm.uniform() ))
+
                     id1 = liveBranchesS[event.newPopulation][event.haplotype][n1]
                     liveBranchesS[event.newPopulation][event.haplotype][n1] = liveBranchesS[event.newPopulation][event.haplotype][-1]
                     liveBranchesS[event.newPopulation][event.haplotype].pop()
@@ -548,8 +574,12 @@ cdef class BirthDeathModel:
             elif event.type_ == 4:
                 lbs = len( liveBranchesS[event.population][event.newHaplotype] )
                 p = lbs/self.liveBranches[event.population][event.newHaplotype]
-                if np.random.rand() < p:
-                    n1 = math.floor( lbs*np.random.rand() )
+
+                # if np.random.rand() < p:
+                #     n1 = int(floor( lbs*np.random.rand() ))
+                if self.rndm.uniform() < p:
+                    n1 = int(floor( lbs*self.rndm.uniform() ))
+
                     id1 = liveBranchesS[event.population][event.newHaplotype][n1]
                     liveBranchesS[event.population][event.newHaplotype][n1] = liveBranchesS[event.population][event.newHaplotype][-1]
                     liveBranchesS[event.population][event.newHaplotype].pop()
