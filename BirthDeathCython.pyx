@@ -280,13 +280,13 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void HapPopRate(self, Py_ssize_t popId, Py_ssize_t haplotype):
+    cdef inline void HapPopRate(self, Py_ssize_t popId, Py_ssize_t haplotype):
         self.hapPopRate[popId, haplotype] = self.tEventHapPopRate[popId, haplotype]*self.liveBranches[popId, haplotype]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef double BirthRate(self, Py_ssize_t popId, Py_ssize_t haplotype):
+    cdef inline double BirthRate(self, Py_ssize_t popId, Py_ssize_t haplotype):
         return self.bRate[haplotype]*self.pm.susceptible[popId]/self.pm.sizes[popId]*self.pm.contactDensity[popId]
 
     @cython.boundscheck(False)
@@ -391,8 +391,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void SampleTime(self):
-        #cdef double tau = - log(np.random.rand()) / self.totalRate
+    cdef inline void SampleTime(self):
         cdef double tau = - log(self.rndm.uniform()) / self.totalRate
         self.currentTime += tau
 
