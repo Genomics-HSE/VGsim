@@ -5,15 +5,24 @@
 cimport cython
 
 from libc.math cimport log, floor
-from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
 
 import numpy as np
 np.random.seed(1256)
 import sys
 
+
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+
+# use named constants for event types
+DEF BIRTH = 0
+DEF DEATH = 1
+DEF SAMPLING = 2
+DEF MIGRATION = 3
+DEF MUTATION = 4
+
 
 cdef class Event:
     cdef:
@@ -302,13 +311,13 @@ cdef class BirthDeathModel:
         haplotype, self.rn = fastChoose1( self.hapPopRate[popId], self.popRate[popId], self.rn)
         eventType, self.rn = fastChoose1( self.eventHapPopRate[popId, haplotype], self.tEventHapPopRate[popId, haplotype], self.rn)
 
-        if eventType == 0:
+        if eventType == BIRTH:
             self.Birth(popId, haplotype)
-        elif eventType == 1:
+        elif eventType == DEATH:
             self.Death(popId, haplotype)
-        elif eventType == 2:
+        elif eventType == SAMPLING:
             self.Sampling(popId, haplotype)
-        elif eventType == 3:
+        elif eventType == MIGRATION:
             self.Migration(popId, haplotype)
         else:
             self.Mutation(popId, haplotype)
@@ -511,7 +520,7 @@ cdef class BirthDeathModel:
         #for event in reversed(self.events):
         for e_id in range(self.events.ptr-1, -1, -1):
             event = self.events.GetEvent(e_id)
-            if event.type_ == 0:
+            if event.type_ == BIRTH:
                 lbs = len( liveBranchesS[event.population][event.haplotype] )
                 p = lbs*(lbs-1)/self.liveBranches[event.population][event.haplotype]/(self.liveBranches[event.population][event.haplotype]-1)
 
@@ -543,9 +552,9 @@ cdef class BirthDeathModel:
                     ptrTreeAndTime += 1
 
                 self.liveBranches[event.population][event.haplotype] -= 1
-            elif event.type_ == 1:
+            elif event.type_ == DEATH:
                 self.liveBranches[event.population][event.haplotype] += 1
-            elif event.type_ == 2:
+            elif event.type_ == SAMPLING:
                 self.liveBranches[event.population][event.haplotype] += 1
                 liveBranchesS[event.population][event.haplotype].append( ptrTreeAndTime )
 
@@ -555,7 +564,7 @@ cdef class BirthDeathModel:
                 self.times[ptrTreeAndTime] = event.time
                 ptrTreeAndTime += 1
 
-            elif event.type_ == 3:
+            elif event.type_ == MIGRATION:
                 lbs = len( liveBranchesS[event.newPopulation][event.haplotype] )
                 p = lbs/self.liveBranches[event.newPopulation][event.haplotype]
 
@@ -570,7 +579,7 @@ cdef class BirthDeathModel:
                     liveBranchesS[event.population][event.haplotype].append(id1)
                 self.liveBranches[event.newPopulation][event.haplotype] -= 1
                 self.liveBranches[event.population][event.haplotype] += 1
-            elif event.type_ == 4:
+            elif event.type_ == MUTATION:
                 lbs = len( liveBranchesS[event.population][event.newHaplotype] )
                 p = lbs/self.liveBranches[event.population][event.newHaplotype]
 
