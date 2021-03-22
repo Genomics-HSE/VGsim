@@ -5,6 +5,7 @@
 cimport cython
 
 from libc.math cimport log, floor
+from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
 
 import numpy as np
@@ -501,27 +502,35 @@ cdef class BirthDeathModel:
             print("Bo-o-o-oring... Less than two cases were sampled.")
             sys.exit(1)
 
-    # @cython.boundscheck(False)
-    # @cython.cdivision(True)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
     cpdef GetGenealogy(self):
         cdef:
             Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs
             double p
             Event event
+            vector[vector[vector[Py_ssize_t]]] liveBranchesS
+            vector[vector[Py_ssize_t]] vecint2
+            vector[Py_ssize_t] vecint1
 
         ptrTreeAndTime = 0
-        self.tree = np.empty(2 * self.sCounter - 1, dtype=np.int32)
-        self.times = np.empty(2 * self.sCounter - 1, dtype=float)
+        self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int32)
+        self.times = np.zeros(2 * self.sCounter - 1, dtype=float)
 
-        liveBranchesS = []
+        # liveBranchesS = []
+        # for i in range( self.popNum ):
+        #     liveBranchesS.append( [[] for _ in range(self.hapNum)] )
         for i in range( self.popNum ):
-            liveBranchesS.append( [[] for _ in range(self.hapNum)] )
+            liveBranchesS.push_back(vecint2)
+            for _ in range( self.hapNum ):
+                liveBranchesS[i].push_back(vecint1)
 
         #for event in reversed(self.events):
         for e_id in range(self.events.ptr-1, -1, -1):
             event = self.events.GetEvent(e_id)
             if event.type_ == BIRTH:
-                lbs = len( liveBranchesS[event.population][event.haplotype] )
+                lbs = liveBranchesS[event.population][event.haplotype].size()
                 p = lbs*(lbs-1)/self.liveBranches[event.population][event.haplotype]/(self.liveBranches[event.population][event.haplotype]-1)
 
                 # if np.random.rand() < p:
@@ -540,8 +549,8 @@ cdef class BirthDeathModel:
                     id3 = ptrTreeAndTime
 
                     liveBranchesS[event.population][event.haplotype][n1] = id3
-                    liveBranchesS[event.population][event.haplotype][n2] = liveBranchesS[event.population][event.haplotype][-1]
-                    liveBranchesS[event.population][event.haplotype].pop()
+                    liveBranchesS[event.population][event.haplotype][n2] = liveBranchesS[event.population][event.haplotype][lbs-1]
+                    liveBranchesS[event.population][event.haplotype].pop_back()
                     self.tree[id1] = id3
                     self.tree[id2] = id3
 
@@ -556,7 +565,7 @@ cdef class BirthDeathModel:
                 self.liveBranches[event.population][event.haplotype] += 1
             elif event.type_ == SAMPLING:
                 self.liveBranches[event.population][event.haplotype] += 1
-                liveBranchesS[event.population][event.haplotype].append( ptrTreeAndTime )
+                liveBranchesS[event.population][event.haplotype].push_back( ptrTreeAndTime )
 
                 # self.tree.append(-1)
                 # self.times.append( event.time )
@@ -565,7 +574,7 @@ cdef class BirthDeathModel:
                 ptrTreeAndTime += 1
 
             elif event.type_ == MIGRATION:
-                lbs = len( liveBranchesS[event.newPopulation][event.haplotype] )
+                lbs = liveBranchesS[event.newPopulation][event.haplotype].size()
                 p = lbs/self.liveBranches[event.newPopulation][event.haplotype]
 
                 # if np.random.rand() < p:
@@ -574,13 +583,13 @@ cdef class BirthDeathModel:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
 
                     id1 = liveBranchesS[event.newPopulation][event.haplotype][n1]
-                    liveBranchesS[event.newPopulation][event.haplotype][n1] = liveBranchesS[event.newPopulation][event.haplotype][-1]
-                    liveBranchesS[event.newPopulation][event.haplotype].pop()
-                    liveBranchesS[event.population][event.haplotype].append(id1)
+                    liveBranchesS[event.newPopulation][event.haplotype][n1] = liveBranchesS[event.newPopulation][event.haplotype][lbs-1]
+                    liveBranchesS[event.newPopulation][event.haplotype].pop_back()
+                    liveBranchesS[event.population][event.haplotype].push_back(id1)
                 self.liveBranches[event.newPopulation][event.haplotype] -= 1
                 self.liveBranches[event.population][event.haplotype] += 1
             elif event.type_ == MUTATION:
-                lbs = len( liveBranchesS[event.population][event.newHaplotype] )
+                lbs = liveBranchesS[event.population][event.newHaplotype].size()
                 p = lbs/self.liveBranches[event.population][event.newHaplotype]
 
                 # if np.random.rand() < p:
@@ -589,9 +598,9 @@ cdef class BirthDeathModel:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
 
                     id1 = liveBranchesS[event.population][event.newHaplotype][n1]
-                    liveBranchesS[event.population][event.newHaplotype][n1] = liveBranchesS[event.population][event.newHaplotype][-1]
-                    liveBranchesS[event.population][event.newHaplotype].pop()
-                    liveBranchesS[event.population][event.haplotype].append(id1)
+                    liveBranchesS[event.population][event.newHaplotype][n1] = liveBranchesS[event.population][event.newHaplotype][lbs-1]
+                    liveBranchesS[event.population][event.newHaplotype].pop_back()
+                    liveBranchesS[event.population][event.haplotype].push_back(id1)
                 self.liveBranches[event.population][event.newHaplotype] -= 1
                 self.liveBranches[event.population][event.haplotype] += 1
             else:
@@ -620,3 +629,4 @@ cdef class BirthDeathModel:
         print("Current time: ", self.currentTime)
         print("Tree size: ", len(self.tree))
         print("Number of sampled elements: ", self.sCounter)
+        print("")
