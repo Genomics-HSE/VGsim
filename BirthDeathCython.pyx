@@ -38,6 +38,7 @@ cdef class Event:
         self.newHaplotype = newHaplotype
         self.newPopulation = newPopulation
 
+
 cdef class Events:
     cdef:
         double[::1] times
@@ -135,7 +136,7 @@ class NeutralMutations:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn):
+cdef inline (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn):
     cdef:
         Py_ssize_t i
         double total
@@ -149,6 +150,7 @@ cdef (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn):
     if w[i] == 0.0:
         print_err("fastChoose() alert: 0-weight sampled")
     return [ i, ( rn-(total-w[i]) )/w[i] ]
+
 
 cdef class BirthDeathModel:
     cdef:
@@ -507,12 +509,14 @@ cdef class BirthDeathModel:
     @cython.cdivision(True)
     cpdef GetGenealogy(self):
         cdef:
-            Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs
+            Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs, lbs_e
             double p
-            Event event
             vector[vector[vector[Py_ssize_t]]] liveBranchesS
             vector[vector[Py_ssize_t]] vecint2
             vector[Py_ssize_t] vecint1
+
+            double e_time
+            Py_ssize_t e_type_, e_population, e_haplotype, e_newHaplotype, e_newPopulation
 
         ptrTreeAndTime = 0
         self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int32)
@@ -528,10 +532,18 @@ cdef class BirthDeathModel:
 
         #for event in reversed(self.events):
         for e_id in range(self.events.ptr-1, -1, -1):
-            event = self.events.GetEvent(e_id)
-            if event.type_ == BIRTH:
-                lbs = liveBranchesS[event.population][event.haplotype].size()
-                p = lbs*(lbs-1)/self.liveBranches[event.population][event.haplotype]/(self.liveBranches[event.population][event.haplotype]-1)
+            # this event
+            e_time = self.events.times[e_id]
+            e_type_ = self.events.types[e_id]
+            e_population = self.events.populations[e_id]
+            e_haplotype = self.events.haplotypes[e_id]
+            e_newHaplotype = self.events.newHaplotypes[e_id]
+            e_newPopulation = self.events.newPopulations[e_id]
+ 
+            if e_type_ == BIRTH:
+                lbs = liveBranchesS[e_population][e_haplotype].size()
+                lbs_e = self.liveBranches[e_population][e_haplotype]
+                p = lbs*(lbs-1)/ lbs_e / (lbs_e - 1)
 
                 # if np.random.rand() < p:
                 #     n1 = int(floor( lbs*np.random.rand() ))
@@ -542,69 +554,69 @@ cdef class BirthDeathModel:
 
                     if n2 >= n1:
                         n2 += 1
-                    id1 = liveBranchesS[event.population][event.haplotype][n1]
-                    id2 = liveBranchesS[event.population][event.haplotype][n2]
+                    id1 = liveBranchesS[e_population][e_haplotype][n1]
+                    id2 = liveBranchesS[e_population][e_haplotype][n2]
 
                     #id3 = len( self.tree )
                     id3 = ptrTreeAndTime
 
-                    liveBranchesS[event.population][event.haplotype][n1] = id3
-                    liveBranchesS[event.population][event.haplotype][n2] = liveBranchesS[event.population][event.haplotype][lbs-1]
-                    liveBranchesS[event.population][event.haplotype].pop_back()
+                    liveBranchesS[e_population][e_haplotype][n1] = id3
+                    liveBranchesS[e_population][e_haplotype][n2] = liveBranchesS[e_population][e_haplotype][lbs-1]
+                    liveBranchesS[e_population][e_haplotype].pop_back()
                     self.tree[id1] = id3
                     self.tree[id2] = id3
 
                     #self.tree.append(-1)
                     #self.times.append( event.time )
                     self.tree[ptrTreeAndTime] = -1
-                    self.times[ptrTreeAndTime] = event.time
+                    self.times[ptrTreeAndTime] = e_time
                     ptrTreeAndTime += 1
 
-                self.liveBranches[event.population][event.haplotype] -= 1
-            elif event.type_ == DEATH:
-                self.liveBranches[event.population][event.haplotype] += 1
-            elif event.type_ == SAMPLING:
-                self.liveBranches[event.population][event.haplotype] += 1
-                liveBranchesS[event.population][event.haplotype].push_back( ptrTreeAndTime )
+                self.liveBranches[e_population][e_haplotype] -= 1
+            elif e_type_ == DEATH:
+                self.liveBranches[e_population][e_haplotype] += 1
+            elif e_type_ == SAMPLING:
+                self.liveBranches[e_population][e_haplotype] += 1
+                liveBranchesS[e_population][e_haplotype].push_back( ptrTreeAndTime )
 
                 # self.tree.append(-1)
                 # self.times.append( event.time )
                 self.tree[ptrTreeAndTime] = -1
-                self.times[ptrTreeAndTime] = event.time
+                self.times[ptrTreeAndTime] = e_time
                 ptrTreeAndTime += 1
 
-            elif event.type_ == MIGRATION:
-                lbs = liveBranchesS[event.newPopulation][event.haplotype].size()
-                p = lbs/self.liveBranches[event.newPopulation][event.haplotype]
+            elif e_type_ == MIGRATION:
+                lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
+                p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
 
                 # if np.random.rand() < p:
                 #     n1 = int(floor( lbs*np.random.rand() ))
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
 
-                    id1 = liveBranchesS[event.newPopulation][event.haplotype][n1]
-                    liveBranchesS[event.newPopulation][event.haplotype][n1] = liveBranchesS[event.newPopulation][event.haplotype][lbs-1]
-                    liveBranchesS[event.newPopulation][event.haplotype].pop_back()
-                    liveBranchesS[event.population][event.haplotype].push_back(id1)
-                self.liveBranches[event.newPopulation][event.haplotype] -= 1
-                self.liveBranches[event.population][event.haplotype] += 1
-            elif event.type_ == MUTATION:
-                lbs = liveBranchesS[event.population][event.newHaplotype].size()
-                p = lbs/self.liveBranches[event.population][event.newHaplotype]
+                    id1 = liveBranchesS[e_newPopulation][e_haplotype][n1]
+                    liveBranchesS[e_newPopulation][e_haplotype][n1] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
+                    liveBranchesS[e_newPopulation][e_haplotype].pop_back()
+                    liveBranchesS[e_population][e_haplotype].push_back(id1)
+                self.liveBranches[e_newPopulation][e_haplotype] -= 1
+                self.liveBranches[e_population][e_haplotype] += 1
+            elif e_type_ == MUTATION:
+                lbs = liveBranchesS[e_population][e_newHaplotype].size()
+                p = lbs/self.liveBranches[e_population][e_newHaplotype]
 
                 # if np.random.rand() < p:
                 #     n1 = int(floor( lbs*np.random.rand() ))
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
 
-                    id1 = liveBranchesS[event.population][event.newHaplotype][n1]
-                    liveBranchesS[event.population][event.newHaplotype][n1] = liveBranchesS[event.population][event.newHaplotype][lbs-1]
-                    liveBranchesS[event.population][event.newHaplotype].pop_back()
-                    liveBranchesS[event.population][event.haplotype].push_back(id1)
-                self.liveBranches[event.population][event.newHaplotype] -= 1
-                self.liveBranches[event.population][event.haplotype] += 1
+                    id1 = liveBranchesS[e_population][e_newHaplotype][n1]
+                    liveBranchesS[e_population][e_newHaplotype][n1] = liveBranchesS[e_population][e_newHaplotype][lbs-1]
+                    liveBranchesS[e_population][e_newHaplotype].pop_back()
+                    liveBranchesS[e_population][e_haplotype].push_back(id1)
+                self.liveBranches[e_population][e_newHaplotype] -= 1
+                self.liveBranches[e_population][e_haplotype] += 1
             else:
-                print("Unknown event type: ", event.type_)
+                print("Unknown event type: ", e_type_)
                 sys.exit(1)
 
     def LogDynamics(self):
