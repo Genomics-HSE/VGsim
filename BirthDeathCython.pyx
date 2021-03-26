@@ -191,7 +191,7 @@ cdef class BirthDeathModel:
         ##END:TOVADIM
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
-    
+
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
 
@@ -590,25 +590,35 @@ cdef class BirthDeathModel:
                 print("Unknown event type: ", e_type_)
                 sys.exit(1)
 
-    def LogDynamics(self, fn, step_num = 1000):
+    def LogDynamics(self, step_num = 1000):
         count = 0
+        time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
+        dynamics = [None for i in range(step_num+1)]
+        ptr = step_num
         for e_id in range(self.events.ptr-1, -1, -1):
             e_time = self.events.times[e_id]
+            e_type_ = self.events.types[e_id]
+            e_population = self.events.populations[e_id]
+            e_haplotype = self.events.haplotypes[e_id]
+            e_newHaplotype = self.events.newHaplotypes[e_id]
+            e_newPopulation = self.events.newPopulations[e_id]
 
+            if e_type_ == BIRTH:
+                self.liveBranches[e_population][e_haplotype] -= 1
+            elif e_type_ == DEATH:
+                self.liveBranches[e_population][e_haplotype] += 1
+            elif e_type_ == SAMPLING:
+                self.liveBranches[e_population][e_haplotype] += 1
+            elif e_type_ == MIGRATION:
+                self.liveBranches[e_newPopulation][e_haplotype] -= 1
+            elif e_type_ == MUTATION:
+                self.liveBranches[e_population][e_newHaplotype] -= 1
+                self.liveBranches[e_population][e_haplotype] += 1
 
-        #     double currentTime, rn, totalRate
-        # Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num
-        # Events events
-        # PopulationModel pm
-
-        # int[::1] tree, suscType
-        # int[:,::1] liveBranches
-
-        # double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times
-        # double[:,::1] pm_migrationRates, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
-        # double[:,:,::1] eventHapPopRate, susceptHapPopRate
-
-
+            while ptr >= 0 and time_points[ptr] >= e_time:
+                dynamics[ptr] = [ [el for el in br] for br in self.liveBranches]
+                ptr -= 1
+          return([time_points, dynamics])
 
     def Debug(self):
         print("Parametrs")
