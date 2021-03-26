@@ -137,7 +137,7 @@ cdef class BirthDeathModel:
         RndmWrapper rndm
 
         double currentTime, rn, totalRate
-        Py_ssize_t sCounter, popNum, dim, hapNum, lbCounter, susceptible_num
+        Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num
         Events events
         PopulationModel pm
 
@@ -184,23 +184,14 @@ cdef class BirthDeathModel:
         ##BEGIN:TOVADIM
         if susceptible == None:
             self.susceptibility = np.asarray( [ [1.0 for _ in range(self.hapNum)], [0.0 for _ in range(self.hapNum)] ] )
-            self.suscType = np.asarray( [1 for _ in range(self.hapNum)], dtype=np.int32 )
+            self.suscType = np.ones(int(self.hapNum), dtype=np.int32)
         else:
             self.susceptibility = np.asarray( susceptible[0] )
             self.suscType = np.asarray( susceptible[1], dtype=np.int32 )
         ##END:TOVADIM
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
-        for i in range(self.popNum):
-            for j in range(self.hapNum):
-                for k in range(self.susceptible_num):
-                  print(self.pm.susceptible[i, k])
-                  print(self.susceptibility[j, k])
-                  print(self.pm.susceptible.shape)
-                  print(self.susceptibility.shape)
-                  print("Index: ", i, j, k)
-                  self.susceptHapPopRate[i, j, k] = self.pm.susceptible[i, k]*self.susceptibility[j, k]
-
+    
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
 
@@ -216,8 +207,7 @@ cdef class BirthDeathModel:
         self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int32)
         self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
         self.liveBranches[0, 0] += 2
-        self.lbCounter = 2 #live branch counter
-        self.pm.susceptible[0,0] -= 2
+        self.pm.susceptible[0, 0] -= 2
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -300,7 +290,7 @@ cdef class BirthDeathModel:
     cdef inline double BirthRate(self, Py_ssize_t popId, Py_ssize_t haplotype):
         cdef double ws = 0.0
         for i in range(self.susceptible_num):
-            self.susceptHapPopRate[popId, haplotype, i] = self.pm.susceptible[popId,i]*self.susceptibility[haplotype, i]
+            self.susceptHapPopRate[popId, haplotype, i] = self.pm.susceptible[popId,i]*self.susceptibility[i, haplotype]
             ws += self.susceptHapPopRate[popId, haplotype, i]#TOVADIM
         return self.bRate[haplotype]*ws/self.pm.sizes[popId]*self.pm.contactDensity[popId]
 
@@ -341,9 +331,11 @@ cdef class BirthDeathModel:
         cdef double ws = 0.0
         for i in range(self.susceptible_num):
             ws += self.susceptHapPopRate[targetPopId, haplotype, i]#TOVADIM
-        st, self.rn = fastChoose1(self.susceptHapPopRate[targetPopId, haplotype], ws, self.rn)
-        self.pm.susceptible[targetPopId, st] -= 1
-        self.UpdateRates(targetPopId)
+        if ws != 0:#TODO
+            st, self.rn = fastChoose1(self.susceptHapPopRate[targetPopId, haplotype], ws, self.rn)
+            self.pm.susceptible[targetPopId, st] -= 1
+            self.events.AddEvent(self.currentTime, 3, popId, haplotype, 0, targetPopId)
+            self.UpdateRates(targetPopId)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -604,6 +596,123 @@ cdef class BirthDeathModel:
             e_time = self.events.times[e_id]
 
 
+        #     double currentTime, rn, totalRate
+        # Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num
+        # Events events
+        # PopulationModel pm
+
+        # int[::1] tree, suscType
+        # int[:,::1] liveBranches
+
+        # double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times
+        # double[:,::1] pm_migrationRates, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
+        # double[:,:,::1] eventHapPopRate, susceptHapPopRate
+
+
+
+    def Debug(self):
+        print("Parametrs")
+        print("Current time: ", self.currentTime)
+        print("Random number: ", self.rn)
+        print("Total rate: ", self.totalRate)
+        print("Sampling counter: ", self.sCounter)
+        print("Populations number: ", self.popNum)
+        print("Mutations number: ", self.dim)
+        print("Haplotypes number: ", self.hapNum)
+        print("Susceptible number: ", self.susceptible_num)
+        print("Susceptible type: ", sep=" ", end="")
+        for i in range(self.suscType.shape[0]):
+            print(self.suscType[i], end=" ")
+        print()
+        print("Birth rate: ", sep="", end="")
+        for i in range(self.hapNum):
+            print(self.bRate[i], end=" ")
+        print()
+        print("Death rate: ", sep="", end="")
+        for i in range(self.hapNum):
+            print(self.dRate[i], end=" ")
+        print()
+        print("Sampling rate: ", sep="", end="")
+        for i in range(self.hapNum):
+            print(self.sRate[i], end=" ")
+        print()
+        print("Total mutation rate: ", sep="", end="")
+        for i in range(self.hapNum):
+            print(self.tmRate[i], end=" ")
+        print()
+        print("Migration population rate: ", sep="", end="")
+        for i in range(self.popNum):
+            print(self.migPopRate[i], end=" ")
+        print()
+        print("Population rate: ", sep="", end="")
+        for i in range(self.popNum):
+            print(self.popRate[i], end=" ")
+        print()
+        print("Population model - sizes: ", end="")
+        for i in range(self.pm.sizes.shape[0]):
+            print(self.pm.sizes[i], end=" ")
+        print()
+        print("Population model - contac density: ", end=" ")
+        for i in range(self.pm.sizes.shape[0]):
+            print(self.pm.contactDensity[i], end=" ")
+        print()
+        print("Population model - susceptible----")
+        for i in range(self.pm.sizes.shape[0]):
+            for j in range(self.susceptible_num):
+                print(self.pm.susceptible[i, j], end=" ")
+            print()
+        print()
+        print("Population model - migration rates----")
+        for i in range(self.pm_migrationRates.shape[0]):
+            for j in range(self.pm_migrationRates.shape[1]):
+                print(self.pm_migrationRates[i, j], end=" ")
+            print()
+        print()
+        print("Total event haplotype population rate----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                print(self.tEventHapPopRate[i, j], end=" ")
+            print()
+        print()
+        print("Haplotypes populations rates----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                print(self.hapPopRate[i, j], end=" ")
+            print()
+        print()
+        print("Mutation rate----")
+        for i in range(self.hapNum):
+            for j in range(self.dim):
+                print(self.mRate[i, j], end=" ")
+            print()
+        print()
+        print("Susceptibility----")
+        for i in range(self.susceptibility.shape[0]):
+            for j in range(self.susceptibility.shape[1]):
+                print(self.susceptibility[i, j], end=" ")
+            print()
+        print()
+        print("Birth haplotypes populations rate----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                print(self.birthHapPopRate[i, j], end=" ")
+            print()
+        print("Event haplotypes populations rate----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                for k in range(5):
+                    print(self.eventHapPopRate[i, j, k], end=" ")
+                print()
+            print()
+        print()
+        print("Susceptible haplotypes populations rate----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                for k in range(self.susceptible_num):
+                    print(self.susceptHapPopRate[i, j, k], end=" ")
+                print()
+            print()
+        print()
 
     def Report(self):
         print("Number of lineages of each hyplotype: ", end = "")
@@ -616,7 +725,6 @@ cdef class BirthDeathModel:
         print("totalRate: ", self.totalRate)
         print("rn: ", self.rn)
         #print("susceptible: ", self.susceptible)
-        print("lbCounter: ", self.lbCounter)
         print("Current time: ", self.currentTime)
         print("Tree size: ", len(self.tree))
         print("Number of sampled elements: ", self.sCounter)
