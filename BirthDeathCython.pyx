@@ -504,7 +504,6 @@ cdef class BirthDeathModel:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
                 lbs_e = self.liveBranches[e_population][e_haplotype]
                 p = lbs*(lbs-1)/ lbs_e / (lbs_e - 1)
-
                 # if np.random.rand() < p:
                 #     n1 = int(floor( lbs*np.random.rand() ))
                 #     n2 = int(floor( (lbs-1)*np.random.rand() ))
@@ -531,7 +530,6 @@ cdef class BirthDeathModel:
                     self.tree[ptrTreeAndTime] = -1
                     self.times[ptrTreeAndTime] = e_time
                     ptrTreeAndTime += 1
-
                 self.liveBranches[e_population][e_haplotype] -= 1
             elif e_type_ == DEATH:
                 self.liveBranches[e_population][e_haplotype] += 1
@@ -548,7 +546,6 @@ cdef class BirthDeathModel:
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
                 p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
-
                 # if np.random.rand() < p:
                 #     n1 = int(floor( lbs*np.random.rand() ))
                 if self.rndm.uniform() < p:
@@ -564,8 +561,8 @@ cdef class BirthDeathModel:
                     liveBranchesS[e_population][e_haplotype][ns] = id3
                     liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                     liveBranchesS[e_newPopulation][e_haplotype].pop_back()
-                    self.tree[id1] = id3
-                    self.tree[id2] = id3
+                    self.tree[idt] = id3
+                    self.tree[ids] = id3
 
                     self.tree[ptrTreeAndTime] = -1
                     self.times[ptrTreeAndTime] = e_time
@@ -589,6 +586,7 @@ cdef class BirthDeathModel:
             else:
                 print("Unknown event type: ", e_type_)
                 sys.exit(1)
+        print("\n")
 
     def LogDynamics(self, step_num = 1000):
         count = 0
@@ -618,7 +616,7 @@ cdef class BirthDeathModel:
             while ptr >= 0 and time_points[ptr] >= e_time:
                 dynamics[ptr] = [ [el for el in br] for br in self.liveBranches]
                 ptr -= 1
-          return([time_points, dynamics])
+        return([time_points, dynamics])
 
     def Debug(self):
         print("Parametrs")
