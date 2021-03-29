@@ -586,7 +586,6 @@ cdef class BirthDeathModel:
             else:
                 print("Unknown event type: ", e_type_)
                 sys.exit(1)
-        print("\n")
 
     def LogDynamics(self, step_num = 1000):
         count = 0
