@@ -154,7 +154,7 @@ cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
 
-        double currentTime, rn, totalRate
+        double currentTime, rn, totalRate, maxEffectiveBirth
         Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num
         Events events
         PopulationModel pm
@@ -162,7 +162,7 @@ cdef class BirthDeathModel:
         int[::1] tree, suscType
         int[:,::1] liveBranches
 
-        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times, pm_maxEffectiveMigration
+        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times, pm_maxEffectiveMigration, maxSusceptibility
         double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
         double[:,:,::1] eventHapPopRate, susceptHapPopRate
 
@@ -200,19 +200,18 @@ cdef class BirthDeathModel:
 
         self.elementsArr3 = np.ones(3)
 
-        ##BEGIN:TOVADIM
         if susceptible == None:
             self.susceptibility = np.asarray( [ [1.0 for _ in range(self.hapNum)], [0.0 for _ in range(self.hapNum)] ] )
             self.suscType = np.ones(int(self.hapNum), dtype=np.int32)
         else:
             self.susceptibility = np.asarray( susceptible[0] )
             self.suscType = np.asarray( susceptible[1], dtype=np.int32 )
-        ##END:TOVADIM
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
 
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
+        self.SetMaxBirth()
 
         #Set random generator
         self.rndm = RndmWrapper(seed=(rndseed, 0))
@@ -227,6 +226,19 @@ cdef class BirthDeathModel:
         #self.pm.NewInfection(0, 0)
         #self.pm.NewInfection(0, 0)
         #self.pm.susceptible[0, 0] -= 2
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void SetMaxBirth(self):
+        for k in range(self.hapNum):
+            self.maxSusceptibility[k] = 0.0
+            for sType in range(self.susceptible_num):
+                if self.susceptibility[sType, k] > self.maxSusceptibility[k]:
+                    self.maxSusceptibility[k] = self.susceptibility[sType, k]
+        self.maxEffectiveBirth = 0.0
+        for k in range(self.hapNum):
+            if self.maxEffectiveBirth < self.bRate[k]*self.maxSusceptibility[k]:
+                self.maxEffectiveBirth = self.bRate[k]*self.maxSusceptibility[k]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

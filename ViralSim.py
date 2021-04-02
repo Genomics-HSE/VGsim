@@ -4,7 +4,7 @@ import argparse
 import sys
 import time
 from BirthDeathCython import BirthDeathModel, PopulationModel, Population
-from IO import ReadRates, ReadPopulations, ReadMigrationRates
+from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
 
@@ -40,7 +40,7 @@ else:
 if clargs.susceptibility == None:
     susceptible = None
 else:
-    susceptible = ReadPopulations(clargs.ReadSusceptibility[0])
+    susceptible = ReadSusceptibility(clargs.susceptibility)
 
 simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible)
 t1 = time.time()
