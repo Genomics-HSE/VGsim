@@ -87,7 +87,7 @@ class Population:
 
 cdef class PopulationModel:
     cdef:
-        int[::1] sizes
+        int[::1] sizes, totalSusceptible, totalInfectious
         int[:,::1] susceptible
         double[::1] contactDensity
 
@@ -98,13 +98,31 @@ cdef class PopulationModel:
         for i in range(sizePop):
             self.sizes[i] = populations[i].size
 
+        self.totalSusceptible = np.zeros(sizePop, dtype=np.int32)
+        self.totalInfectious = np.zeros(sizePop, dtype=np.int32)
+
         self.susceptible = np.zeros((sizePop, susceptible_num), dtype=np.int32)
         for i in range(sizePop):
             self.susceptible[i, 0] = populations[i].size
+            self.totalSusceptible = populations[i].size
 
         self.contactDensity = np.zeros(sizePop, dtype=float)
         for i in range(sizePop):
             self.contactDensity[i] = populations[i].contactDensity
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef inline void NewInfection(Py_ssize_t popId, Py_ssize_t suscId):
+        self.susceptible[popId,suscId] -= 1
+        self.totalSusceptible[popId] -= 1
+        self.totalInfectious[popId] += 1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef inline void NewRecovery(Py_ssize_t popId, Py_ssize_t suscId):
+        self.susceptible[popId,suscId] += 1
+        self.totalSusceptible[popId] += 1
+        self.totalInfectious[popId] -= 1
 
 class NeutralMutations:
     def __init__(self):
@@ -144,8 +162,8 @@ cdef class BirthDeathModel:
         int[::1] tree, suscType
         int[:,::1] liveBranches
 
-        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times
-        double[:,::1] pm_migrationRates, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
+        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times, pm_maxEffectiveMigration
+        double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
         double[:,:,::1] eventHapPopRate, susceptHapPopRate
 
     def __init__(self, iterations, bRate, dRate, sRate, mRate = [], populationModel = None, susceptible = None, rndseed = 1256, **kwargs):
@@ -153,7 +171,6 @@ cdef class BirthDeathModel:
         self.sCounter = 0 #sample counter
         self.events = Events(iterations+1)
 
-        ##BEGIN:TOVADIM
         if susceptible == None:
             self.susceptible_num = 2
         else:
@@ -166,7 +183,9 @@ cdef class BirthDeathModel:
         else:
             self.pm = PopulationModel( populationModel[0] , self.susceptible_num)
             self.pm_migrationRates = np.asarray(populationModel[1])
-        ##END:TOVADIM
+        self.pm_effectiveMigration = np.asarray(self.pm_migrationRates)#TODO - deep copy?
+        self.pm_maxEffectiveMigration = np.zeros(self.popNum, dtype=np.int32)
+        self.SetEffectiveMigration()
 
         self.popNum = self.pm.sizes.shape[0]
 
@@ -201,13 +220,24 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void InitLiveBranches(self):
-
-        # for i in range( self.popNum ):
-        #     self.liveBranches.append( [0 for _ in range(self.hapNum)] )
         self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int32)
-        self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
-        self.liveBranches[0, 0] += 2
-        self.pm.susceptible[0, 0] -= 2
+        self.Birth(0, 0)
+        #self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
+        #self.liveBranches[0, 0] += 2
+        #self.pm.NewInfection(0, 0)
+        #self.pm.NewInfection(0, 0)
+        #self.pm.susceptible[0, 0] -= 2
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void SetEffectiveMigration(self):
+        for i in range(self.popNum):
+            self.pm_maxEffectiveMigration[i] = 0.0
+        for i in range(self.popNum):
+            for j in range(self.popNum):
+                self.pm_effectiveMigration[i,j] = self.pm_migrationRates[i,j]*self.pm.contactDensity[j]+self.pm_migrationRates[j,i]*self.pm.contactDensity[i]
+                if self.pm_effectiveMigration[i,j] > self.pm_maxEffectiveMigration[j]:
+                    self.pm_maxEffectiveMigration[j] = self.pm_effectiveMigration[i,j]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -390,7 +420,8 @@ cdef class BirthDeathModel:
             ws += self.susceptHapPopRate[popId, haplotype, i]#TOVADIM
         st, self.rn = fastChoose1(self.susceptHapPopRate[popId, haplotype], ws, self.rn)
 
-        self.pm.susceptible[popId, st] -= 1
+        self.pm.NewInfection(popId, st)
+        #self.pm.susceptible[popId, st] -= 1
 
         #event = Event(self.currentTime, 0, popId, haplotype)
         #self.events.append(event)
@@ -425,7 +456,8 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cdef void Death(self, Py_ssize_t popId, Py_ssize_t haplotype, bint add_event = True):
         self.liveBranches[popId, haplotype] -= 1
-        self.pm.susceptible[popId, self.suscType[haplotype] ] += 1
+        self.pm.NewRecovery(popId, self.suscType[haplotype])
+        #self.pm.susceptible[popId, self.suscType[haplotype] ] += 1
 
         if add_event:
             #event = Event(self.currentTime, 1, popId, haplotype)
@@ -542,7 +574,6 @@ cdef class BirthDeathModel:
                 self.tree[ptrTreeAndTime] = -1
                 self.times[ptrTreeAndTime] = e_time
                 ptrTreeAndTime += 1
-
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
                 p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
