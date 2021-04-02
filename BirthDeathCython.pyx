@@ -74,11 +74,12 @@ cdef class Events:
         return( ev )
 
 class Mutation:
-    def __init__(self, nodeId, time, AS, DS):#AS = ancestral state, DS = derived state
+    def __init__(self, nodeId, time, AS, DS, site):#AS = ancestral state, DS = derived state
         self.nodeId = nodeId
         self.time = time
         self.AS = AS
         self.DS = DS
+        self.site = site
 
 class Population:
     def __init__(self, size = 1000000, contactDensity = 1.0):
@@ -87,6 +88,7 @@ class Population:
 
 cdef class PopulationModel:
     cdef:
+        Py_ssize_t globalInfectious
         int[::1] sizes, totalSusceptible, totalInfectious
         int[:,::1] susceptible
         double[::1] contactDensity
@@ -100,6 +102,7 @@ cdef class PopulationModel:
 
         self.totalSusceptible = np.zeros(sizePop, dtype=np.int32)
         self.totalInfectious = np.zeros(sizePop, dtype=np.int32)
+        self.globalInfectious = 0.0
 
         self.susceptible = np.zeros((sizePop, susceptible_num), dtype=np.int32)
         for i in range(sizePop):
@@ -116,6 +119,7 @@ cdef class PopulationModel:
         self.susceptible[popId,suscId] -= 1
         self.totalSusceptible[popId] -= 1
         self.totalInfectious[popId] += 1
+        self.globalInfectious += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -123,6 +127,7 @@ cdef class PopulationModel:
         self.susceptible[popId,suscId] += 1
         self.totalSusceptible[popId] += 1
         self.totalInfectious[popId] -= 1
+        self.globalInfectious -= 1
 
 class NeutralMutations:
     def __init__(self):
@@ -242,50 +247,40 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void SetEffectiveMigration(self):
         for i in range(self.popNum):
             self.pm_maxEffectiveMigration[i] = 0.0
         for i in range(self.popNum):
             for j in range(self.popNum):
-                self.pm_effectiveMigration[i,j] = self.pm_migrationRates[i,j]*self.pm.contactDensity[j]+self.pm_migrationRates[j,i]*self.pm.contactDensity[i]
+                self.pm_effectiveMigration[i,j] = self.pm_migrationRates[i,j]*self.pm.contactDensity[j]/self.pm.sizes[j]+self.pm_migrationRates[j,i]*self.pm.contactDensity[i]/self.pm.sizes[i]
                 if self.pm_effectiveMigration[i,j] > self.pm_maxEffectiveMigration[j]:
                     self.pm_maxEffectiveMigration[j] = self.pm_effectiveMigration[i,j]
+        for i in range(self.popNum):
+            self.pm_maxEffectiveMigration[i] *= self.maxEffectiveBirth[i]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void SetRates(self, bRate, dRate, sRate, mRate):
         self.bRate, self.dRate, self.sRate = np.asarray(bRate), np.asarray(dRate), np.asarray(sRate)
 
-
-        #self.mRate = mRate
         self.mRate = np.zeros((len(mRate), len(mRate[0])), dtype=float)
         for i in range(len(mRate)):
             for j in range(len(mRate[0])):
                 self.mRate[i, j] = mRate[i][j]
 
-
-        #self.tmRate = [ sum(mr) for mr in self.mRate ]
         self.tmRate = np.zeros(len(mRate), dtype=float)
         for i in range(self.mRate.shape[0]):
             for j in range(self.mRate.shape[1]):
                 self.tmRate[i] += self.mRate[i, j]
 
-
-        #self.migPopRate = [sum(mr) for mr in self.pm_migrationRates]
         self.migPopRate = np.zeros(len(self.pm_migrationRates), dtype=float)
         for i in range(len(self.pm_migrationRates)):
             for j in range(len(self.pm_migrationRates[0])):
                 self.migPopRate[i] += self.pm_migrationRates[i, j]
 
-
-
-        #self.birthHapPopRate = [ [0.0]*self.hapNum for _ in range( self.popNum ) ]
         self.birthHapPopRate = np.zeros((self.popNum, self.hapNum), dtype=float)
-
-        #self.eventHapPopRate = [ [ [0.0 for _ in range(5) ] for _ in range(self.hapNum) ] for _ in range(self.popNum) ]
         self.eventHapPopRate = np.zeros((self.popNum, self.hapNum, 5), dtype=float)
-
-        #self.tEventHapPopRate = [ [ 0.0 for _ in range(self.hapNum) ] for _ in range(self.popNum) ]
         self.tEventHapPopRate = np.zeros((self.popNum, self.hapNum), dtype=float)
 
         for pn in range(self.popNum):
@@ -335,6 +330,13 @@ cdef class BirthDeathModel:
             self.susceptHapPopRate[popId, haplotype, i] = self.pm.susceptible[popId,i]*self.susceptibility[i, haplotype]
             ws += self.susceptHapPopRate[popId, haplotype, i]#TOVADIM
         return self.bRate[haplotype]*ws/self.pm.sizes[popId]*self.pm.contactDensity[popId]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef inline double MigrationRates(self):
+        for p in range(self.popNum):
+            self.migPopRate[p] = self.pm_maxEffectiveMigration[p]*self.pm.totalSusceptible[p]*(self.pm.globalInfectious-self.pm.totalInfectious[p])
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
