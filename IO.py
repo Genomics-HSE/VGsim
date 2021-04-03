@@ -86,5 +86,5 @@ def ReadMigrationRates(fn):
             line = line.split(" ")
             migrationRates.append( [float(v) for v in line] )
         for i in range(len(migrationRates)):
-            migrationRates[i,i] = 0.0
+            migrationRates[i][i] = 0.0
         return(migrationRates)
