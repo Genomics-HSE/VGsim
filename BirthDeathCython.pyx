@@ -102,12 +102,12 @@ cdef class PopulationModel:
 
         self.totalSusceptible = np.zeros(sizePop, dtype=np.int32)
         self.totalInfectious = np.zeros(sizePop, dtype=np.int32)
-        self.globalInfectious = 0.0
+        self.globalInfectious = 0
 
         self.susceptible = np.zeros((sizePop, susceptible_num), dtype=np.int32)
         for i in range(sizePop):
             self.susceptible[i, 0] = populations[i].size
-            self.totalSusceptible = populations[i].size
+            self.totalSusceptible[i] = populations[i].size
 
         self.contactDensity = np.zeros(sizePop, dtype=float)
         for i in range(sizePop):
@@ -115,7 +115,7 @@ cdef class PopulationModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewInfection(Py_ssize_t popId, Py_ssize_t suscId):
+    cdef inline void NewInfection(self, Py_ssize_t popId, Py_ssize_t suscId):
         self.susceptible[popId,suscId] -= 1
         self.totalSusceptible[popId] -= 1
         self.totalInfectious[popId] += 1
@@ -123,7 +123,7 @@ cdef class PopulationModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewRecovery(Py_ssize_t popId, Py_ssize_t suscId):
+    cdef inline void NewRecovery(self, Py_ssize_t popId, Py_ssize_t suscId):
         self.susceptible[popId,suscId] += 1
         self.totalSusceptible[popId] += 1
         self.totalInfectious[popId] -= 1
@@ -140,6 +140,24 @@ class NeutralMutations:
 @cython.wraparound(False)
 @cython.cdivision(True)
 cdef inline (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn):
+    cdef:
+        Py_ssize_t i
+        double total
+
+    rn = tw*rn
+    i = 0
+    total = w[0]
+    while total < rn and i < w.shape[0] - 1:
+        i += 1
+        total += w[i]
+    if w[i] == 0.0:
+        print_err("fastChoose() alert: 0-weight sampled")
+    return [ i, ( rn-(total-w[i]) )/w[i] ]
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef inline (Py_ssize_t, double) fastChoose2(int[::1] w, int tw, double rn):
     cdef:
         Py_ssize_t i
         double total
@@ -178,19 +196,43 @@ cdef inline (Py_ssize_t, double) fastChoose1_skip(double[::1] w, double tw, doub
         print_err("fastChoose() alert: 0-weight sampled")
     return [ i, ( rn-(total-w[i]) )/w[i] ]
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef inline (Py_ssize_t, double) fastChoose2_skip(int[::1] w, int tw, double rn, Py_ssize_t skip):
+    cdef:
+        Py_ssize_t i
+        double total
+
+    rn = tw*rn
+    if skip > 0:
+        i = 0
+        total = w[0]
+    else:
+        i = 1
+        total = w[1]
+    while total < rn and i < w.shape[0] - 1:
+        i += 1
+        if i == skip:
+            i += 1
+        total += w[i]
+    if w[i] == 0.0:
+        print_err("fastChoose() alert: 0-weight sampled")
+    return [ i, ( rn-(total-w[i]) )/w[i] ]
+
 cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
 
         double currentTime, rn, totalRate, maxEffectiveBirth, totalMigrationRate
-        Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num
+        Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus
         Events events
         PopulationModel pm
 
         int[::1] tree, suscType
         int[:,::1] liveBranches
 
-        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times, pm_maxEffectiveMigration, maxSusceptibility
+        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times, pm_maxEffectiveMigration, maxSusceptibility, elementsArr2
         double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
         double[:,:,::1] eventHapPopRate, susceptHapPopRate
 
@@ -199,10 +241,13 @@ cdef class BirthDeathModel:
         self.sCounter = 0 #sample counter
         self.events = Events(iterations+1)
 
+        self.migPlus = 0
+        self.migNonPlus = 0
+
         if susceptible == None:
             self.susceptible_num = 2
         else:
-            self.susceptible_num = len( susceptible[0] )#CHECK
+            self.susceptible_num = len( susceptible[0][0] )
 
         #Set population model
         if populationModel == None:
@@ -211,11 +256,10 @@ cdef class BirthDeathModel:
         else:
             self.pm = PopulationModel( populationModel[0] , self.susceptible_num)
             self.pm_migrationRates = np.asarray(populationModel[1])
-        self.pm_effectiveMigration = np.asarray(self.pm_migrationRates)#TODO - deep copy?
-        self.pm_maxEffectiveMigration = np.zeros(self.popNum, dtype=np.int32)
-        self.SetEffectiveMigration()
-
         self.popNum = self.pm.sizes.shape[0]
+        self.pm_effectiveMigration = np.zeros((self.popNum, self.popNum), dtype=float)
+        self.pm_maxEffectiveMigration = np.zeros(self.popNum, dtype=float)
+        self.SetEffectiveMigration()
 
         #Initialise haplotypes
         if len(mRate) > 0:
@@ -226,22 +270,22 @@ cdef class BirthDeathModel:
 
         self.InitLiveBranches()
 
+        self.elementsArr2 = np.zeros(2, dtype=float)
         self.elementsArr3 = np.ones(3)
 
         if susceptible == None:
             self.susceptibility = np.asarray( [ [1.0 for _ in range(self.hapNum)], [0.0 for _ in range(self.hapNum)] ] )
             self.suscType = np.ones(int(self.hapNum), dtype=np.int32)
         else:
-            self.susceptibility = np.asarray( susceptible[0] )
+            self.susceptibility = np.asarray( susceptible[0], dtype=float)
             self.suscType = np.asarray( susceptible[1], dtype=np.int32 )
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
-
+        
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
+        self.maxSusceptibility = np.zeros(self.hapNum, dtype=float)
         self.SetMaxBirth()
-
-        self.SetEffectiveMigration()
         self.migPopRate = np.zeros(len(self.pm_migrationRates), dtype=float)
         self.MigrationRates()
 
@@ -252,11 +296,11 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cdef void InitLiveBranches(self):
         self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int32)
-        self.Birth(0, 0)
-        #self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
-        #self.liveBranches[0, 0] += 2
-        #self.pm.NewInfection(0, 0)
-        #self.pm.NewInfection(0, 0)
+        # self.Birth(0, 0)
+        self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
+        self.liveBranches[0, 0] += 2
+        self.pm.NewInfection(0, 0)
+        self.pm.NewInfection(0, 0)
         #self.pm.susceptible[0, 0] -= 2
 
     @cython.boundscheck(False)
@@ -265,8 +309,8 @@ cdef class BirthDeathModel:
         for k in range(self.hapNum):
             self.maxSusceptibility[k] = 0.0
             for sType in range(self.susceptible_num):
-                if self.susceptibility[sType, k] > self.maxSusceptibility[k]:
-                    self.maxSusceptibility[k] = self.susceptibility[sType, k]
+                if self.susceptibility[k, sType] > self.maxSusceptibility[k]:
+                    self.maxSusceptibility[k] = self.susceptibility[k, sType]
         self.maxEffectiveBirth = 0.0
         for k in range(self.hapNum):
             if self.maxEffectiveBirth < self.bRate[k]*self.maxSusceptibility[k]:
@@ -308,7 +352,6 @@ cdef class BirthDeathModel:
         self.birthHapPopRate = np.zeros((self.popNum, self.hapNum), dtype=float)
         self.eventHapPopRate = np.zeros((self.popNum, self.hapNum, 4), dtype=float)
         self.tEventHapPopRate = np.zeros((self.popNum, self.hapNum), dtype=float)
-
         for pn in range(self.popNum):
             for hn in range(self.hapNum):
                 self.birthHapPopRate[pn, hn] = self.BirthRate(pn, hn)
@@ -353,8 +396,9 @@ cdef class BirthDeathModel:
     cdef inline double BirthRate(self, Py_ssize_t popId, Py_ssize_t haplotype):
         cdef double ws = 0.0
         for i in range(self.susceptible_num):
-            self.susceptHapPopRate[popId, haplotype, i] = self.pm.susceptible[popId,i]*self.susceptibility[i, haplotype]
+            self.susceptHapPopRate[popId, haplotype, i] = self.pm.susceptible[popId, i]*self.susceptibility[haplotype, i]
             ws += self.susceptHapPopRate[popId, haplotype, i]#TOVADIM
+
         return self.bRate[haplotype]*ws/self.pm.sizes[popId]*self.pm.contactDensity[popId]
 
     @cython.boundscheck(False)
@@ -363,7 +407,7 @@ cdef class BirthDeathModel:
     cdef inline double MigrationRates(self):
         self.totalMigrationRate = 0.0
         for p in range(self.popNum):
-            self.migPopRate[p] = self.pm_maxEffectiveMigration[p]*self.maxEffectiveBirth[p]*self.pm.totalSusceptible[p]*(self.pm.globalInfectious-self.pm.totalInfectious[p])
+            self.migPopRate[p] = self.pm_maxEffectiveMigration[p]*self.maxEffectiveBirth*self.pm.totalSusceptible[p]*(self.pm.globalInfectious-self.pm.totalInfectious[p])
             self.totalMigrationRate += self.migPopRate[p]
 
     @cython.boundscheck(False)
@@ -375,7 +419,9 @@ cdef class BirthDeathModel:
         #self.rn = np.random.rand()
         self.rn = self.rndm.uniform()
 
-        et, self.rn = fastChoose1( [self.totalRate, self.totalMigrationRate], self.totalRate+self.totalMigrationRate, self.rn)
+        self.elementsArr2[0] = self.totalRate
+        self.elementsArr2[1] = self.totalMigrationRate
+        et, self.rn = fastChoose1( self.elementsArr2, self.totalRate+self.totalMigrationRate, self.rn)
 
         if et == 0:
             popId, self.rn = fastChoose1( self.popRate, self.totalRate, self.rn)
@@ -397,18 +443,25 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void GenerateMigration(self):
+        cdef:
+            Py_ssize_t targetPopId, sourcePopId, haplotype, suscType
+            double p_accept
         targetPopId, self.rn = fastChoose1( self.migPopRate, self.totalMigrationRate, self.rn)
-        sourcePopId, self.rn = fastChoose1_skip( self.totalInfectious, self.globalInfectious-self.totalInfectious[targetPopId], self.rn, skip = targetPopId)
-        haplotype, self.rn = fastChoose1( self.liveBranches[sourcePopId], self.totalInfectious[sourcePopId], self.rn)
-        suscType, self.rn = fastChoose1( self.pm.susceptible[targetPopId], self.totalSusceptible[targetPopId], self.rn)
-        p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[haplotype, suscType]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth[haplotype]
+        sourcePopId, self.rn = fastChoose2_skip( self.pm.totalInfectious, self.pm.globalInfectious-self.pm.totalInfectious[targetPopId], self.rn, skip = targetPopId)
+        haplotype, self.rn = fastChoose2( self.liveBranches[sourcePopId], self.pm.totalInfectious[sourcePopId], self.rn)
+        suscType, self.rn = fastChoose2( self.pm.susceptible[targetPopId], self.pm.totalSusceptible[targetPopId], self.rn)
+        p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[suscType, haplotype]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth
         if p_accept < self.rn:
             self.liveBranches[targetPopId, haplotype] += 1
             self.pm.NewInfection(targetPopId, suscType)
             self.UpdateRates(targetPopId)
             self.MigrationRates()
             self.events.AddEvent(self.currentTime, MIGRATION, sourcePopId, haplotype, 0, targetPopId)
+            self.migPlus += 1
+        else:
+            self.migNonPlus += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -501,11 +554,15 @@ cdef class BirthDeathModel:
         for h in range(self.hapNum):
             self.birthHapPopRate[popId, h] = self.BirthRate(popId, h)
             self.eventHapPopRate[popId, h, 0] = self.birthHapPopRate[popId, h]
+            # tmp = (self.eventHapPopRate[popId, h, 0] +
+            #        self.eventHapPopRate[popId, h, 1] +
+            #        self.eventHapPopRate[popId, h, 2] +
+            #        self.eventHapPopRate[popId, h, 3] +
+            #        self.eventHapPopRate[popId, h, 4] )
             tmp = (self.eventHapPopRate[popId, h, 0] +
                    self.eventHapPopRate[popId, h, 1] +
                    self.eventHapPopRate[popId, h, 2] +
-                   self.eventHapPopRate[popId, h, 3] +
-                   self.eventHapPopRate[popId, h, 4] )
+                   self.eventHapPopRate[popId, h, 3] )
             self.tEventHapPopRate[popId, h] = tmp
             self.HapPopRate(popId, h)
 
@@ -558,6 +615,8 @@ cdef class BirthDeathModel:
             if self.totalRate == 0.0:
                 break
         print("Total number of iterations: ", self.events.ptr)
+        print("Migration plus: ", self.migPlus)
+        print("Migration non plus: ", self.migNonPlus)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
             sys.exit(1)
@@ -567,7 +626,7 @@ cdef class BirthDeathModel:
     @cython.cdivision(True)
     cpdef GetGenealogy(self):
         cdef:
-            Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs, lbs_e
+            Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs, lbs_e, ns, nt, idt, ids, lbss
             double p
             vector[vector[vector[Py_ssize_t]]] liveBranchesS
             vector[vector[Py_ssize_t]] vecint2
@@ -597,11 +656,15 @@ cdef class BirthDeathModel:
             e_haplotype = self.events.haplotypes[e_id]
             e_newHaplotype = self.events.newHaplotypes[e_id]
             e_newPopulation = self.events.newPopulations[e_id]
-
+    
             if e_type_ == BIRTH:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
                 lbs_e = self.liveBranches[e_population][e_haplotype]
                 p = lbs*(lbs-1)/ lbs_e / (lbs_e - 1)
+                # if lbs != lbs_e:
+                #     print("-")
+                # else:
+                #     print("+")
                 # if np.random.rand() < p:
                 #     n1 = int(floor( lbs*np.random.rand() ))
                 #     n2 = int(floor( (lbs-1)*np.random.rand() ))
@@ -623,11 +686,22 @@ cdef class BirthDeathModel:
                     self.tree[id1] = id3
                     self.tree[id2] = id3
 
+                    # print(lbs)
+                    # print(lbs_e)
+                    # print(p)
+                    # print(n1)
+                    # print(n2)
+                    # print(id1)
+                    # print(id2)
+                    # print(id3)
+                    # print(liveBranchesS[e_population][e_haplotype].size())
+                    # print()
                     #self.tree.append(-1)
                     #self.times.append( event.time )
                     self.tree[ptrTreeAndTime] = -1
                     self.times[ptrTreeAndTime] = e_time
                     ptrTreeAndTime += 1
+                    # print()
                 self.liveBranches[e_population][e_haplotype] -= 1
             elif e_type_ == DEATH:
                 self.liveBranches[e_population][e_haplotype] += 1
@@ -658,27 +732,31 @@ cdef class BirthDeathModel:
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
                 p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
-                # if np.random.rand() < p:
-                #     n1 = int(floor( lbs*np.random.rand() ))
+
                 if self.rndm.uniform() < p:
                     nt = int(floor( lbs*self.rndm.uniform() ))
-
                     lbss = liveBranchesS[e_population][e_haplotype].size()
-                    ns = int(floor( lbss*self.rndm.uniform() ))
+                    p1 = lbss/self.liveBranches[e_population][e_haplotype]
+                    if self.rndm.uniform() < p1:
+                        ns = int(floor( lbss*self.rndm.uniform() ))
 
-                    idt = liveBranchesS[e_newPopulation][e_haplotype][nt]
-                    ids = liveBranchesS[e_population][e_haplotype][ns]
+                        idt = liveBranchesS[e_newPopulation][e_haplotype][nt]
+                        ids = liveBranchesS[e_population][e_haplotype][ns]
 
-                    id3 = ptrTreeAndTime
-                    liveBranchesS[e_population][e_haplotype][ns] = id3
-                    liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
-                    liveBranchesS[e_newPopulation][e_haplotype].pop_back()
-                    self.tree[idt] = id3
-                    self.tree[ids] = id3
+                        id3 = ptrTreeAndTime
 
-                    self.tree[ptrTreeAndTime] = -1
-                    self.times[ptrTreeAndTime] = e_time
-                    ptrTreeAndTime += 1
+                        liveBranchesS[e_population][e_haplotype][ns] = id3
+                        liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
+                        liveBranchesS[e_newPopulation][e_haplotype].pop_back()
+                        self.tree[idt] = id3
+                        self.tree[ids] = id3
+                        self.tree[ptrTreeAndTime] = -1
+                        self.times[ptrTreeAndTime] = e_time
+                        ptrTreeAndTime += 1
+                    else: 
+                        liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
+                        liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
+                        liveBranchesS[e_newPopulation][e_haplotype].pop_back()
                 self.liveBranches[e_newPopulation][e_haplotype] -= 1
             else:
                 print("Unknown event type: ", e_type_)
@@ -715,108 +793,133 @@ cdef class BirthDeathModel:
         return([time_points, dynamics])
 
     def Debug(self):
-        print("Parametrs")
-        print("Current time: ", self.currentTime)
-        print("Random number: ", self.rn)
-        print("Total rate: ", self.totalRate)
-        print("Sampling counter: ", self.sCounter)
-        print("Populations number: ", self.popNum)
-        print("Mutations number: ", self.dim)
-        print("Haplotypes number: ", self.hapNum)
-        print("Susceptible number: ", self.susceptible_num)
-        print("Susceptible type: ", sep=" ", end="")
+        print("Parameters")
+        print("Current time(mutable): ", self.currentTime)
+        print("Random number(mutable): ", self.rn)
+        print("Total rate(mutable): ", self.totalRate)
+        print("Max effective birth(const): ", self.maxEffectiveBirth)
+        print("Total migration rate(mutable): ", self.totalMigrationRate)
+        print("Sampling counter(mutable): ", self.sCounter)
+        print("Populations number(const): ", self.popNum)
+        print("Mutations number(const): ", self.dim)
+        print("Haplotypes number(const): ", self.hapNum)
+        print("Susceptible number(const): ", self.susceptible_num)
+        print("Population model - globalInfectious(mutable): ", self.pm.globalInfectious)
+        print("Susceptible type(): ", sep=" ", end="")
         for i in range(self.suscType.shape[0]):
             print(self.suscType[i], end=" ")
         print()
-        print("Birth rate: ", sep="", end="")
+        print("Birth rate(const): ", sep="", end="")
         for i in range(self.hapNum):
             print(self.bRate[i], end=" ")
         print()
-        print("Death rate: ", sep="", end="")
+        print("Death rate(const): ", sep="", end="")
         for i in range(self.hapNum):
             print(self.dRate[i], end=" ")
         print()
-        print("Sampling rate: ", sep="", end="")
+        print("Sampling rate(const): ", sep="", end="")
         for i in range(self.hapNum):
             print(self.sRate[i], end=" ")
         print()
-        print("Total mutation rate: ", sep="", end="")
+        print("Total mutation rate(const): ", sep="", end="")
         for i in range(self.hapNum):
             print(self.tmRate[i], end=" ")
         print()
-        print("Migration population rate: ", sep="", end="")
+        print("Migration population rate(mutable): ", sep="", end="")
         for i in range(self.popNum):
             print(self.migPopRate[i], end=" ")
         print()
-        print("Population rate: ", sep="", end="")
+        print("Population rate(mutable): ", sep="", end="")
         for i in range(self.popNum):
             print(self.popRate[i], end=" ")
         print()
-        print("Population model - sizes: ", end="")
+        print("Population model - sizes(const): ", end="")
         for i in range(self.pm.sizes.shape[0]):
             print(self.pm.sizes[i], end=" ")
         print()
-        print("Population model - contac density: ", end=" ")
+        print("Population model - totalSusceptible(mutable): ", end="")
+        for i in range(self.pm.totalSusceptible.shape[0]):
+            print(self.pm.totalSusceptible[i], end=" ")
+        print()
+        print("Population model - totalInfectious(mutable): ", end="")
+        for i in range(self.pm.totalInfectious.shape[0]):
+            print(self.pm.totalInfectious[i], end=" ")
+        print()
+        print("Population model - contac density(const): ", end=" ")
         for i in range(self.pm.sizes.shape[0]):
             print(self.pm.contactDensity[i], end=" ")
         print()
-        print("Population model - susceptible----")
+        print("Population model - max effective migration(const): ", end=" ")
+        for i in range(self.pm_maxEffectiveMigration.shape[0]):
+            print(self.pm_maxEffectiveMigration[i], end=" ")
+        print()
+        print("Population model - max susceptibility(const): ", end=" ")
+        for i in range(self.maxSusceptibility.shape[0]):
+            print(self.maxSusceptibility[i], end=" ")
+        print()
+        print("Population model - susceptible(mutable)----")
         for i in range(self.pm.sizes.shape[0]):
             for j in range(self.susceptible_num):
                 print(self.pm.susceptible[i, j], end=" ")
             print()
         print()
-        print("Population model - migration rates----")
+        print("Population model - migration rates(const)----")
         for i in range(self.pm_migrationRates.shape[0]):
             for j in range(self.pm_migrationRates.shape[1]):
                 print(self.pm_migrationRates[i, j], end=" ")
             print()
         print()
-        print("Total event haplotype population rate----")
+        print("Population model - effective migration(const)----")
+        for i in range(self.pm_effectiveMigration.shape[0]):
+            for j in range(self.pm_effectiveMigration.shape[1]):
+                print(self.pm_effectiveMigration[i, j], end=" ")
+            print()
+        print()
+        print("Total event haplotype population rate(mutable)----")
         for i in range(self.popNum):
             for j in range(self.hapNum):
                 print(self.tEventHapPopRate[i, j], end=" ")
             print()
         print()
-        print("Haplotypes populations rates----")
+        print("Haplotypes populations rates(mutable)----")
         for i in range(self.popNum):
             for j in range(self.hapNum):
                 print(self.hapPopRate[i, j], end=" ")
             print()
         print()
-        print("Mutation rate----")
-        for i in range(self.hapNum):
-            for j in range(self.dim):
-                print(self.mRate[i, j], end=" ")
-            print()
-        print()
-        print("Susceptibility----")
-        for i in range(self.susceptibility.shape[0]):
-            for j in range(self.susceptibility.shape[1]):
-                print(self.susceptibility[i, j], end=" ")
-            print()
-        print()
-        print("Birth haplotypes populations rate----")
-        for i in range(self.popNum):
-            for j in range(self.hapNum):
-                print(self.birthHapPopRate[i, j], end=" ")
-            print()
-        print("Event haplotypes populations rate----")
-        for i in range(self.popNum):
-            for j in range(self.hapNum):
-                for k in range(5):
-                    print(self.eventHapPopRate[i, j, k], end=" ")
-                print()
-            print()
-        print()
-        print("Susceptible haplotypes populations rate----")
-        for i in range(self.popNum):
-            for j in range(self.hapNum):
-                for k in range(self.susceptible_num):
-                    print(self.susceptHapPopRate[i, j, k], end=" ")
-                print()
-            print()
-        print()
+        # print("Mutation rate(const)----")
+        # for i in range(self.hapNum):
+        #     for j in range(self.dim):
+        #         print(self.mRate[i, j], end=" ")
+        #     print()
+        # print()
+        # print("Susceptibility(const)----")
+        # for i in range(self.susceptibility.shape[0]):
+        #     for j in range(self.susceptibility.shape[1]):
+        #         print(self.susceptibility[i, j], end=" ")
+        #     print()
+        # print()
+        # print("Birth haplotypes populations rate(mutable)----")
+        # for i in range(self.popNum):
+        #     for j in range(self.hapNum):
+        #         print(self.birthHapPopRate[i, j], end=" ")
+        #     print()
+        # print("Event haplotypes populations rate(mutable)----")
+        # for i in range(self.popNum):
+        #     for j in range(self.hapNum):
+        #         for k in range(4):
+        #             print(self.eventHapPopRate[i, j, k], end=" ")
+        #         print()
+        #     print()
+        # print()
+        # print("Susceptible haplotypes populations rate(mutable)----")
+        # for i in range(self.popNum):
+        #     for j in range(self.hapNum):
+        #         for k in range(self.susceptible_num):
+        #             print(self.susceptHapPopRate[i, j, k], end=" ")
+        #         print()
+        #     print()
+        # print()
 
     def Report(self):
         print("Number of lineages of each hyplotype: ", end = "")
