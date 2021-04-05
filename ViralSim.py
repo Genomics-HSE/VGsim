@@ -31,6 +31,8 @@ if isinstance(clargs.iterations, list):
     clargs.iterations = clargs.iterations[0]
 if isinstance(clargs.susceptibility, list):
     clargs.susceptibility = clargs.susceptibility[0]
+if isinstance(clargs.lockdownModel, list):
+    clargs.lockdownModel = clargs.lockdownModel[0]
 if isinstance(clargs.seed, list):
     clargs.seed = clargs.seed[0]
 
@@ -41,13 +43,17 @@ if clargs.populationModel == None:
 else:
     populations = ReadPopulations(clargs.populationModel[0])
     migrationRates = ReadMigrationRates(clargs.populationModel[1])
-    lockdownModel = ReadLockdown(clargs.lockdownModel[0])
     popModel = [populations, migrationRates]
 
 if clargs.susceptibility == None:
     susceptible = None
 else:
     susceptible = ReadSusceptibility(clargs.susceptibility)
+
+if clargs.lockdownModel == None:
+    lockdownModel = None
+else:
+    lockdownModel = ReadLockdown(clargs.lockdownModel)
 
 if clargs.seed == None:
     rndseed = int(time.time())
@@ -64,12 +70,6 @@ simulation.Debug()
 simulation.GetGenealogy()
 # simulation.Debug()
 # t3 = time.time()
-# simulation.Report()
 # print(t2 - t1)
 # print(t3 - t2)
 print("_________________________________")
-# print(tree1.Tree)
-# print(tree1.newTree)
-# print(tree1.nodeSampling)
-# print(tree1.times)
-# print(tree1.newTimes)

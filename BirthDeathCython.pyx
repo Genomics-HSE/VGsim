@@ -82,18 +82,22 @@ cdef class Mutations:
     def __init__(self):#AS = ancestral state, DS = derived state
         pass
 
-
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void AddMutation(self, Py_ssize_t nodeId, Py_ssize_t haplotype, Py_ssize_t newHaplotype):
+        cdef:
+            Py_ssize_t ASDSdigit4, site, digit4
         ASDSdigit4 = newHaplotype - haplotype
         site = 0
         while ASDSdigit4 >= 4:
             ASDSdigit4 = ASDSdigit4 / 4
             site += 1
-        digit4 = 4**site
+        digit4 = int(4**site)
         self.nodeId.push_back(nodeId)
         self.DS.push_back(int(floor(newHaplotype / digit4)) % 4)
         self.AS.push_back(int(floor(haplotype / digit4)) % 4)
-        self.site.push_back(site)
+        self.site.push_back(int(site))
         # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
 
@@ -103,7 +107,7 @@ class Population:
         self.contactDensity = contactDensity
 
 class Lockdown:
-    def __init__(self, conDenAfterLD=0.1, startLD=5, endLD=2.5):
+    def __init__(self, conDenAfterLD=0.1, startLD=2, endLD=1):
         self.conDenAfterLD = conDenAfterLD
         self.startLD = startLD
         self.endLD = endLD
@@ -144,13 +148,13 @@ cdef class PopulationModel:
             for i in range(sizePop):
                 self.contactDensityBeforeLockdown[i] = populations[i].contactDensity
                 self.contactDensityAfterLockdown[i] = lockdownModel[i].conDenAfterLD
-                self.startLD[i] = lockdownModel[i].startLD
-                self.endLD[i] = lockdownModel[i].endLD
+                self.startLD[i] = lockdownModel[i].startLD*self.sizes[i]/100
+                self.endLD[i] = lockdownModel[i].endLD*self.sizes[i]/100
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef inline void NewInfection(self, Py_ssize_t popId, Py_ssize_t suscId):
-        self.susceptible[popId,suscId] -= 1
+        self.susceptible[popId, suscId] -= 1
         self.totalSusceptible[popId] -= 1
         self.totalInfectious[popId] += 1
         self.globalInfectious += 1
@@ -158,7 +162,7 @@ cdef class PopulationModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef inline void NewRecovery(self, Py_ssize_t popId, Py_ssize_t suscId):
-        self.susceptible[popId,suscId] += 1
+        self.susceptible[popId, suscId] += 1
         self.totalSusceptible[popId] += 1
         self.totalInfectious[popId] -= 1
         self.globalInfectious -= 1
@@ -169,7 +173,7 @@ cdef class BirthDeathModel:
         RndmWrapper rndm
 
         double currentTime, rn, totalRate, maxEffectiveBirth, totalMigrationRate
-        Py_ssize_t CounterLockdown, bCounter, dCounter, sCounter, migCounter, mutCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus
+        Py_ssize_t bCounter, dCounter, sCounter, migCounter, mutCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus
         Events events
         PopulationModel pm
         Mutations mut
@@ -183,7 +187,6 @@ cdef class BirthDeathModel:
 
     def __init__(self, iterations, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, lockdownModel=None, rndseed=1256, **kwargs):
         self.currentTime = 0.0
-        self.CounterLockdown = 0
         self.sCounter = 0 #sample counter
         self.bCounter = 0
         self.dCounter = 0
@@ -418,25 +421,6 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void Migration(self, Py_ssize_t popId, Py_ssize_t haplotype):#TODO - remove this function - see GenerateMigration instead
-        cdef Py_ssize_t targetPopId
-        targetPopId, self.rn = fastChoose1(self.pm_migrationRates[popId], self.migPopRate[popId], self.rn)
-        if targetPopId >= popId:
-            targetPopId += 1
-
-        self.liveBranches[targetPopId, haplotype] += 1
-
-        cdef double ws = 0.0
-        for i in range(self.susceptible_num):
-            ws += self.susceptHapPopRate[targetPopId, haplotype, i]#TOVADIM
-        if ws != 0:#TODO
-            st, self.rn = fastChoose1(self.susceptHapPopRate[targetPopId, haplotype], ws, self.rn)
-            self.pm.susceptible[targetPopId, st] -= 1
-            self.events.AddEvent(self.currentTime, MIGRATION, popId, haplotype, 0, targetPopId)
-            self.UpdateRates(targetPopId)
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
     @cython.cdivision(True)
     cdef void Mutation(self, Py_ssize_t popId, Py_ssize_t haplotype):
         cdef:
@@ -569,7 +553,7 @@ cdef class BirthDeathModel:
         for j in range(0, iterations):
             self.SampleTime()
             popId = self.GenerateEvent()
-            if self.pm.contactDensityBeforeLockdown != None:
+            if self.pm.contactDensityBeforeLockdown.shape[0] > 0 and self.pm.globalInfectious > 0:
                 self.CheckLockdown(popId)
             if self.totalRate == 0.0:
                 break
@@ -582,12 +566,10 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void CheckLockdown(self, Py_ssize_t popId):
-        if self.pm.totalInfectious[popId] / self.pm.globalInfectious > self.pm.startLD[popId]:
+        if self.pm.totalInfectious[popId] > self.pm.startLD[popId]:
             self.pm.contactDensity[popId] = self.pm.contactDensityAfterLockdown[popId] 
-            self.CounterLockdown += 1
-        if self.pm.totalInfectious[popId] / self.pm.globalInfectious < self.pm.endLD[popId]:
+        if self.pm.totalInfectious[popId] < self.pm.endLD[popId]:
             self.pm.contactDensity[popId] = self.pm.contactDensityBeforeLockdown[popId] 
-            self.CounterLockdown += 1
         self.SetEffectiveMigration()
         self.MigrationRates()
         self.UpdateRates(popId)
@@ -796,7 +778,6 @@ cdef class BirthDeathModel:
         print("Total rate(mutable): ", self.totalRate)
         print("Max effective birth(const): ", self.maxEffectiveBirth)
         print("Total migration rate(mutable): ", self.totalMigrationRate)
-        print("Lockdown counter(mutable): ", self.CounterLockdown)
         print("Birth counter(mutable): ", self.bCounter)
         print("Death counter(mutable): ", self.dCounter)
         print("Sampling counter(mutable): ", self.sCounter)
@@ -861,15 +842,15 @@ cdef class BirthDeathModel:
         print()
 
         print("Population model - contactDensityAfterLockdown(const): ", end=" ")
-        for i in range(self.popNum):
+        for i in range(self.pm.contactDensityAfterLockdown.shape[0]):
             print(self.pm.contactDensityAfterLockdown[i], end=" ")
         print()
         print("Population model - startLD(const): ", end=" ")
-        for i in range(self.popNum):
+        for i in range(self.pm.startLD.shape[0]):
             print(self.pm.startLD[i], end=" ")
         print()
         print("Population model - endLD(const): ", end=" ")
-        for i in range(self.popNum):
+        for i in range(self.pm.endLD.shape[0]):
             print(self.pm.endLD[i], end=" ")
         print()
 
