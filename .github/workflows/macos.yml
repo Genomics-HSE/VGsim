@@ -5,9 +5,9 @@ name: Mac OS
 
 on:
   push:
-    branches: [ cython ]
+    branches: [ main ]
   pull_request:
-    branches: [ cython ]
+    branches: [ main ]
 
 jobs:
   build:
