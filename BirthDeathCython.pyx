@@ -73,13 +73,25 @@ cdef class Events:
         ev = Event( self.times[ e_id ], self.types[ e_id ], self.populations[ e_id ], self.haplotypes[ e_id ], self.newHaplotypes[ e_id ], self.newPopulations[ e_id ])
         return( ev )
 
-class Mutation:
-    def __init__(self, nodeId, time, AS, DS, site):#AS = ancestral state, DS = derived state
-        self.nodeId = nodeId
-        self.time = time
-        self.AS = AS
-        self.DS = DS
-        self.site = site
+cdef class Mutations:
+    cdef:
+        vector[Py_ssize_t] nodeId, AS, DS, site
+    def __init__(self):#AS = ancestral state, DS = derived state
+        pass
+
+
+    cdef void AddMutation(self, Py_ssize_t nodeId, Py_ssize_t haplotype, Py_ssize_t newHaplotype):
+        ASDSdigit4 = newHaplotype - haplotype
+        site = 0
+        while ASDSdigit4 >= 4:
+            ASDSdigit4 = ASDSdigit4 / 4
+            site += 1
+        digit4 = 4**site
+        self.nodeId.push_back(nodeId)
+        self.DS.push_back(int(floor(newHaplotype / digit4)) % 4)
+        self.AS.push_back(int(floor(haplotype / digit4)) % 4)
+        self.site.push_back(site)
+        # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
 class Population:
     def __init__(self, size = 1000000, contactDensity = 1.0):
@@ -228,6 +240,7 @@ cdef class BirthDeathModel:
         Py_ssize_t sCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus
         Events events
         PopulationModel pm
+        Mutations mut
 
         int[::1] tree, suscType
         int[:,::1] liveBranches
@@ -240,7 +253,7 @@ cdef class BirthDeathModel:
         self.currentTime = 0.0
         self.sCounter = 0 #sample counter
         self.events = Events(iterations+1)
-
+        self.mut = Mutations()
         self.migPlus = 0
         self.migNonPlus = 0
 
@@ -498,6 +511,8 @@ cdef class BirthDeathModel:
         #self.mutations.append(Mutation(self.liveBranches[popId][haplotype][affectedBranch], self.currentTime, AS, DS))
         newHaplotype = haplotype + (DS-AS)*digit4
 
+        # print("MutType, AS, DS: ", mutationType, AS, DS)
+
         self.liveBranches[popId, newHaplotype] += 1
         self.liveBranches[popId, haplotype] -= 1
 
@@ -727,6 +742,7 @@ cdef class BirthDeathModel:
                     liveBranchesS[e_population][e_newHaplotype][n1] = liveBranchesS[e_population][e_newHaplotype][lbs-1]
                     liveBranchesS[e_population][e_newHaplotype].pop_back()
                     liveBranchesS[e_population][e_haplotype].push_back(id1)
+                    self.mut.AddMutation(id1, e_haplotype, e_newHaplotype)
                 self.liveBranches[e_population][e_newHaplotype] -= 1
                 self.liveBranches[e_population][e_haplotype] += 1
             elif e_type_ == MIGRATION:
@@ -887,39 +903,39 @@ cdef class BirthDeathModel:
                 print(self.hapPopRate[i, j], end=" ")
             print()
         print()
-        # print("Mutation rate(const)----")
-        # for i in range(self.hapNum):
-        #     for j in range(self.dim):
-        #         print(self.mRate[i, j], end=" ")
-        #     print()
-        # print()
-        # print("Susceptibility(const)----")
-        # for i in range(self.susceptibility.shape[0]):
-        #     for j in range(self.susceptibility.shape[1]):
-        #         print(self.susceptibility[i, j], end=" ")
-        #     print()
-        # print()
-        # print("Birth haplotypes populations rate(mutable)----")
-        # for i in range(self.popNum):
-        #     for j in range(self.hapNum):
-        #         print(self.birthHapPopRate[i, j], end=" ")
-        #     print()
-        # print("Event haplotypes populations rate(mutable)----")
-        # for i in range(self.popNum):
-        #     for j in range(self.hapNum):
-        #         for k in range(4):
-        #             print(self.eventHapPopRate[i, j, k], end=" ")
-        #         print()
-        #     print()
-        # print()
-        # print("Susceptible haplotypes populations rate(mutable)----")
-        # for i in range(self.popNum):
-        #     for j in range(self.hapNum):
-        #         for k in range(self.susceptible_num):
-        #             print(self.susceptHapPopRate[i, j, k], end=" ")
-        #         print()
-        #     print()
-        # print()
+        print("Mutation rate(const)----")
+        for i in range(self.hapNum):
+            for j in range(self.dim):
+                print(self.mRate[i, j], end=" ")
+            print()
+        print()
+        print("Susceptibility(const)----")
+        for i in range(self.susceptibility.shape[0]):
+            for j in range(self.susceptibility.shape[1]):
+                print(self.susceptibility[i, j], end=" ")
+            print()
+        print()
+        print("Birth haplotypes populations rate(mutable)----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                print(self.birthHapPopRate[i, j], end=" ")
+            print()
+        print("Event haplotypes populations rate(mutable)----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                for k in range(4):
+                    print(self.eventHapPopRate[i, j, k], end=" ")
+                print()
+            print()
+        print()
+        print("Susceptible haplotypes populations rate(mutable)----")
+        for i in range(self.popNum):
+            for j in range(self.hapNum):
+                for k in range(self.susceptible_num):
+                    print(self.susceptHapPopRate[i, j, k], end=" ")
+                print()
+            print()
+        print()
 
     def Report(self):
         print("Number of lineages of each hyplotype: ", end = "")
