@@ -50,7 +50,7 @@ if clargs.seed == None:
     rndseed = int(time.time())
 else: 
     rndseed = clargs.seed
-print("Seed: "rndseed)
+print("Seed: ", rndseed)
 
 simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, rndseed=rndseed)
 # simulation.Debug()
