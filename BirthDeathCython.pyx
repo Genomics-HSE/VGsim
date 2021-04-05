@@ -333,9 +333,9 @@ cdef class BirthDeathModel:
 
         return self.bRate[haplotype]*ws/self.pm.sizes[popId]*self.pm.contactDensity[popId]
 
-    @cython.boundscheck(True)
-    @cython.wraparound(True)
-    @cython.cdivision(False)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef inline double MigrationRates(self):
         self.totalMigrationRate = 0.0
         for p in range(self.popNum):
@@ -557,7 +557,7 @@ cdef class BirthDeathModel:
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
             print("_________________________________")
-            sys.exit(1)
+            sys.exit(0)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -700,7 +700,7 @@ cdef class BirthDeathModel:
             else:
                 print("Unknown event type: ", e_type_)
                 print("_________________________________")
-                sys.exit(1)
+                sys.exit(0)
         self.CheckTree()
 
     cdef void CheckTree(self):
@@ -710,17 +710,17 @@ cdef class BirthDeathModel:
             if self.tree[i] == 0:
                 print("Error 1")
                 print("_________________________________")
-                sys.exit(1)
+                sys.exit(0)
             if self.tree[i] == 1:
                 counter += 1
             if counter >= 2:
                 print("Error 2")
                 print("_________________________________")
-                sys.exit(1)
+                sys.exit(0)
             if self.tree[i] == i:
                 print("Error 3")
                 print("_________________________________")
-                sys.exit(1)
+                sys.exit(0)
 
 
 
