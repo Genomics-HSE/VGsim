@@ -213,7 +213,7 @@ cdef class BirthDeathModel:
             self.suscType = np.asarray( susceptible[1], dtype=np.int32 )
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
-        
+
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
         self.maxSusceptibility = np.zeros(self.hapNum, dtype=float)
@@ -553,7 +553,7 @@ cdef class BirthDeathModel:
         print("Migration non plus: ", self.migNonPlus)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
-            sys.exit(1)
+            sys.exit(0)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -590,7 +590,7 @@ cdef class BirthDeathModel:
             e_haplotype = self.events.haplotypes[e_id]
             e_newHaplotype = self.events.newHaplotypes[e_id]
             e_newPopulation = self.events.newPopulations[e_id]
-    
+
             if e_type_ == BIRTH:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
                 lbs_e = self.liveBranches[e_population][e_haplotype]
@@ -688,7 +688,7 @@ cdef class BirthDeathModel:
                         self.tree[ptrTreeAndTime] = -1
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
-                    else: 
+                    else:
                         liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
                         liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                         liveBranchesS[e_newPopulation][e_haplotype].pop_back()
