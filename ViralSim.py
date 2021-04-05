@@ -3,8 +3,8 @@
 import argparse
 import sys
 import time
-from BirthDeathCython import BirthDeathModel, PopulationModel, Population
-from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility
+from BirthDeathCython import BirthDeathModel, PopulationModel, Population, Lockdown
+from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility, ReadLockdown
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
 
@@ -18,6 +18,8 @@ parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
                     help='population model: a file with population sizes etc, and a file with migration rate matrix')
 parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
                     help='susceptibility file')
+parser.add_argument('--lockdownModel', '-ld', nargs=1, default=None,
+                    help='lockdown model: a file with parameters for lockdowns')
 parser.add_argument('--seed', '-seed', nargs=1, type=int, default=None,
                     help='random seed')
 
@@ -39,6 +41,7 @@ if clargs.populationModel == None:
 else:
     populations = ReadPopulations(clargs.populationModel[0])
     migrationRates = ReadMigrationRates(clargs.populationModel[1])
+    lockdownModel = ReadLockdown(clargs.lockdownModel[0])
     popModel = [populations, migrationRates]
 
 if clargs.susceptibility == None:
@@ -52,11 +55,11 @@ else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)
 
-simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, rndseed=rndseed)
-# simulation.Debug()
+simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, lockdownModel=lockdownModel, rndseed=rndseed)
+simulation.Debug()
 # t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations)
-# simulation.Debug()
+simulation.Debug()
 # t2 = time.time()
 simulation.GetGenealogy()
 # simulation.Debug()

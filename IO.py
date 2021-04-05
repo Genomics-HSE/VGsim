@@ -1,5 +1,5 @@
 import sys
-from BirthDeath import Population
+from BirthDeathCython import Population, Lockdown
 
 def ReadRates(fn):
     with open(fn) as f:
@@ -73,6 +73,19 @@ def ReadPopulations(fn):
             line = line.split(" ")
             populations.append( Population(int(line[1]), float(line[2])) )
         return(populations)
+
+def ReadLockdown(fn):
+    with open(fn) as f:
+        line = next(f).rstrip()#header with version etc
+        line = next(f).rstrip()
+        lockdowns = []
+        for line in f:
+            if line[0] == "#":
+                next
+            line = line.rstrip()
+            line = line.split(" ")
+            lockdowns.append( Lockdown(float(line[1]), float(line[2]), float(line[3])) )
+        return(lockdowns)
 
 def ReadMigrationRates(fn):
     with open(fn) as f:
