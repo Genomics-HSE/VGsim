@@ -182,8 +182,8 @@ cdef class BirthDeathModel:
         int[:,::1] liveBranches
 
         double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, elementsArr3, times, pm_maxEffectiveMigration, maxSusceptibility, elementsArr2
-        double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility
-        double[:,:,::1] eventHapPopRate, susceptHapPopRate
+        double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility, totalHapMutType
+        double[:,:,::1] eventHapPopRate, susceptHapPopRate, hapMutType
 
     def __init__(self, iterations, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, lockdownModel=None, rndseed=1256, **kwargs):
         self.currentTime = 0.0
@@ -289,9 +289,18 @@ cdef class BirthDeathModel:
         self.bRate, self.dRate, self.sRate = np.asarray(bRate), np.asarray(dRate), np.asarray(sRate)
 
         self.mRate = np.zeros((len(mRate), len(mRate[0])), dtype=float)
+        self.hapMutType = np.zeros((self.hapNum, len(mRate[0]), 3), dtype=float)
+        self.totalHapMutType = np.zeros((self.hapNum, len(mRate[0])), dtype=float)
         for i in range(len(mRate)):
             for j in range(len(mRate[0])):
-                self.mRate[i, j] = mRate[i][j]
+                self.totalHapMutType[i, j] = 0
+                self.mRate[i, j] = mRate[i][j][0]
+                self.hapMutType[i, j, 0] = mRate[i][j][1]
+                self.totalHapMutType[i, j] += mRate[i][j][1]
+                self.hapMutType[i, j, 1] = mRate[i][j][2]
+                self.totalHapMutType[i, j] += mRate[i][j][2]
+                self.hapMutType[i, j, 2] = mRate[i][j][3]
+                self.totalHapMutType[i, j] += mRate[i][j][3]
 
         self.tmRate = np.zeros(len(mRate), dtype=float)
         for i in range(self.mRate.shape[0]):
@@ -429,7 +438,7 @@ cdef class BirthDeathModel:
         mutationType, self.rn = fastChoose1( self.mRate[haplotype], self.tmRate[haplotype], self.rn)
         digit4 = 4**mutationType
         AS = int(floor(haplotype/digit4) % 4)
-        DS, self.rn = fastChoose1(self.elementsArr3, 3.0, self.rn)#TODO non-uniform rates???
+        DS, self.rn = fastChoose1(self.hapMutType[haplotype, mutationType], self.totalHapMutType[haplotype, mutationType], self.rn)#TODO non-uniform rates???
         if DS >= AS:
             DS += 1
         #self.mutations.append(Mutation(self.liveBranches[popId][haplotype][affectedBranch], self.currentTime, AS, DS))
@@ -540,9 +549,6 @@ cdef class BirthDeathModel:
 
         self.Death(popId, haplotype, False)
         self.sCounter += 1
-
-#    def UpdateRate(self):
-#        self.totalRate = self.B_rate[0] + self.D_rate[0] + self.S_rate[0] #TODO
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -915,6 +921,14 @@ cdef class BirthDeathModel:
             for j in range(self.hapNum):
                 for k in range(self.susceptible_num):
                     print(self.susceptHapPopRate[i, j, k], end=" ")
+                print()
+            print()
+        print()
+        print("Probabilities of mutations(const)----")
+        for i in range(self.hapMutType.shape[0]):
+            for j in range(self.hapMutType.shape[1]):
+                for k in range(self.hapMutType.shape[2]):
+                    print(self.hapMutType[i, j, k], end=" ")
                 print()
             print()
         print()

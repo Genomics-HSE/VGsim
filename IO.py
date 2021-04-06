@@ -26,11 +26,21 @@ def ReadRates(fn):
                 next
             line = line.rstrip()
             line = line.split(" ")
-            line = [float(el) for el in line[shift:]]
-            bRate.append(line[0])
-            dRate.append(line[1])
-            sRate.append(line[2])
-            mRate.append( line[3:] )
+            line = [el for el in line[shift:]]
+            bRate.append(float(line[0]))
+            dRate.append(float(line[1]))
+            sRate.append(float(line[2]))
+            mRate.append( [] )
+            mutations = line[3:]
+            for mut in mutations:
+                a = mut.split(',')
+                if len(a) == 1:
+                    mRate[len(bRate)-1].append( [float(a[0]), 1.0/3.0, 1.0/3.0, 1.0/3.0] )
+                elif len(a) == 4:
+                    mRate[len(bRate)-1].append( [float(a[0]), float(a[1]), float(a[2]), float(a[3])] )
+                else:
+                    print("Error in mutations!!!")
+                    sys.exit(1)
         return([bRate, dRate, sRate, mRate])
 
 def ReadSusceptibility(fn):

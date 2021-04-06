@@ -62,10 +62,10 @@ else:
 print("Seed: ", rndseed)
 
 simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, lockdownModel=lockdownModel, rndseed=rndseed)
-simulation.Debug()
+# simulation.Debug()
 # t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations)
-simulation.Debug()
+# simulation.Debug()
 # t2 = time.time()
 simulation.GetGenealogy()
 # simulation.Debug()
