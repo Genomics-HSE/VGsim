@@ -140,7 +140,7 @@ cdef class PopulationModel:
         for i in range(sizePop):
             self.contactDensity[i] = populations[i].contactDensity
 
-        if lockdownModel != None:
+        if lockdownModel is not None:
             self.contactDensityBeforeLockdown = np.zeros(sizePop, dtype=float)
             self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
             self.startLD = np.zeros(sizePop, dtype=float)
@@ -197,13 +197,13 @@ cdef class BirthDeathModel:
         self.migPlus = 0
         self.migNonPlus = 0
 
-        if susceptible == None:
+        if susceptible is None:
             self.susceptible_num = 2
         else:
             self.susceptible_num = len( susceptible[0][0] )
 
         #Set population model
-        if populationModel == None:
+        if populationModel is None:
             self.pm = PopulationModel( [ Population() ], self.susceptible_num)
             self.pm_migrationRates = np.asarray((0, 0), dtype=float)
         else:
@@ -226,7 +226,7 @@ cdef class BirthDeathModel:
         self.elementsArr2 = np.zeros(2, dtype=float)
         self.elementsArr3 = np.ones(3)
 
-        if susceptible == None:
+        if susceptible is None:
             self.susceptibility = np.asarray( [ [1.0 for _ in range(self.hapNum)], [0.0 for _ in range(self.hapNum)] ] )
             self.suscType = np.ones(int(self.hapNum), dtype=np.int32)
         else:
