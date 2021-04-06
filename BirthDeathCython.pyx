@@ -4,7 +4,7 @@
 
 cimport cython
 
-from libc.math cimport log, floor
+from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
 
@@ -88,15 +88,15 @@ cdef class Mutations:
     cdef void AddMutation(self, Py_ssize_t nodeId, Py_ssize_t haplotype, Py_ssize_t newHaplotype):
         cdef:
             Py_ssize_t ASDSdigit4, site, digit4
-        ASDSdigit4 = newHaplotype - haplotype
+        ASDSdigit4 = int(abs(newHaplotype - haplotype))
         site = 0
         while ASDSdigit4 >= 4:
             ASDSdigit4 = ASDSdigit4 / 4
             site += 1
         digit4 = int(4**site)
         self.nodeId.push_back(nodeId)
-        self.DS.push_back(int(floor(newHaplotype / digit4)) % 4)
-        self.AS.push_back(int(floor(haplotype / digit4)) % 4)
+        self.DS.push_back(int(floor(newHaplotype/digit4) % 4))
+        self.AS.push_back(int(floor(haplotype/digit4) % 4))
         self.site.push_back(int(site))
         # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
@@ -140,7 +140,7 @@ cdef class PopulationModel:
         for i in range(sizePop):
             self.contactDensity[i] = populations[i].contactDensity
 
-        if lockdownModel is not None:
+        if lockdownModel != None:
             self.contactDensityBeforeLockdown = np.zeros(sizePop, dtype=float)
             self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
             self.startLD = np.zeros(sizePop, dtype=float)
@@ -197,13 +197,13 @@ cdef class BirthDeathModel:
         self.migPlus = 0
         self.migNonPlus = 0
 
-        if susceptible is None:
+        if susceptible == None:
             self.susceptible_num = 2
         else:
             self.susceptible_num = len( susceptible[0][0] )
 
         #Set population model
-        if populationModel is None:
+        if populationModel == None:
             self.pm = PopulationModel( [ Population() ], self.susceptible_num)
             self.pm_migrationRates = np.asarray((0, 0), dtype=float)
         else:
@@ -226,8 +226,8 @@ cdef class BirthDeathModel:
         self.elementsArr2 = np.zeros(2, dtype=float)
         self.elementsArr3 = np.ones(3)
 
-        if susceptible is None:
-            self.susceptibility = np.asarray( [ [1.0 for _ in range(self.hapNum)], [0.0 for _ in range(self.hapNum)] ] )
+        if susceptible == None:
+            self.susceptibility = np.asarray( [ [1.0, 0.0] for _ in range(self.hapNum) ] )
             self.suscType = np.ones(int(self.hapNum), dtype=np.int32)
         else:
             self.susceptibility = np.asarray( susceptible[0], dtype=float)
@@ -262,8 +262,8 @@ cdef class BirthDeathModel:
         for k in range(self.hapNum):
             self.maxSusceptibility[k] = 0.0
             for sType in range(self.susceptible_num):
-                if self.susceptibility[sType, k] > self.maxSusceptibility[k]:
-                    self.maxSusceptibility[k] = self.susceptibility[sType, k]
+                if self.susceptibility[k, sType] > self.maxSusceptibility[k]:
+                    self.maxSusceptibility[k] = self.susceptibility[k, sType]
         self.maxEffectiveBirth = 0.0
         for k in range(self.hapNum):
             if self.maxEffectiveBirth < self.bRate[k]*self.maxSusceptibility[k]:
@@ -406,7 +406,7 @@ cdef class BirthDeathModel:
         sourcePopId, self.rn = fastChoose2_skip( self.pm.totalInfectious, self.pm.globalInfectious-self.pm.totalInfectious[targetPopId], self.rn, skip = targetPopId)
         haplotype, self.rn = fastChoose2( self.liveBranches[sourcePopId], self.pm.totalInfectious[sourcePopId], self.rn)
         suscType, self.rn = fastChoose2( self.pm.susceptible[targetPopId], self.pm.totalSusceptible[targetPopId], self.rn)
-        p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[suscType, haplotype]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth
+        p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[haplotype, suscType]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth
         if p_accept < self.rn:
             self.liveBranches[targetPopId, haplotype] += 1
             self.pm.NewInfection(targetPopId, suscType)
