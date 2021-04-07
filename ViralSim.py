@@ -4,7 +4,7 @@ import argparse
 import sys
 import time
 from BirthDeathCython import BirthDeathModel, PopulationModel, Population, Lockdown
-from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility, ReadLockdown
+from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
 
@@ -31,8 +31,8 @@ if isinstance(clargs.iterations, list):
     clargs.iterations = clargs.iterations[0]
 if isinstance(clargs.susceptibility, list):
     clargs.susceptibility = clargs.susceptibility[0]
-if isinstance(clargs.lockdownModel, list):
-    clargs.lockdownModel = clargs.lockdownModel[0]
+# if isinstance(clargs.lockdownModel, list):
+#     clargs.lockdownModel = clargs.lockdownModel[0]
 if isinstance(clargs.seed, list):
     clargs.seed = clargs.seed[0]
 
@@ -40,8 +40,9 @@ bRate, dRate, sRate, mRate = ReadRates(clargs.frate)
 
 if clargs.populationModel == None:
     popModel = None
+    lockdownModel = None
 else:
-    populations = ReadPopulations(clargs.populationModel[0])
+    populations, lockdownModel = ReadPopulations(clargs.populationModel[0])
     migrationRates = ReadMigrationRates(clargs.populationModel[1])
     popModel = [populations, migrationRates]
 
@@ -50,10 +51,10 @@ if clargs.susceptibility == None:
 else:
     susceptible = ReadSusceptibility(clargs.susceptibility)
 
-if clargs.lockdownModel == None:
-    lockdownModel = None
-else:
-    lockdownModel = ReadLockdown(clargs.lockdownModel)
+# if clargs.lockdownModel == None:
+#     lockdownModel = None
+# else:
+#     lockdownModel = ReadLockdown(clargs.lockdownModel)
 
 if clargs.seed == None:
     rndseed = int(time.time())
@@ -63,13 +64,13 @@ print("Seed: ", rndseed)
 
 simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, lockdownModel=lockdownModel, rndseed=rndseed)
 # simulation.Debug()
-# t1 = time.time()
+t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations)
-# simulation.Debug()
-# t2 = time.time()
+simulation.Debug()
+t2 = time.time()
 simulation.GetGenealogy()
 # simulation.Debug()
-# t3 = time.time()
-# print(t2 - t1)
-# print(t3 - t2)
+t3 = time.time()
+print(t2 - t1)
+print(t3 - t2)
 print("_________________________________")
