@@ -18,8 +18,8 @@ parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
                     help='population model: a file with population sizes etc, and a file with migration rate matrix')
 parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
                     help='susceptibility file')
-parser.add_argument('--lockdownModel', '-ld', nargs=1, default=None,
-                    help='lockdown model: a file with parameters for lockdowns')
+# parser.add_argument('--lockdownModel', '-ld', nargs=1, default=None,
+#                     help='lockdown model: a file with parameters for lockdowns')
 parser.add_argument('--seed', '-seed', nargs=1, type=int, default=None,
                     help='random seed')
 
