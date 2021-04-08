@@ -70,7 +70,7 @@ Setting population model
 
 In order to set population model use `--populationModel` or `-pm` flag followed by two files. The first file contains information abouch each population, and the second file contains the matrix of "visit" rates.
 
-Part 1 - setting populations.
+###Part 1 - setting populations
 
 Here is an example of the file with populations.
 ```
@@ -82,6 +82,32 @@ id size contactDensity conDenAfterLD startLD endLD
 ```
 `id` is the population number (for convinience). `size` is the total number of individuals in the population. Contact density in the relative number of contacts per time unit. It can be used to model different social, cultural, economical and other aspects (e.g. population density in a city or a country side, holiday times etc.) Currently we provide only one out-of-the-box solution to change contact density during simulation. Those are optinal fields (included in the example) to tune lockdowns. `conDenAfterLD` is the contact density during lockdown, `startLD` and `endLD` are condition to impose and lift the lockdown. These two numerbs are the percentage of individuals which are simultaneously infected. If the percentage of simultanelously infected individuals in a population becomes larger than `startLD`, lockdown is imposed. As soon as the percentage of simultaneously infected individuals drops below `endLD` the lockdown is lifted.
 
+###Part 2 - setting migration matrix
+
+In the model we consider migration as some individuals spending some time in other population and then returning to their home population. This is modelled by "visit" rates. During such visits individuals are assumed to contact with individuals of another population according to contact density of the destination population (so lockdown in a destination country also changes the contact rate of a visitor). Example:
+
+```#Migration_format_version 0.0.1
+0.0 0.002 0.002 0.001
+0.0 0.0 0.002 0.0
+0.0 0.005 0.0 0.001
+0.0 0.002 0.001 0.0
+```
+
+Susceptibility types (immunity)
+-------------------------------
+
+Multiple susceptibility classes can be modelled by adding `--susceptibility` or, `-su` flag followed by the file with susceptibility constants (non-negative `float`). Example:
+```
+#Susceptibility_format_version 0.0.1
+H T S0 S1 S2
+AA 1 1.0 0.0 0.0
+AT 2 1.0 0.4 0.0
+AC 2 1.0 1.1 0.0
+...
+```
+There are three susceptibility types `S0`, `S1` and `S2` in this example. All the individuals start in `S0`, and they have susceptibility of `1.0` to all strains. `T` is the type of susceptibility (immunity) caused by recovering from a particular strain. Inficting by haplotype `AA` leads to susceptibility type `S1`, which gives total resistance (susceptibility 0.0) to haplotype `AA`, partial resitance to `AT` (susceptibility 0.4) and increases susceptibility (1.1) to strain `AC`.
+
+*NB* There is no "immunity memory" - the immunity does not depend on the whole illness history of an individual, but only on the **latest** infection.
 
 The rest of the README
 ----------------------
