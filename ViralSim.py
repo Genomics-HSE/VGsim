@@ -5,6 +5,7 @@ import sys
 import time
 from BirthDeathCython import BirthDeathModel, PopulationModel, Population, Lockdown
 from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility
+from random import randrange
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
 
@@ -57,7 +58,7 @@ else:
 #     lockdownModel = ReadLockdown(clargs.lockdownModel)
 
 if clargs.seed == None:
-    rndseed = int(time.time())
+    rndseed = randrange(sys.maxsize)
 else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)

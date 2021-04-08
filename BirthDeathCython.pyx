@@ -9,11 +9,10 @@ from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
 
 import numpy as np
-np.random.seed(1256)
 import sys
 
 include "fast_choose.pxi"
-include "mutations_popModel.pxi"
+include "models.pxi"
 
 
 def print_err(*args, **kwargs):
