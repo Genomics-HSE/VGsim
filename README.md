@@ -109,6 +109,16 @@ There are three susceptibility types `S0`, `S1` and `S2` in this example. All th
 
 *NB* There is no "immunity memory" - the immunity does not depend on the whole illness history of an individual, but only on the **latest** infection.
 
+Output
+------
+
+The final genealogical tree can be exported into Newick format with `--createNewick` or `-nwk`, and mutations can be exported in a tsv file with `--writeMutations` or `-tsv`. This format is compatible with phastSim (https://github.com/NicolaDM/phastSim) and Usher (REF).
+
+Adding neutral mutations
+------------------------
+
+We suggest to pipe the tree and non-neautral sites into phastSim (https://github.com/NicolaDM/phastSim) by Nicola de Maio to add neutral mutations and to obtain full sequences.
+
 The rest of the README
 ----------------------
 
