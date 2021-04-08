@@ -143,7 +143,7 @@ cdef class BirthDeathModel:
             self.suscType = np.asarray( susceptible[1], dtype=np.int32 )
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
-        
+
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
         self.maxSusceptibility = np.zeros(self.hapNum, dtype=float)
@@ -442,19 +442,24 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef void UpdateContactDensity(self, Py_ssize_t popId, float newCD):
+        self.pm.contactDensity[popId] = newCD
+        self.SetEffectiveMigration()
+        self.SetMaxBirth()
+        self.MigrationRates()
+        self.UpdateRates(popId)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cdef void CheckLockdown(self, Py_ssize_t popId):
-        if self.pm.totalInfectious[popId] > self.pm.startLD[popId] and self.pm.contactDensity[popId] != self.pm.contactDensityAfterLockdown[popId]:
-            self.pm.contactDensity[popId] = self.pm.contactDensityAfterLockdown[popId] 
-            self.SetEffectiveMigration()
-            self.MigrationRates()
-            self.UpdateRates(popId)
+        if self.pm.totalInfectious[popId] > self.pm.startLD[popId] and not self.pm.lockdownON:
+            self.UpdateContactDensity(popId, self.pm.contactDensityAfterLockdown[popId] )
             self.swapLockdown += 1
-        if self.pm.totalInfectious[popId] < self.pm.endLD[popId] and self.pm.contactDensity[popId] != self.pm.contactDensityBeforeLockdown[popId] :
-            self.pm.contactDensity[popId] = self.pm.contactDensityBeforeLockdown[popId] 
-            self.SetEffectiveMigration()
-            self.MigrationRates()
-            self.UpdateRates(popId)
+            self.pm.lockdownON = True
+        if self.pm.totalInfectious[popId] < self.pm.endLD[popId] and self.pm.lockdownON:
+            self.UpdateContactDensity(popId, self.pm.contactDensityBeforeLockdown[popId] )
             self.swapLockdown += 1
+            self.pm.lockdownON = False
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -548,7 +553,7 @@ cdef class BirthDeathModel:
                         self.tree[ptrTreeAndTime] = -1
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
-                    else: 
+                    else:
                         liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
                         liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                         liveBranchesS[e_newPopulation][e_haplotype].pop_back()
@@ -764,5 +769,3 @@ cdef class BirthDeathModel:
                 print()
             print()
         print()
-
-

@@ -58,7 +58,7 @@ else:
 
 if clargs.seed == None:
     rndseed = int(time.time())
-else: 
+else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)
 
@@ -66,7 +66,7 @@ simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, popu
 # simulation.Debug()
 t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations)
-simulation.Debug()
+#simulation.Debug()
 t2 = time.time()
 simulation.GetGenealogy()
 # simulation.Debug()
