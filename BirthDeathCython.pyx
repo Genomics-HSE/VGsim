@@ -768,3 +768,18 @@ cdef class BirthDeathModel:
                 print()
             print()
         print()
+
+    def Output_tree_mutations(self):
+        tree = []
+        times = []
+        for i in range(self.tree.shape[0]):
+            tree.append(self.tree[i])
+            times.append(self.times[i])
+        mut = [[], [], [], []]
+        for i in range(self.mut.nodeId.size()):
+            mut[0].append(self.mut.nodeId[i])
+            mut[1].append(self.mut.AS[i])
+            mut[2].append(self.mut.site[i])
+            mut[3].append(self.mut.DS[i])
+            
+        return tree, times, mut
