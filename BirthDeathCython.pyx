@@ -612,6 +612,9 @@ cdef class BirthDeathModel:
                 ptr -= 1
         return([time_points, dynamics])
 
+    def Report(self):
+        print("Number of samples:", self.sCounter)
+
     def Debug(self):
         print("Parameters")
         print("swapLockdown: ", self.swapLockdown)
@@ -781,5 +784,5 @@ cdef class BirthDeathModel:
             mut[1].append(self.mut.AS[i])
             mut[2].append(self.mut.site[i])
             mut[3].append(self.mut.DS[i])
-            
+
         return tree, times, mut

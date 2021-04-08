@@ -79,6 +79,7 @@ t2 = time.time()
 simulation.GetGenealogy()
 # simulation.Debug()
 t3 = time.time()
+simulation.Report()
 print(t2 - t1)
 print(t3 - t2)
 print("_________________________________")
@@ -207,7 +208,7 @@ def writeGenomeNewick(pruferSeq, times):
 
     #phase 3: look for parents
     parentFutureLeeves, futureLeeves = phase3_LookForParents(resultOutput, listOfLeefs, pruferSeq, allChildren)
-    
+
     #phase 4: union lists
     while(True):
         listsOfNextLeeves = parentFutureLeeves + futureLeeves
