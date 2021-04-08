@@ -42,6 +42,47 @@ as soon as there is a NumPy version which supports this hardware).
 ![macOS tests](https://github.com/ev-br/mc_lib/actions/workflows/macos.yml/badge.svg)
 
 
+
+Setting haplotype (strain) model
+--------------------------------
+
+You should provide a space-separated file with the per-haplotype rates (all the rates are assumed to be `float` non-negative numbers). Example:
+```
+#Rates_format_version 0.0.1
+H B D S M1 M2
+AA 25 9 1 0.1 0.1
+AT 25 9 1 0.1,3,4,1 0.1,0.4,0.6,0.0
+AC 25 9 1 0.1 0.1
+...
+```
+Column `H` (optional) specifies the haplotype. In the example file there are two sites, so the total of 16 haplotypes should appear in the file in lexicographical order (we assume the following nucleotide alphabetic order: `ATCG`).
+
+Column `B` (for Birth rate) is the base rate for an individual carrying the corresponding strain to transmit the infection to a new individual.
+
+Column `D` (for Death rate) is the rate for an individual to get uninfectious.
+
+Column `S` is the rate for an individual to be sampled. Sampling also means that the individual got isolated and treated, hence become uninfectious immediately.
+
+`M1` and `M2` are two sites where non-neutral mutations can be ovserved. The user can specify mutation rates only (see haplotype `AA`), and the substitution rates are assumed to be unifrom. Also weights (probabilities, but not necessariliy normalised) can be specified for each substitution (see haplotype `AT` - in the first site susbstitions `A->T`, `A->C`, `A->G` occur with probabilities 3/8, 4/8 and 1/8 respectively, and for the second site substitutions `T->A`, `T->C`, `T->G` occur with probabilities 0.4, 0.6 and 0.0 respectively).
+
+Setting population model
+------------------------
+
+In order to set population model use `--populationModel` or `-pm` flag followed by two files. The first file contains information abouch each population, and the second file contains the matrix of "visit" rates.
+
+Part 1 - setting populations.
+
+Here is an example of the file with populations.
+```
+#Population_format_version 0.0.1
+id size contactDensity conDenAfterLD startLD endLD
+0 20000000 1.0 0.1 2 1
+1 10000000 1.0 0.1 2 1
+...
+```
+`id` is the population number (for convinience). `size` is the total number of individuals in the population. Contact density in the relative number of contacts per time unit. It can be used to model different social, cultural, economical and other aspects (e.g. population density in a city or a country side, holiday times etc.) Currently we provide only one out-of-the-box solution to change contact density during simulation. Those are optinal fields (included in the example) to tune lockdowns. `conDenAfterLD` is the contact density during lockdown, `startLD` and `endLD` are condition to impose and lift the lockdown. These two numerbs are the percentage of individuals which are simultaneously infected. If the percentage of simultanelously infected individuals in a population becomes larger than `startLD`, lockdown is imposed. As soon as the percentage of simultaneously infected individuals drops below `endLD` the lockdown is lifted.
+
+
 The rest of the README
 ----------------------
 
