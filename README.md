@@ -1,4 +1,4 @@
-# ViralSim
+# VGsim
 
 
 Building the package
@@ -27,11 +27,11 @@ $ python setup.py build_ext --inplace
 That's it! You may now run simulations:
 
 ```
-$ python ./ViralSim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+$ python ./VGsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
 ```
 
 If you encounter problems with either of these steps, please file an issue at
-`https://github.com/Genomics-HSE/ViralSim` and include the build log.
+`https://github.com/Genomics-HSE/VGsim` and include the build log.
 
 
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. Whether
@@ -127,7 +127,7 @@ File with rates is required.
 Example:
 ```
 python setup.py build_ext --inplace
-./ViralSim.py example/example.rt -it 100000000 -pm example/example.pp example/example.mg -su example/example.su
+./VGsim.py example/example.rt -it 100000000 -pm example/example.pp example/example.mg -su example/example.su
 
-for n in {1..5}; do ./ViralSim.py example/example.rt -it 1000000 -pm example/example.pp example/example.mg -su example/example.su; done >> errors.txt
+for n in {1..5}; do ./VGsim.py example/example.rt -it 1000000 -pm example/example.pp example/example.mg -su example/example.su; done >> errors.txt
 ```
