@@ -1,6 +1,10 @@
 # VGsim
 
 
+![linux tests](https://github.com/ev-br/mc_lib/actions/workflows/python-package.yml/badge.svg)
+![macOS tests](https://github.com/ev-br/mc_lib/actions/workflows/macos.yml/badge.svg)
+
+
 Building the package
 --------------------
 
@@ -21,10 +25,12 @@ $ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.1
 Then, build the C extensions,
 
 ```
-$ python setup.py build_ext --inplace
+$ python -m pip install -e . -v
 ```
 
-That's it! You may now run simulations:
+That's it! 
+
+You may now run simulations:
 
 ```
 $ python ./VGsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
@@ -37,9 +43,6 @@ If you encounter problems with either of these steps, please file an issue at
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. Whether
 it works on Apple Silicon hardware, we do not know (most likely, it should
 as soon as there is a NumPy version which supports this hardware).
-
-![linux tests](https://github.com/ev-br/mc_lib/actions/workflows/python-package.yml/badge.svg)
-![macOS tests](https://github.com/ev-br/mc_lib/actions/workflows/macos.yml/badge.svg)
 
 
 
