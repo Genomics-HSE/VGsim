@@ -64,6 +64,7 @@ cdef class Events:
     cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
         self.times[ self.ptr ] = time_
         self.types[ self.ptr ] = type_
+        print(type_, end = "")
         self.populations[ self.ptr ] = population
         self.haplotypes[ self.ptr ] = haplotype
         self.newHaplotypes[ self.ptr ] = newHaplotype
@@ -90,8 +91,8 @@ cdef class BirthDeathModel:
         int[::1] tree, suscType
         int[:,::1] liveBranches
 
-        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, times, pm_maxEffectiveMigration, maxSusceptibility, elementsArr2, immunePopRate, infectPopRate, sourceSuscepTransition, immuneTargetSourcePopRate, suscepCumulTransition
-        double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility, totalHapMutType, suscepTransition, immuneTargetPopRate
+        double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, times, pm_maxEffectiveMigration, maxSusceptibility, elementsArr2, immunePopRate, infectPopRate, sourceSuscepTransition, suscepCumulTransition
+        double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility, totalHapMutType, suscepTransition, immuneSourcePopRate
         double[:,:,::1] eventHapPopRate, susceptHapPopRate, hapMutType
 
     def __init__(self, iterations, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, suscepTransition=None, lockdownModel=None, rndseed=1256, **kwargs):
@@ -246,13 +247,12 @@ cdef class BirthDeathModel:
             for j in range(self.susceptible_num):
                 self.suscepCumulTransition[i] += self.suscepTransition[i, j]
 
-        self.immuneTargetSourcePopRate = np.zeros(self.susceptible_num, dtype=float)
         self.immuneSourcePopRate = np.zeros((self.popNum, self.susceptible_num), dtype=float)
         self.immunePopRate = np.zeros(self.popNum, dtype=float)
 
         for i in range(self.popNum):
             for j in range(self.susceptible_num):
-                self.immuneSourcePopRate[i, j] += self.suscepCumulTransition[i, j]*self.pm.susceptible[i, j]
+                self.immuneSourcePopRate[i, j] += self.suscepCumulTransition[j]*self.pm.susceptible[i, j]
                 self.immunePopRate[i] += self.immuneSourcePopRate[i, j]
 
         self.popRate = np.zeros(self.popNum, dtype=float)
@@ -302,9 +302,11 @@ cdef class BirthDeathModel:
 
         if et == 0:
             popId, self.rn = fastChoose1( self.popRate, self.totalRate, self.rn)
-            immune_vs_infect, self.rn = fastChoose1( [ self.immunePopRate[popId], self.infectPopRate[popId] ], self.popRate[popId], self.rn)
-            if immune_vs_infect = 0:
-                self.ImmunityTransition()
+            self.elementsArr2[0] = self.immunePopRate[popId]
+            self.elementsArr2[1] = self.infectPopRate[popId]
+            immune_vs_infect, self.rn = fastChoose1( self.elementsArr2, self.popRate[popId], self.rn)
+            if immune_vs_infect == 0:
+                self.ImmunityTransition(popId)
             else:
                 haplotype, self.rn = fastChoose1( self.hapPopRate[popId], self.infectPopRate[popId], self.rn)
                 eventType, self.rn = fastChoose1( self.eventHapPopRate[popId, haplotype], self.tEventHapPopRate[popId, haplotype], self.rn)
@@ -326,8 +328,8 @@ cdef class BirthDeathModel:
     cdef void ImmunityTransition(self, Py_ssize_t popId):
         cdef:
             Py_ssize_t sourceImmune, targetImmune
-        sourceImmune, self.rn = fastChoose1( [ self.immuneSourcePopRate, self.immunePopRate[popId] ], self.popRate[popId], self.rn)
-        targetImmune, self.rn = fastChoose1( [ self.suscepTransition[sourceImmune], self.immuneSourcePopRate[popId, sourceImmune] ], self.popRate[popId], self.rn)
+        sourceImmune, self.rn = fastChoose1( self.immuneSourcePopRate[popId], self.immunePopRate[popId], self.rn)
+        targetImmune, self.rn = fastChoose1( self.suscepTransition[sourceImmune], self.immuneSourcePopRate[popId, sourceImmune], self.rn)
         self.events.AddEvent(self.currentTime, SUSCCHANGE, popId, sourceImmune, targetImmune, 0)
         self.pm.susceptible[popId, sourceImmune] -= 1
         self.pm.susceptible[popId, targetImmune] += 1
