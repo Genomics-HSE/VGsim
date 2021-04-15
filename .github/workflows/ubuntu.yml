@@ -30,7 +30,7 @@ jobs:
         python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.1
     - name: Build
       run: |
-        python setup.py build_ext --inplace
+        python -m pip install -e . -v
     - name: Run an example
       run: |
         python ./VGsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
