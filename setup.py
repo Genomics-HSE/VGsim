@@ -13,7 +13,7 @@ import subprocess
 PACKAGE_NAME = 'VGSimulator'
 DESCRIPTION = "VGSimulator"
 LONG_DESCRIPTION = DESCRIPTION
-AUTHOR = "Vladimir Shchur"
+AUTHOR = "Vladimir Shchur et al"
 AUTHOR_EMAIL = ""
 URL = "FIXME"
 DOWNLOAD_URL = 'FIXME'
@@ -100,7 +100,8 @@ def setup_package():
                 'License :: OSI Approved :: BSD License',
                 'Natural Language :: English',
                 'Programming Language :: Python :: 3.7',
-                'Programming Language :: Python :: 3.8'])
+                'Programming Language :: Python :: 3.8',
+                'Programming Language :: Python :: 3.9'])
     finally:
         del sys.path[0]
         os.chdir(old_path)
