@@ -64,7 +64,6 @@ cdef class Events:
     cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
         self.times[ self.ptr ] = time_
         self.types[ self.ptr ] = type_
-        print(type_, end = "")
         self.populations[ self.ptr ] = population
         self.haplotypes[ self.ptr ] = haplotype
         self.newHaplotypes[ self.ptr ] = newHaplotype
@@ -145,7 +144,10 @@ cdef class BirthDeathModel:
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
 
-        self.suscepTransition = suscepTransition
+        if suscepTransition is None:
+            self.suscepTransition = np.zeros( (self.susceptible_num, self.susceptible_num), dtype=float)
+        else:
+            self.suscepTransition = np.asarray( suscepTransition )
 
         #Set rates
         self.SetRates(bRate, dRate, sRate, mRate)
@@ -329,7 +331,7 @@ cdef class BirthDeathModel:
         cdef:
             Py_ssize_t sourceImmune, targetImmune
         sourceImmune, self.rn = fastChoose1( self.immuneSourcePopRate[popId], self.immunePopRate[popId], self.rn)
-        targetImmune, self.rn = fastChoose1( self.suscepTransition[sourceImmune], self.immuneSourcePopRate[popId, sourceImmune], self.rn)
+        targetImmune, self.rn = fastChoose1( self.suscepTransition[sourceImmune], self.suscepCumulTransition[sourceImmune], self.rn)
         self.events.AddEvent(self.currentTime, SUSCCHANGE, popId, sourceImmune, targetImmune, 0)
         self.pm.susceptible[popId, sourceImmune] -= 1
         self.pm.susceptible[popId, targetImmune] += 1
@@ -356,6 +358,12 @@ cdef class BirthDeathModel:
         if p_accept < self.rn:
             self.liveBranches[targetPopId, haplotype] += 1
             self.pm.NewInfection(targetPopId, suscType)
+
+            self.immuneSourcePopRate[targetPopId, suscType] = self.pm.susceptible[targetPopId, suscType]*self.suscepCumulTransition[suscType]
+            self.immunePopRate[targetPopId] = 0.0
+            for j in range(self.susceptible_num):
+                self.immunePopRate[targetPopId] += self.immuneSourcePopRate[targetPopId, j]
+
             self.UpdateRates(targetPopId)
             self.MigrationRates()
             self.events.AddEvent(self.currentTime, MIGRATION, sourcePopId, haplotype, 0, targetPopId)
@@ -591,6 +599,8 @@ cdef class BirthDeathModel:
                     self.mut.AddMutation(id1, e_haplotype, e_newHaplotype)
                 self.liveBranches[e_population][e_newHaplotype] -= 1
                 self.liveBranches[e_population][e_haplotype] += 1
+            elif e_type_ == SUSCCHANGE:
+                pass
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
                 p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
