@@ -9,7 +9,7 @@ import numpy
 
 Options.annotate = True
 
-ext = Extension("BirthDeathCython", ["BirthDeathCython.pyx"],
+ext = Extension("_BirthDeath", ["_BirthDeath.pyx"],
                 include_dirs = [numpy.get_include()],
                 language='c++',)
 
