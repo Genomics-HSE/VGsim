@@ -1,8 +1,8 @@
 # VGsim
 
 
-![linux tests](https://github.com/ev-br/mc_lib/actions/workflows/python-package.yml/badge.svg)
-![macOS tests](https://github.com/ev-br/mc_lib/actions/workflows/macos.yml/badge.svg)
+![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/python-package.yml/badge.svg)
+![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)
 
 
 Building the package
