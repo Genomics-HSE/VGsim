@@ -33,4 +33,4 @@ jobs:
         python -m pip install -e . -v
     - name: Run an example
       run: |
-        python ./VGsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+        python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
