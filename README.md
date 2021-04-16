@@ -1,7 +1,7 @@
 # VGsim
 
 
-![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/python-package.yml/badge.svg)
+![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/linux.yml/badge.svg)
 ![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)
 
 
@@ -34,7 +34,7 @@ That's it!
 You may now run simulations:
 
 ```
-$ python ./VGsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+$ python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
 ```
 
 If you encounter problems with either of these steps, please file an issue at
