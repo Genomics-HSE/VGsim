@@ -113,6 +113,16 @@ There are three susceptibility types `S0`, `S1` and `S2` in this example. All th
 
 *NB* There is no "immunity memory" - the immunity does not depend on the whole illness history of an individual, but only on the **latest** infection.
 
+### Susceptibility transition
+
+The user can specify the rates of direct transitions between susceptibility types. This can be used for example to model vaccination or immunity loss. Use `--suscepTransition` or, `-st` flag followed by the file with susceptibility transition rate matrix (non-negative `float` entrys). Example:
+```
+#Susceptibility_format_version 0.0.1
+0.0 0.0 0.0001
+0.001 0.0 0.0001
+0.0 0.0 0.0
+```
+
 Output
 ------
 
