@@ -1,7 +1,7 @@
 # VGsim
 
 
-![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/linux.yml/badge.svg)
+![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/badge.svg)
 ![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)
 
 
