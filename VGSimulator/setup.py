@@ -6,7 +6,7 @@ import numpy
 
 Options.annotate = True
 
-PACKAGE_NAME = 'VGSimulator'
+PACKAGE_NAME = 'VGsim'
 
 
 def configuration(parent_package='', top_path=None):
