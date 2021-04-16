@@ -15,7 +15,7 @@ DESCRIPTION = "VGsim is the fast viral genealogy simulator for world-wide pandem
 LONG_DESCRIPTION = "VGsim allows to simulateneously model evolutionary processes (selection, episthasis), population structure, immunity response etc."
 AUTHOR = "Vladimir Shchur et al"
 AUTHOR_EMAIL = "vshchur@hse.ru"
-URL = "https://github.com/Genomics-HSE/VGsim"
+URL = "https://scg.hse.ru"
 DOWNLOAD_URL = 'https://github.com/Genomics-HSE/VGsim'
 LICENSE = 'GPL-3.0 License'
 
