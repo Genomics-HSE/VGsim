@@ -10,14 +10,14 @@ import sys
 import subprocess
 
 
-PACKAGE_NAME = 'VGSimulator'
-DESCRIPTION = "VGSimulator"
-LONG_DESCRIPTION = DESCRIPTION
+PACKAGE_NAME = 'VGsim'
+DESCRIPTION = "VGsim is the fast viral genealogy simulator for world-wide pandemic scenarios"
+LONG_DESCRIPTION = "VGsim allows to simulateneously model evolutionary processes (selection, episthasis), population structure, immunity response etc."
 AUTHOR = "Vladimir Shchur et al"
-AUTHOR_EMAIL = ""
-URL = "FIXME"
-DOWNLOAD_URL = 'FIXME'
-LICENSE = 'FIXME'
+AUTHOR_EMAIL = "vshchur@hse.ru"
+URL = "https://github.com/Genomics-HSE/VGsim"
+DOWNLOAD_URL = 'https://github.com/Genomics-HSE/VGsim'
+LICENSE = 'GPL-3.0 License'
 
 
 def version(package, encoding='utf-8'):
