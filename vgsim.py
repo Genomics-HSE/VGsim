@@ -3,8 +3,8 @@
 import argparse
 import sys
 import time
-from BirthDeathCython import BirthDeathModel, PopulationModel, Population, Lockdown
-from IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility, ReadSusceptibilityTransition, writeGenomeNewick, writeMutations
+from VGsim import BirthDeathModel, PopulationModel, Population, Lockdown
+from VGsim.IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility, ReadSusceptibilityTransition, writeGenomeNewick, writeMutations
 from random import randrange
 import numpy as np
 
