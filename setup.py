@@ -97,7 +97,7 @@ def setup_package():
                 'Development Status :: 4 - Beta',
                 'Environment :: Console',
                 'Intended Audience :: Science/Research',
-                'License :: OSI Approved :: BSD License',
+                'License :: OSI Approved :: GPL-3.0 License',
                 'Natural Language :: English',
                 'Programming Language :: Python :: 3.7',
                 'Programming Language :: Python :: 3.8',
