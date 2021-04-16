@@ -497,7 +497,7 @@ cdef class BirthDeathModel:
         for j in range(0, iterations):
             self.SampleTime()
             popId = self.GenerateEvent()
-            if self.totalRate == 0.0:
+            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
                 break
             self.CheckLockdown(popId)
         print("Total number of iterations: ", self.events.ptr)
