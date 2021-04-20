@@ -117,7 +117,7 @@ def ReadSusceptibilityTransition(fn):
             suscepTransition[i][i] = 0.0
         return(suscepTransition)
 
-def writeMutations(mut):
+def writeMutations(mut, len_prufer):
     #digits replacement
     alleles = ["A","T","C","G"]
     for i in [1,3]:
@@ -139,7 +139,7 @@ def writeMutations(mut):
         mutations_dict[nodeId] = mutations_dict[nodeId][:-1]
 
     f_mut = open('mutation_output.tsv', 'w')
-    for i in range(len(pruferSeq)):
+    for i in range(len_prufer):
         if i in mutations_dict:
             f_mut.write(str(i)+'\t'+str(mutations_dict[i])+'\n')
         else:

@@ -93,4 +93,4 @@ pruferSeq, times, mut = simulation.Output_tree_mutations()
 if clargs.createNewick:
     writeGenomeNewick(pruferSeq, times)
 if clargs.writeMutations:
-    writeMutations(mut)
+    writeMutations(mut, len(pruferSeq))
