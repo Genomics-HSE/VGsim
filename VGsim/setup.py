@@ -15,7 +15,7 @@ def configuration(parent_package='', top_path=None):
     config = Configuration(PACKAGE_NAME, parent_package, top_path)
 
     config.add_extension('_BirthDeath',
-                         sources=['_BirthDeath.cpp'],
+                         sources=['_BirthDeath.cxx'],
                          depends=['_BirthDeath.pyx',
                                   'models.pxi', 'fast_choose.pxi'],
                          language='c++',
