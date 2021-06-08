@@ -63,17 +63,25 @@ cdef class PopulationModel:
         for i in range(sizePop):
             self.contactDensity[i] = populations[i].contactDensity
 
-        if lockdownModel is not None:
-            self.contactDensityBeforeLockdown = np.zeros(sizePop, dtype=float)
-            self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
-            self.startLD = np.zeros(sizePop, dtype=float)
-            self.endLD = np.zeros(sizePop, dtype=float)
+        self.contactDensityBeforeLockdown = np.zeros(sizePop, dtype=float)
+        self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
+        self.startLD = np.zeros(sizePop, dtype=float)
+        self.endLD = np.zeros(sizePop, dtype=float)
+        if len(lockdownModel) != 0:
             for i in range(sizePop):
                 self.contactDensityBeforeLockdown[i] = populations[i].contactDensity
                 self.contactDensityAfterLockdown[i] = lockdownModel[i].conDenAfterLD
                 self.startLD[i] = lockdownModel[i].startLD*self.sizes[i]/100.0
                 self.endLD[i] = lockdownModel[i].endLD*self.sizes[i]/100.0
             self.lockdownON = False
+        else:
+            for i in range(sizePop):
+                self.contactDensityBeforeLockdown[i] = 0
+                self.contactDensityAfterLockdown[i] = 0
+                self.startLD[i] = 1.01*self.sizes[i]
+                self.endLD[i] = 1.0*self.sizes[i]
+            self.lockdownON = False
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -90,3 +98,10 @@ cdef class PopulationModel:
         self.totalSusceptible[popId] += 1
         self.totalInfectious[popId] -= 1
         self.globalInfectious -= 1
+
+# cdef class SusceptibleModel:
+#     cdef: 
+
+
+# cdef class RateModel:
+#     cdef:
