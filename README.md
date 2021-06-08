@@ -12,7 +12,8 @@ Building the package
 For performance reasons, the package includes C extensions, which need to be
 built. In the future, we plan to provide prebuilt packages, but for now you need
 to build them yourself. For this, you need a working toolchain for building C++
-code (gcc and clang are known to work). 
+code (gcc and clang are known to work). Since you are going to build Python extensions,
+you will need python development headers (e.g. on ubuntu linux the package name is `python-dev`).
 
 You can use either `pip` or `conda`. With `pip`, proceed as follows
 (with `conda`, the process should be similar):
