@@ -38,23 +38,23 @@ class Lockdown:
 cdef class PopulationModel:
     cdef:
         Py_ssize_t globalInfectious
-        int[::1] sizes, totalSusceptible, totalInfectious
-        int[:,::1] susceptible
+        long[::1] sizes, totalSusceptible, totalInfectious
+        long[:,::1] susceptible
         double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD
         bint lockdownON
 
     def __init__(self, populations, susceptible_num, lockdownModel=None):
         sizePop = len(populations)
 
-        self.sizes = np.zeros(sizePop, dtype=np.int32)
+        self.sizes = np.zeros(sizePop, dtype=np.int64)
         for i in range(sizePop):
             self.sizes[i] = populations[i].size
 
-        self.totalSusceptible = np.zeros(sizePop, dtype=np.int32)
-        self.totalInfectious = np.zeros(sizePop, dtype=np.int32)
+        self.totalSusceptible = np.zeros(sizePop, dtype=np.int64)
+        self.totalInfectious = np.zeros(sizePop, dtype=np.int64)
         self.globalInfectious = 0
 
-        self.susceptible = np.zeros((sizePop, susceptible_num), dtype=np.int32)
+        self.susceptible = np.zeros((sizePop, susceptible_num), dtype=np.int64)
         for i in range(sizePop):
             self.susceptible[i, 0] = populations[i].size
             self.totalSusceptible[i] = populations[i].size

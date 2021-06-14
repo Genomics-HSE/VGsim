@@ -87,8 +87,8 @@ cdef class BirthDeathModel:
         PopulationModel pm
         Mutations mut
 
-        int[::1] tree, suscType
-        int[:,::1] liveBranches
+        long[::1] tree, suscType
+        long[:,::1] liveBranches
 
         double[::1] bRate, dRate, sRate, tmRate, migPopRate, popRate, times, pm_maxEffectiveMigration, maxSusceptibility, elementsArr2, immunePopRate, infectPopRate, sourceSuscepTransition, suscepCumulTransition
         double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility, totalHapMutType, suscepTransition, immuneSourcePopRate
@@ -137,10 +137,10 @@ cdef class BirthDeathModel:
 
         if susceptible is None:
             self.susceptibility = np.asarray( [ [1.0, 0.0] for _ in range(self.hapNum) ] )
-            self.suscType = np.ones(int(self.hapNum), dtype=np.int32)
+            self.suscType = np.ones(int(self.hapNum), dtype=np.int64)
         else:
             self.susceptibility = np.asarray( susceptible[0], dtype=float)
-            self.suscType = np.asarray( susceptible[1], dtype=np.int32 )
+            self.suscType = np.asarray( susceptible[1], dtype=np.int64 )
 
         self.susceptHapPopRate = np.zeros((self.popNum, self.hapNum, self.susceptible_num), dtype=float)
 
@@ -162,7 +162,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void InitLiveBranches(self):
-        self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int32)
+        self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
         self.events.AddEvent(self.currentTime, 0, 0, 0, 0, 0)
         self.liveBranches[0, 0] += 2
         self.pm.NewInfection(0, 0)
@@ -542,7 +542,7 @@ cdef class BirthDeathModel:
             Py_ssize_t e_type_, e_population, e_haplotype, e_newHaplotype, e_newPopulation
 
         ptrTreeAndTime = 0
-        self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int32)
+        self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
         self.times = np.zeros(2 * self.sCounter - 1, dtype=float)
 
         for i in range( self.popNum ):
