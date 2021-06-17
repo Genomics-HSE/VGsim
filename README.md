@@ -47,7 +47,13 @@ We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. Whether
 it works on Apple Silicon hardware, we do not know (most likely, it should
 as soon as there is a NumPy version which supports this hardware).
 
+Troubleshooting
+---------------
 
+In some setups, the following was needed to install `mc_lib`
+```
+$ python -m pip install -t ./ git+https://github.com/ev-br/mc_lib.git@v0.1
+```
 
 Setting haplotype (strain) model
 --------------------------------
