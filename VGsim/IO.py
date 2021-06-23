@@ -146,117 +146,64 @@ def writeMutations(mut, len_prufer):
             f_mut.write(str(i)+'\n')
     f_mut.close()
 
-# count of childrens
-def frequentCart(nodes, sequence):
-    result = dict()
-    #print("nodes=", nodes)
-    for node in nodes:
-        result[node] = 0
-    for parent in sequence:
-        if parent in nodes:
-            result[parent] = result[parent] + 1
-    return result
+class Vertex():
+    def __init__(self, root, root_time, children):
+        self.__children = children
+        self.__root = root
+        self.__root_time = root_time
+        left_node = self.__children[root][0][0]
+        left_time = self.__children[root][0][1]
+        right_node = self.__children[root][1][0]
+        right_time = self.__children[root][1][1]
 
-# place of childrens
-def allChildrens(nodes, sequence):
-    result = dict()
-    for node in nodes:
-        result[node] = []
-    for index in range(len(sequence)):
-        if sequence[index] in nodes:
-            result[sequence[index]].append(index)
-    return result
-
-def getOutputDict(nodes, times):
-    result = dict()
-    for node in nodes:
-        result[node] = "{0}:{1}".format(node, times[node])
-    return result
-
-def phase3_LookForParents(resultOutput, listOfLeefs, pruferSeq, allChildren):
-    alreadyFinishedParent = []
-    #print('phase 3')
-    parentFutureLeeves = []
-    futureLeeves = []
-    alreadyFinishedLeeves = []
-    for leef in listOfLeefs:
-        if leef in alreadyFinishedLeeves:
-            continue
-        parent = int(pruferSeq[leef])
-        # root is found
-        if parent == -1:
-            resultOutput[leef] = "(" + resultOutput[leef] + ")"
-            continue
-        if parent in alreadyFinishedParent:
-            continue
-        alreadyFinishedParent.append(parent)
-        listOfChildren = allChildren[parent]
-        isAllChildrenLeefs = True
-        for child in listOfChildren:
-            if not child in listOfLeefs:
-                isAllChildrenLeefs = False
-                break
-        if isAllChildrenLeefs:
-            parentFutureLeeves.append(parent)
-            message = ""
-            for child in listOfChildren:
-                childSplit = resultOutput[child].split(':')
-                absTimeChild = float(childSplit[-1])
-                absTimeParent = float(resultOutput[parent].split(':')[-1])
-                time = absTimeChild - absTimeParent
-                childSplit[-1] = str(time)
-                resultOutput[child] = ":".join(childSplit)
-
-                message += resultOutput[child] + "," ##?????
-                alreadyFinishedLeeves.append(child)
-                resultOutput.pop(child)
-            resultOutput[parent] = "(" + message[:-1] + ")" + resultOutput[parent]#!!!!!
+        if left_node in self.__children:
+            self.__left_child = Vertex(left_node, left_time, self.__children)
         else:
-            futureLeeves.append(leef)
-    return parentFutureLeeves, futureLeeves
+            self.__left_child = Leaf(left_node, left_time)
+            
+        if right_node in self.__children:
+            self.__right_child = Vertex(right_node, right_time, self.__children)
+        else:
+            self.__right_child = Leaf(right_node, right_time)
 
+    def get_children(self):
+        return '({0},{1}){2}:{3}'.format(self.__left_child.get_children(), self.__right_child.get_children(), self.__root, self.__root_time)
+
+class Leaf(Vertex):
+    def __init__(self, leaf, times):
+        self.__leaf = leaf
+        self.__times = times
+
+    def get_children(self):
+        return '{0}:{1}'.format(self.__leaf, self.__times)
+
+#find list with childrens
+def find_children(pruferSeq, times):
+    children = {}
+    for index in range(len(pruferSeq)):
+        add_list = []
+        add_list = [index, times[index]]
+        if pruferSeq[index] in children:
+            children[pruferSeq[index]].append(add_list)
+        else:
+            children[pruferSeq[index]] = []
+            children[pruferSeq[index]].append(add_list)
+    return children
+
+def get_last(output_string):
+    try:
+        return output_string[-1]
+    except:
+        return "notDigit"
 
 def writeGenomeNewick(pruferSeq, times):
-    #pruferSeq = pruferSeq.astype(int)
-    for i in range(len(pruferSeq)):
-        if pruferSeq[i] == i:
-            pruferSeq[i] = -1
-    #number of nodes
-    numberOfNodes = len(pruferSeq)
-    listOfNodes = [i for i in range(numberOfNodes)]
-    frequencyCart = frequentCart(listOfNodes, pruferSeq)
-    allChildren = allChildrens(listOfNodes, pruferSeq)
-    resultOutput = getOutputDict(listOfNodes, times)
+    children = find_children(pruferSeq, times)
+    root = children[-1][0][0]
+    root_time = children[-1][0][1]
 
-    #phase 2: look for normal leefs and parents
-    listOfLeefs = []
-    for key in frequencyCart:
-        if frequencyCart[key] == 0:
-            # find leefs
-            resultOutput[key] = "{0}:{1}".format(key, times[key])
-            listOfNodes.remove(key)
-            listOfLeefs.append(key)
-
-    #phase 3: look for parents
-    parentFutureLeeves, futureLeeves = phase3_LookForParents(resultOutput, listOfLeefs, pruferSeq, allChildren)
-
-    #phase 4: union lists
-    while(True):
-        listsOfNextLeeves = parentFutureLeeves + futureLeeves
-        noParents = True
-        actualLeafList = []
-        for leef in listsOfNextLeeves:
-            if pruferSeq[int(leef)] != -1.0:
-                actualLeafList.append(leef)
-                noParents = False
-        if noParents:
-             break
-        else:
-            parentFutureLeeves, futureLeeves = phase3_LookForParents(resultOutput, actualLeafList, pruferSeq, allChildren)
+    result = Vertex(root, root_time, children)
 
     f_nwk = open('newick_output.nwk', 'w')
-    for key in resultOutput:
-        f_nwk.write(resultOutput[key])
+    f_nwk.write(result.get_children())
     f_nwk.write(';')
     f_nwk.close()
-    #print(len(times))
