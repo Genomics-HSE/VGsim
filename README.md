@@ -43,9 +43,10 @@ If you encounter problems with either of these steps, please file an issue at
 `https://github.com/Genomics-HSE/VGsim` and include the build log.
 
 
-We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. Whether
-it works on Apple Silicon hardware, we do not know (most likely, it should
-as soon as there is a NumPy version which supports this hardware).
+We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. 
+On Apple Silicon, you need to have `numpy >= 1.21` (which is the first NumPy
+version to support this hardware).
+
 
 Troubleshooting
 ---------------
