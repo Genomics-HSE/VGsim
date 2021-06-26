@@ -3,6 +3,7 @@
 # distutils: language = c++
 
 cimport cython
+from cython.parallel import prange
 
 from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
@@ -185,9 +186,11 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     @cython.cdivision(True)
     cdef void SetEffectiveMigration(self):
+        cdef Py_ssize_t i, j
+
         for i in range(self.popNum):
             self.pm_maxEffectiveMigration[i] = 0.0
-        for i in range(self.popNum):
+        for i in prange(self.popNum, nogil=True):
             for j in range(self.popNum):
                 self.pm_effectiveMigration[i,j] = self.pm_migrationRates[i,j]*self.pm.contactDensity[j]/self.pm.sizes[j]+self.pm_migrationRates[j,i]*self.pm.contactDensity[i]/self.pm.sizes[i]
                 if self.pm_effectiveMigration[i,j] > self.pm_maxEffectiveMigration[j]:
@@ -497,7 +500,7 @@ cdef class BirthDeathModel:
         for j in range(0, iterations):
             self.SampleTime()
             popId = self.GenerateEvent()
-            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+            if self.totalRate == 0.0 or self.pm.globalInfectious == 0 or self.events.ptr == 20000000:
                 break
             self.CheckLockdown(popId)
         print("Total number of iterations: ", self.events.ptr)

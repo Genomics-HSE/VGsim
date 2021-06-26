@@ -20,6 +20,8 @@ def configuration(parent_package='', top_path=None):
                                   'models.pxi', 'fast_choose.pxi'],
                          language='c++',
                          include_dirs=[numpy.get_include()],
+                         extra_compile_args=['-fopenmp'],
+                         extra_link_args=['-fopenmp'],
     )
 
     return config
