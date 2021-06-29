@@ -21,7 +21,7 @@ First, install the dependencies
 
 ```
 $ python -m pip install numpy>=1.19.5 cython
-$ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.1
+$ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.2
 ```
 
 Then, build the C extensions (note that we are doing an inplace, editable build
