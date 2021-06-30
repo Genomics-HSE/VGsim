@@ -16,6 +16,8 @@ parser.add_argument('frate',
 
 parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
                     help='number of iterations (default is 1000)')
+parser.add_argument('--sampleSize', '-s', nargs=1, type=int, default=None,
+                    help='number of sample (default is None)')
 parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
                     help='population model: a file with population sizes etc, and a file with migration rate matrix')
 parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
@@ -40,6 +42,8 @@ if isinstance(clargs.frate, list):
     clargs.frate = clargs.frate[0]
 if isinstance(clargs.iterations, list):
     clargs.iterations = clargs.iterations[0]
+if isinstance(clargs.sampleSize, list):
+    clargs.sampleSize = clargs.sampleSize[0]
 if isinstance(clargs.susceptibility, list):
     clargs.susceptibility = clargs.susceptibility[0]
 if isinstance(clargs.suscepTransition, list):
@@ -48,6 +52,9 @@ if isinstance(clargs.seed, list):
     clargs.seed = clargs.seed[0]
 
 bRate, dRate, sRate, mRate = ReadRates(clargs.frate)
+
+if clargs.sampleSize == None:
+    clargs.sampleSize = clargs.iterations
 
 if clargs.populationModel == None:
     popModel = None
@@ -76,7 +83,7 @@ print("Seed: ", rndseed)
 simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, lockdownModel=lockdownModel, suscepTransition=suscepTransition, rndseed=rndseed)
 # simulation.Debug()
 t1 = time.time()
-simulation.SimulatePopulation(clargs.iterations)
+simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
 #simulation.Debug()
 t2 = time.time()
 simulation.GetGenealogy()

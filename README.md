@@ -56,6 +56,14 @@ In some setups, the following was needed to install `mc_lib`
 $ python -m pip install -t ./ git+https://github.com/ev-br/mc_lib.git@v0.1
 ```
 
+
+Stopping criterion
+------------------
+
+Exists two variants to stop simulation.
+First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
+
+
 Setting haplotype (strain) model
 --------------------------------
 
