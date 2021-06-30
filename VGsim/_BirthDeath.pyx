@@ -491,13 +491,6 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize):
-        # for j in range(0, iterations):
-        #     self.SampleTime()
-        #     popId = self.GenerateEvent()
-        #     if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-        #         break
-        #     self.CheckLockdown(popId)
-
         cdef Py_ssize_t popId, j = 0
         while (j < iterations and self.sCounter < sampleSize):
             self.SampleTime()
@@ -506,8 +499,7 @@ cdef class BirthDeathModel:
                 break
             self.CheckLockdown(popId)
             j += 1
-
-        print("Check!")
+            
         print("Total number of iterations: ", self.events.ptr)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
