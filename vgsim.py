@@ -80,17 +80,19 @@ simulation.SimulatePopulation(clargs.iterations)
 #simulation.Debug()
 t2 = time.time()
 simulation.GetGenealogy()
-# simulation.Debug()
+#simulation.Debug()
 t3 = time.time()
 simulation.Report()
 print(t2 - t1)
 print(t3 - t2)
 print("_________________________________")
 
-pruferSeq, times, mut = simulation.Output_tree_mutations()
+pruferSeq, times, mut, populations = simulation.Output_tree_mutations()
 
 
 if clargs.createNewick:
-    writeGenomeNewick(pruferSeq, times)
+    writeGenomeNewick(pruferSeq, times, populations)
 if clargs.writeMutations:
     writeMutations(mut, len(pruferSeq))
+
+

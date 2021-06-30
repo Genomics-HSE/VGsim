@@ -77,6 +77,7 @@ cdef class Events:
         return( ev )
 
 
+
 cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
@@ -854,4 +855,9 @@ cdef class BirthDeathModel:
             mut[2].append(self.mut.site[i])
             mut[3].append(self.mut.DS[i])
 
-        return tree, times, mut
+        times_dict = {self.events.times[i]: i for i in range(len(self.events.times))}
+        populations = {}
+        for time in self.times:
+            populations[time] = self.events.populations[times_dict[time]]
+
+        return tree, times, mut, populations
