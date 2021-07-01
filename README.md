@@ -25,7 +25,7 @@ $ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.2
 ```
 
 Then, build the C extensions (note that we are doing an inplace, editable build
-with `-e .`),
+with `-e .`). Please, note, that the build must be conducted from the root VGsim folder, not the inner one.
 
 ```
 $ python -m pip install -e .
