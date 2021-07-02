@@ -519,14 +519,14 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void CheckLockdown(self, Py_ssize_t popId):
-        if self.pm.totalInfectious[popId] > self.pm.startLD[popId] and not self.pm.lockdownON:
+        if self.pm.totalInfectious[popId] > self.pm.startLD[popId] and self.pm.lockdownON[popId] == 0:
             self.UpdateContactDensity(popId, self.pm.contactDensityAfterLockdown[popId] )
             self.swapLockdown += 1
-            self.pm.lockdownON = True
-        if self.pm.totalInfectious[popId] < self.pm.endLD[popId] and self.pm.lockdownON:
+            self.pm.lockdownON[popId] = 1
+        if self.pm.totalInfectious[popId] < self.pm.endLD[popId] and self.pm.lockdownON[popId] == 1:
             self.UpdateContactDensity(popId, self.pm.contactDensityBeforeLockdown[popId] )
             self.swapLockdown += 1
-            self.pm.lockdownON = False
+            self.pm.lockdownON[popId] = 0
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

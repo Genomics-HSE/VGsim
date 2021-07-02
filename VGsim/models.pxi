@@ -38,10 +38,9 @@ class Lockdown:
 cdef class PopulationModel:
     cdef:
         Py_ssize_t globalInfectious
-        long[::1] sizes, totalSusceptible, totalInfectious
+        long[::1] sizes, totalSusceptible, totalInfectious, lockdownON
         long[:,::1] susceptible
         double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD
-        bint lockdownON
 
     def __init__(self, populations, susceptible_num, lockdownModel=None):
         sizePop = len(populations)
@@ -73,14 +72,13 @@ cdef class PopulationModel:
                 self.contactDensityAfterLockdown[i] = lockdownModel[i].conDenAfterLD
                 self.startLD[i] = lockdownModel[i].startLD*self.sizes[i]/100.0
                 self.endLD[i] = lockdownModel[i].endLD*self.sizes[i]/100.0
-            self.lockdownON = False
         else:
             for i in range(sizePop):
                 self.contactDensityBeforeLockdown[i] = 0
                 self.contactDensityAfterLockdown[i] = 0
                 self.startLD[i] = 1.01*self.sizes[i]
                 self.endLD[i] = 1.0*self.sizes[i]
-            self.lockdownON = False
+        self.lockdownON = np.zeros(sizePop, dtype=np.int64)
 
 
     @cython.boundscheck(False)
@@ -98,10 +96,3 @@ cdef class PopulationModel:
         self.totalSusceptible[popId] += 1
         self.totalInfectious[popId] -= 1
         self.globalInfectious -= 1
-
-# cdef class SusceptibleModel:
-#     cdef: 
-
-
-# cdef class RateModel:
-#     cdef:
