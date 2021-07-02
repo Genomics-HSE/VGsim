@@ -95,7 +95,7 @@ cdef class BirthDeathModel:
         double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility, totalHapMutType, suscepTransition, immuneSourcePopRate
         double[:,:,::1] eventHapPopRate, susceptHapPopRate, hapMutType
 
-    def __init__(self, iterations, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, suscepTransition=None, lockdownModel=None, rndseed=1256, **kwargs):
+    def __init__(self, iterations, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, suscepTransition=None, lockdownModel=None, samplingMultiplier=None, rndseed=1256, **kwargs):
         self.currentTime = 0.0
         self.sCounter = 0 #sample counter
         self.bCounter = 0
@@ -118,7 +118,7 @@ cdef class BirthDeathModel:
             self.pm = PopulationModel( [ Population() ], self.susceptible_num)
             self.pm_migrationRates = np.asarray((0, 0), dtype=float)
         else:
-            self.pm = PopulationModel( populationModel[0] , self.susceptible_num, lockdownModel)
+            self.pm = PopulationModel( populationModel[0] , self.susceptible_num, lockdownModel, samplingMultiplier)
             self.pm_migrationRates = np.asarray(populationModel[1])
         self.popNum = self.pm.sizes.shape[0]
         self.pm_effectiveMigration = np.zeros((self.popNum, self.popNum), dtype=float)
@@ -228,7 +228,7 @@ cdef class BirthDeathModel:
                 self.birthHapPopRate[pn, hn] = self.BirthRate(pn, hn)
                 self.eventHapPopRate[pn, hn, 0] = self.birthHapPopRate[pn, hn]
                 self.eventHapPopRate[pn, hn, 1] = self.dRate[hn]
-                self.eventHapPopRate[pn, hn, 2] = self.sRate[hn]
+                self.eventHapPopRate[pn, hn, 2] = self.pm.samplingMultiplier[pn] * self.sRate[hn]
                 self.eventHapPopRate[pn, hn, 3] = self.tmRate[hn]
                 for i in range(4):
                     self.tEventHapPopRate[pn, hn] += self.eventHapPopRate[pn, hn, i]
@@ -769,6 +769,10 @@ cdef class BirthDeathModel:
         print("Population model - endLD(const): ", end=" ")
         for i in range(self.pm.endLD.shape[0]):
             print(self.pm.endLD[i], end=" ")
+        print()
+        print("Population model - samplingMultiplier(const): ", end=" ")
+        for i in range(self.pm.samplingMultiplier.shape[0]):
+            print(self.pm.samplingMultiplier[i], end=" ")
         print()
         print("Population model - susceptible(mutable)----")
         for i in range(self.pm.sizes.shape[0]):

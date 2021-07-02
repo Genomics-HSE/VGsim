@@ -77,15 +77,30 @@ def ReadPopulations(fn):
         line = line.split(" ")
         populations = []
         lockdown = []
+        samplingMultiplier = []
         for line in f:
             if line[0] == "#":
                 next
             line = line.rstrip()
             line = line.split(" ")
             populations.append( Population(int(line[1]), float(line[2])) )
-            if len(line) == 6:
-                lockdown.append( Lockdown(float(line[3]), float(line[4]), float(line[5])) )
-        return(populations, lockdown)
+            if len(line) == 4:
+                part_line = line[3].split(",")
+                if len(part_line) == 1:
+                    samplingMultiplier.append(float(part_line[0]))
+                elif len(part_line) == 3:
+                    lockdown.append( Lockdown(float(part_line[0]), float(part_line[1]), float(part_line[2])) )
+            elif len(line) == 5:
+                part_line1 = line[3].split(",")
+                part_line2 = line[4].split(",")
+                if len(part_line1) == 1:
+                    samplingMultiplier.append(float(part_line1[0]))
+                    lockdown.append( Lockdown(float(part_line2[0]), float(part_line2[1]), float(part_line2[2])) )
+                elif len(part_line1) == 3:
+                    samplingMultiplier.append(float(part_line2[0]))
+                    lockdown.append( Lockdown(float(part_line1[0]), float(part_line1[1]), float(part_line1[2])) )
+        print(samplingMultiplier)
+        return(populations, lockdown, samplingMultiplier)
 
 def ReadMigrationRates(fn):
     with open(fn) as f:

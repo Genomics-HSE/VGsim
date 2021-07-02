@@ -40,9 +40,9 @@ cdef class PopulationModel:
         Py_ssize_t globalInfectious
         long[::1] sizes, totalSusceptible, totalInfectious, lockdownON
         long[:,::1] susceptible
-        double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD
+        double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier
 
-    def __init__(self, populations, susceptible_num, lockdownModel=None):
+    def __init__(self, populations, susceptible_num, lockdownModel=None, samplingMultiplier=None):
         sizePop = len(populations)
 
         self.sizes = np.zeros(sizePop, dtype=np.int64)
@@ -79,6 +79,10 @@ cdef class PopulationModel:
                 self.startLD[i] = 1.01*self.sizes[i]
                 self.endLD[i] = 1.0*self.sizes[i]
         self.lockdownON = np.zeros(sizePop, dtype=np.int64)
+        if len(samplingMultiplier) != 0:
+            self.samplingMultiplier = np.asarray(samplingMultiplier)
+        else:
+            self.samplingMultiplier = np.ones(sizePop)
 
 
     @cython.boundscheck(False)

@@ -96,12 +96,12 @@ In order to set population model use `--populationModel` or `-pm` flag followed 
 Here is an example of the file with populations.
 ```
 #Population_format_version 0.0.1
-id size contactDensity conDenAfterLD startLD endLD
-0 20000000 1.0 0.1 2 1
-1 10000000 1.0 0.1 2 1
+id size contactDensity conDenAfterLD startLD endLD samplingMultiplier
+0 20000000 1.0 0.1,2,1 5 
+1 10000000 1.0 0.1,2,1 1
 ...
 ```
-`id` is the population number (for convinience). `size` is the total number of individuals in the population. Contact density in the relative number of contacts per time unit. It can be used to model different social, cultural, economical and other aspects (e.g. population density in a city or a country side, holiday times etc.) Currently we provide only one out-of-the-box solution to change contact density during simulation. Those are optinal fields (included in the example) to tune lockdowns. `conDenAfterLD` is the contact density during lockdown, `startLD` and `endLD` are condition to impose and lift the lockdown. These two numerbs are the percentage of individuals which are simultaneously infected. If the percentage of simultanelously infected individuals in a population becomes larger than `startLD`, lockdown is imposed. As soon as the percentage of simultaneously infected individuals drops below `endLD` the lockdown is lifted.
+`id` is the population number (for convinience). `size` is the total number of individuals in the population. Contact density in the relative number of contacts per time unit. It can be used to model different social, cultural, economical and other aspects (e.g. population density in a city or a country side, holiday times etc.) Currently we provide only one out-of-the-box solution to change contact density during simulation. Those are optinal fields (included in the example) to tune lockdowns. `conDenAfterLD` is the contact density during lockdown, `startLD` and `endLD` are condition to impose and lift the lockdown. These two numbers are the percentage of individuals which are simultaneously infected. If the percentage of simultanelously infected individuals in a population becomes larger than `startLD`, lockdown is imposed. As soon as the percentage of simultaneously infected individuals drops below `endLD` the lockdown is lifted.
 
 ### Part 2 - setting migration matrix
 
