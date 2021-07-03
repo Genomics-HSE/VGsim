@@ -60,7 +60,7 @@ if clargs.populationModel == None:
     popModel = None
     lockdownModel = None
 else:
-    populations, lockdownModel = ReadPopulations(clargs.populationModel[0])
+    populations, lockdownModel, samplingMulti = ReadPopulations(clargs.populationModel[0])
     migrationRates = ReadMigrationRates(clargs.populationModel[1])
     popModel = [populations, migrationRates]
 
@@ -80,11 +80,11 @@ else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)
 
-simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, lockdownModel=lockdownModel, suscepTransition=suscepTransition, rndseed=rndseed)
-# simulation.Debug()
+simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
+simulation.Debug()
 t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
-#simulation.Debug()
+# simulation.Debug()
 t2 = time.time()
 simulation.GetGenealogy()
 #simulation.Debug()
