@@ -356,7 +356,7 @@ cdef class BirthDeathModel:
         haplotype, self.rn = fastChoose2( self.liveBranches[sourcePopId], self.pm.totalInfectious[sourcePopId], self.rn)
         suscType, self.rn = fastChoose2( self.pm.susceptible[targetPopId], self.pm.totalSusceptible[targetPopId], self.rn)
         p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[haplotype, suscType]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth
-        if p_accept < self.rn:
+        if self.rn < p_accept:
             self.liveBranches[targetPopId, haplotype] += 1
             self.pm.NewInfection(targetPopId, suscType)
 
@@ -388,8 +388,6 @@ cdef class BirthDeathModel:
         if DS >= AS:
             DS += 1
         newHaplotype = haplotype + (DS-AS)*digit4
-
-        # print("MutType, AS, DS: ", mutationType, AS, DS)
 
         self.liveBranches[popId, newHaplotype] += 1
         self.liveBranches[popId, haplotype] -= 1
@@ -501,7 +499,7 @@ cdef class BirthDeathModel:
             self.CheckLockdown(popId)
             j += 1
             
-        print("Total number of iterations: ", self.events.ptr)
+        print("Total number of iterations: ", j)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
             print("_________________________________")
