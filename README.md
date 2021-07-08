@@ -105,7 +105,7 @@ id size contactDensity conDenAfterLD startLD endLD samplingMultiplier
 
 ### Part 2 - setting migration matrix
 
-In the model we consider migration as some individuals spending some time in other population and then returning to their home population. This is modelled by "visit" rates. During such visits individuals are assumed to contact with individuals of another population according to contact density of the destination population (so lockdown in a destination country also changes the contact rate of a visitor). Example:
+In the model we consider migration as some individuals spending some time in other population and then returning to their home population. This is modelled by the probabilities that an individual from their home population is found in a destination population. During such visits individuals are assumed to contact with individuals of another population according to contact density of the destination population (so lockdown in a destination country also changes the contact rate of a visitor). Example:
 
 ```#Migration_format_version 0.0.1
 0.0 0.002 0.002 0.001
