@@ -182,8 +182,8 @@ class Vertex():
         else:
             self.__right_child = Leaf(right_node, right_time, populations)
 
-    def get_children(self):
-        return '({0},{1}){2}:{3}'.format(self.__left_child.get_children(), self.__right_child.get_children(), self.__root, self.__root_time)
+    def get_children(self, base_time):
+        return '({0},{1}){2}:{3}'.format(self.__left_child.get_children(self.__root_time), self.__right_child.get_children(self.__root_time), self.__root, self.__root_time - base_time)
 
     def write_population(self):
         return '{0}\t{1}\n'.format(self.__root, self.__root_population_id) + self.__left_child.write_population() + self.__right_child.write_population()
@@ -194,8 +194,8 @@ class Leaf(Vertex):
         self.__times = times
         self.__leaf_population_id = populations[times]
 
-    def get_children(self):
-        return '{0}:{1}'.format(self.__leaf, self.__times)
+    def get_children(self, base_time):
+        return '{0}:{1}'.format(self.__leaf, self.__times - base_time)
 
     def write_population(self):
         return '{0}\t{1}\n'.format(self.__leaf, self.__leaf_population_id)
@@ -227,7 +227,7 @@ def writeGenomeNewick(pruferSeq, times, populations):
     result = Vertex(root, root_time, children, populations)
 
     f_nwk = open('newick_output.nwk', 'w')
-    f_nwk.write(result.get_children())
+    f_nwk.write(result.get_children(root_time))
     f_nwk.write(';')
     f_nwk.close()
 
