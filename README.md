@@ -2,8 +2,8 @@
 Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/badge.svg)
-![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)
+[![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/)
+[![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/)
 
 
 Building the package
@@ -21,7 +21,7 @@ First, install the dependencies
 
 ```
 $ python -m pip install numpy>=1.19.5 cython
-$ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.2
+$ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.3
 ```
 
 Then, build the C extensions (note that we are doing an inplace, editable build
