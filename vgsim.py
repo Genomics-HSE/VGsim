@@ -35,6 +35,9 @@ parser.add_argument("--createNewick", '-nwk',
 parser.add_argument("--writeMutations", '-tsv',
                     help="Create a mutation file *.tsv ",
                     action="store_true")
+parser.add_argument("--writeMigrations",
+                    help="Create a migration file *.txt ",
+                    action="store_true")
 
 clargs = parser.parse_args()
 
@@ -101,5 +104,7 @@ if clargs.createNewick:
     writeGenomeNewick(pruferSeq, times, populations)
 if clargs.writeMutations:
     writeMutations(mut, len(pruferSeq))
+if clargs.writeMigrations:
+    simulation.writeMigrations()
 
 

@@ -87,6 +87,7 @@ cdef class BirthDeathModel:
         Events events
         PopulationModel pm
         Mutations mut
+        Migrations mig
 
         long[::1] tree, suscType
         long[:,::1] liveBranches
@@ -104,6 +105,7 @@ cdef class BirthDeathModel:
         self.mutCounter = 0
         self.events = Events(iterations+1)
         self.mut = Mutations()
+        self.mig = Migrations()
         self.migPlus = 0
         self.migNonPlus = 0
         self.swapLockdown = 0
@@ -620,6 +622,7 @@ cdef class BirthDeathModel:
                         self.tree[ptrTreeAndTime] = -1
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
+                        self.mig.AddMigration(idt, e_time, e_population, e_newPopulation)
                     else:
                         liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
                         liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
@@ -863,3 +866,11 @@ cdef class BirthDeathModel:
             populations[time] = self.events.populations[times_dict[time]]
 
         return tree, times, mut, populations
+
+    def writeMigrations(self):
+        file = open('migrations.txt', 'w')
+        file.write("Node Time OldPopulation NewPopulation\n")
+        for i in range(self.mig.nodeId.size()):
+            file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
+        file.close()
+

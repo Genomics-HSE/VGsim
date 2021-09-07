@@ -22,6 +22,22 @@ cdef class Mutations:
         self.site.push_back(int(site))
         # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
+cdef class Migrations:
+    cdef:
+        vector[Py_ssize_t] nodeId, oldPop, newPop
+        vector[double] time
+
+    def __init__(self):
+        pass
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef void AddMigration(self, Py_ssize_t nodeId, double time, Py_ssize_t oldPop, Py_ssize_t newPop):
+        self.nodeId.push_back(nodeId)
+        self.time.push_back(time)
+        self.oldPop.push_back(oldPop)
+        self.newPop.push_back(newPop)
 
 class Population:
     def __init__(self, size=1000000, contactDensity=1.0):
