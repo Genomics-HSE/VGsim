@@ -5,12 +5,15 @@ def ReadRates(fn):
     with open(fn) as f:
         line = next(f).rstrip()#header with version etc
         line = line.split(" ")
+        flag = 0
 
         line = next(f).rstrip()
         line = line.split(" ")
         hapFilled = False
         if line[0] == "H":
             hapFilled = True
+        if line[3] == "SP":
+            flag = 1
         shift = int(hapFilled)
         dim = len(line) - shift
         hapNum = int( 4**(dim - 3) )
@@ -28,8 +31,12 @@ def ReadRates(fn):
             line = line.split(" ")
             line = [el for el in line[shift:]]
             bRate.append(float(line[0]))
-            dRate.append(float(line[1]))
-            sRate.append(float(line[2]))
+            if flag == 0:
+                dRate.append(float(line[1]))
+                sRate.append(float(line[2]))
+            else:
+                dRate.append(float(line[1]) * (1 - float(line[2])))
+                sRate.append(float(line[1]) * float(line[2]))
             mRate.append( [] )
             mutations = line[3:]
             for mut in mutations:
