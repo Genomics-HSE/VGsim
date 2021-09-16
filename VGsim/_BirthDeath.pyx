@@ -597,7 +597,7 @@ cdef class BirthDeathModel:
                     liveBranchesS[e_population][e_newHaplotype][n1] = liveBranchesS[e_population][e_newHaplotype][lbs-1]
                     liveBranchesS[e_population][e_newHaplotype].pop_back()
                     liveBranchesS[e_population][e_haplotype].push_back(id1)
-                    self.mut.AddMutation(id1, e_haplotype, e_newHaplotype)
+                    self.mut.AddMutation(id1, e_haplotype, e_newHaplotype, e_time)
                 self.liveBranches[e_population][e_newHaplotype] -= 1
                 self.liveBranches[e_population][e_haplotype] += 1
             elif e_type_ == SUSCCHANGE:
@@ -853,12 +853,13 @@ cdef class BirthDeathModel:
         for i in range(self.tree.shape[0]):
             tree.append(self.tree[i])
             times.append(self.times[i])
-        mut = [[], [], [], []]
+        mut = [[], [], [], [], []]
         for i in range(self.mut.nodeId.size()):
             mut[0].append(self.mut.nodeId[i])
             mut[1].append(self.mut.AS[i])
             mut[2].append(self.mut.site[i])
             mut[3].append(self.mut.DS[i])
+            mut[4].append(self.mut.time[i])
 
         times_dict = {self.events.times[i]: i for i in range(len(self.events.times))}
         populations = {}
@@ -873,4 +874,3 @@ cdef class BirthDeathModel:
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
         file.close()
-

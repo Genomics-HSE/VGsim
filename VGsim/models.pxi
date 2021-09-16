@@ -1,13 +1,14 @@
 cdef class Mutations:
     cdef:
         vector[Py_ssize_t] nodeId, AS, DS, site
+        vector[double] time
     def __init__(self):#AS = ancestral state, DS = derived state
         pass
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void AddMutation(self, Py_ssize_t nodeId, Py_ssize_t haplotype, Py_ssize_t newHaplotype):
+    cdef void AddMutation(self, Py_ssize_t nodeId, Py_ssize_t haplotype, Py_ssize_t newHaplotype, double time):
         cdef:
             Py_ssize_t ASDSdigit4, site, digit4
         ASDSdigit4 = int(abs(newHaplotype - haplotype))
@@ -20,6 +21,7 @@ cdef class Mutations:
         self.DS.push_back(int(floor(newHaplotype/digit4) % 4))
         self.AS.push_back(int(floor(haplotype/digit4) % 4))
         self.site.push_back(int(site))
+        self.time.push_back(time)
         # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
 cdef class Migrations:
