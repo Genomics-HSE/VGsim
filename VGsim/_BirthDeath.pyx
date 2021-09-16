@@ -10,6 +10,7 @@ from mc_lib.rndm cimport RndmWrapper
 
 import numpy as np
 import sys
+import os
 
 include "fast_choose.pxi"
 include "models.pxi"
@@ -654,34 +655,59 @@ cdef class BirthDeathModel:
                 sys.exit(0)
 
     def LogDynamics(self, step_num = 1000):
-        count = 0
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
-        dynamics = [None for i in range(step_num+1)]
-        ptr = step_num
-        for e_id in range(self.events.ptr-1, -1, -1):
-            e_time = self.events.times[e_id]
-            e_type_ = self.events.types[e_id]
-            e_population = self.events.populations[e_id]
-            e_haplotype = self.events.haplotypes[e_id]
-            e_newHaplotype = self.events.newHaplotypes[e_id]
-            e_newPopulation = self.events.newPopulations[e_id]
+        suscepDate = np.zeros((self.popNum, self.susceptible_num), dtype=np.int64)
+        hapDate = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        if not os.path.isdir("logs"):
+            os.mkdir("logs")
 
-            if e_type_ == BIRTH:
-                self.liveBranches[e_population][e_haplotype] -= 1
-            elif e_type_ == DEATH:
-                self.liveBranches[e_population][e_haplotype] += 1
-            elif e_type_ == SAMPLING:
-                self.liveBranches[e_population][e_haplotype] += 1
-            elif e_type_ == MIGRATION:
-                self.liveBranches[e_newPopulation][e_haplotype] -= 1
-            elif e_type_ == MUTATION:
-                self.liveBranches[e_population][e_newHaplotype] -= 1
-                self.liveBranches[e_population][e_haplotype] += 1
+        logDynamics = []
+        for i in range(self.popNum):
+            logDynamics.append(open('logs/PID' + str(i) + '.log', 'w'))
+            logDynamics[i].write("time")
+            for sn in range(self.susceptible_num):
+                if sn == 0:
+                    suscepDate[i, sn] = self.pm.sizes[i]
+                else:
+                    suscepDate[i, sn] = 0
+                logDynamics[i].write(" S" + str(sn))
+            for hn in range(self.hapNum):
+                hapDate[i, hn] = 0
+                logDynamics[i].write(" H" + str(hn))
+            logDynamics[i].write("\n")
 
-            while ptr >= 0 and time_points[ptr] >= e_time:
-                dynamics[ptr] = [ [el for el in br] for br in self.liveBranches]
-                ptr -= 1
-        return([time_points, dynamics])
+        point = 0
+        for j in range(self.events.ptr):
+            if self.events.types[j] == BIRTH:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] += 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] -= 1
+            elif self.events.types[j] == DEATH:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == SAMPLING:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == MUTATION:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                hapDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == SUSCCHANGE:
+                suscepDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == MIGRATION:
+                suscepDate[self.events.newPopulations[j], self.events.newHaplotypes[j]] -= 1
+                hapDate[self.events.newPopulations[j], self.events.haplotypes[j]] += 1
+            if time_points[point] <= self.events.times[j]:
+                for i in range(self.popNum):
+                    logDynamics[i].write(str(time_points[point]) + " ")
+                    for k in range(self.susceptible_num):
+                        logDynamics[i].write(str(suscepDate[i, k]) + " ")
+                    for k in range(self.hapNum):
+                        logDynamics[i].write(str(hapDate[i, k]) + " ")
+                    logDynamics[i].write("\n")
+                point += 1 
+
+        for i in range(self.popNum-1, -1, -1):
+            logDynamics[i].close()
 
     def Report(self):
         print("Number of samples:", self.sCounter)
