@@ -709,6 +709,15 @@ cdef class BirthDeathModel:
         for i in range(self.popNum-1, -1, -1):
             logDynamics[i].close()
 
+    def sampleDate(self):
+        time, pop, hap = [], [], []
+        for i in range(self.events.ptr):
+            if self.events.types[i] == SAMPLING:
+                time.append(self.events.times[i])
+                pop.append(self.events.populations[i])
+                hap.append(self.events.haplotypes[i])
+        return time, pop, hap
+
     def Report(self):
         print("Number of samples:", self.sCounter)
 

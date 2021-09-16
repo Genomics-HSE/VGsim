@@ -244,6 +244,13 @@ class Simulator:
 	def mig(self):
 		self.simulation.writeMigrations()
 
+	def sampleDate(self):
+		time, pop, hap = self.simulation.sampleDate()
+		print(time)
+		print(pop)
+		print(hap)
+
+
 	def change_B(self, target, value):
 		if value <= 0:
 			print("Birth rate less than 0!")
