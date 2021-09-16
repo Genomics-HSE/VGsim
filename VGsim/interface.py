@@ -180,11 +180,12 @@ class Simulator:
 		if _sampleSize == None:
 			_sampleSize = _iterations
 		self.simulation = BirthDeathModel(int(_iterations), self.B_rate, self.D_rate, self.S_rate, self.mutations, populationModel=[self.populations, self.migration], susceptible=self.susc, suscepTransition=self.suscTrans, lockdownModel=self.lockdowns, samplingMultiplier=self.samplingMultiplier, rndseed=int(_seed))
-		self.simulation.Debug()
 		self.simulation.SimulatePopulation(_iterations, _sampleSize)
 		self.simulation.GetGenealogy()
-		self.simulation.Debug()
 		self.simulation.Report()
+
+	def debug(self):
+		self.simulation.Debug()
 
 	def log_dynamics(self, step=1000):
 		self.simulation.LogDynamics(step)
