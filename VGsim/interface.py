@@ -18,32 +18,32 @@ class Lockdown:
         self.endLD = endLD
 
 class Simulator:
-	def __init__(self, B=25, D=10, Sr=1, Sp=None, num_mut=0, mut_rate=None, mut_target_rate=None, num_pop=1, size_pop=1000000, contact_density=1.0, total_mig_rate=0.0, lockdown=None, sampling_multiplier=None, susc_type=None, susceptible=None, susc_trans=None):
+	def __init__(self, B=25, D=10, Sr=1, Sp=None, num_sites=0, mut_rate=None, mut_target_rate=None, num_pop=1, size_pop=1000000, contact_density=1.0, total_mig_rate=0.0, lockdown=None, sampling_multiplier=None, susc_type=None, susceptible=None, susc_trans=None):
 		#Get rates
 		if B > 0 and D > 0 and Sr > 0:
-			self.B_rate = [float(B) for _ in range(4**num_mut)]
+			self.B_rate = [float(B) for _ in range(4**num_sites)]
 			if Sp != None:
 				if 0 < Sp < 1:
-					self.D_rate = [float(D) * (1 - Sp) for _ in range(4**num_mut)]
-					self.S_rate = [float(D) * Sp for _ in range(4**num_mut)]
+					self.D_rate = [float(D) * (1 - Sp) for _ in range(4**num_sites)]
+					self.S_rate = [float(D) * Sp for _ in range(4**num_sites)]
 				else: 
 					self.Error("\"Sr\" should be more 0 and less 1!")
 			else:
-				self.D_rate = [float(D) for _ in range(4**num_mut)]
-				self.S_rate = [float(Sr) for _ in range(4**num_mut)]
+				self.D_rate = [float(D) for _ in range(4**num_sites)]
+				self.S_rate = [float(Sr) for _ in range(4**num_sites)]
 		else:
 			self.Error("\"B\" or \"D\" or \"S\" should be more 0!")
 
 		#Get mutations
 		self.mutations = [[]]
-		if num_mut != 0:
+		if num_sites != 0:
 			if mut_rate != None and mut_target_rate != None:
 				if 0<=mut_rate<=1 and len(mut_target_rate)==3 and mut_target_rate[0]>=0 and mut_target_rate[1]>=0 and mut_target_rate[2]>=0:
-					self.mutations = [[[mut_rate] + mut_target_rate for _ in range(num_mut)] for _ in range(4**num_mut)]
+					self.mutations = [[[mut_rate] + mut_target_rate for _ in range(num_sites)] for _ in range(4**num_sites)]
 				else:
 					self.Error("\"mut_rate\" should be more 0 and less 1, lenght of \"mut_target_rate\" should be equal 3 and each element should be more or equal 0!")
 			else:
-				self.Error("Mutations model consist of \"num_mut\", \"mut_rate\" and \"mut_target_rate\"!")
+				self.Error("Mutations model consist of \"num_sites\", \"mut_rate\" and \"mut_target_rate\"!")
 
 		#Get populations
 		if size_pop>=1 and contact_density>=0 and 0<=total_mig_rate<=1:
@@ -89,8 +89,8 @@ class Simulator:
 				else:
 					self.Error("Each element of \"susceptible\" should be more or equal 0 and less or equal 1!")
 			if 0<=susc_type<len(susceptible):
-				self.suscType = [susc_type for _ in range(4**num_mut)]
-				self.susceptible = [susceptible for _ in range(4**num_mut)]
+				self.suscType = [susc_type for _ in range(4**num_sites)]
+				self.susceptible = [susceptible for _ in range(4**num_sites)]
 			else:
 				self.Error("\"susc_type\" should be more or equal 0 and less lenght of \"susceptible\"!")	
 			self.susc = [self.suscType, self.susceptible]			
@@ -109,6 +109,9 @@ class Simulator:
 							self.suscTrans[i].append(susc_trans/(len(susceptible)-1))
 			else:
 				self.Error("\"susc_trans\" should be more or equal 0 and less or equal 1!")
+
+		#Other date
+		self.pruferSeq = None
 
 	def Error(self, text):
 		print("ERROR:", text)
@@ -228,23 +231,17 @@ class Simulator:
 	# 		plt.plot(hapDate, time_points)
 
 	def newick(self):
-		print("Check!")
-		pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()
-		print("Check!")
+		if self.pruferSeq == None:
+			pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()
 		writeGenomeNewick(pruferSeq, times, populations)
-		print("Check!")
 
 	def mut(self):
-		print("Check!")
-		pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()
-		print("Check!")
+		if self.pruferSeq == None:
+			pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()
 		writeMutations(mut, len(pruferSeq))
-		print("Check!")
 
 	def mig(self):
-		print("Check!")
 		self.simulation.writeMigrations()
-		print("Check!")
 
 	def change_B(self, target, value):
 		if value <= 0:
