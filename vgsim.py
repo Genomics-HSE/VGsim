@@ -18,6 +18,8 @@ parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
                     help='number of iterations (default is 1000)')
 parser.add_argument('--sampleSize', '-s', nargs=1, type=int, default=None,
                     help='number of sample (default is None)')
+parser.add_argument('--time', '-t', nargs=1, type=double, default=None,
+                    help='time for stopping simulation (default is None)')
 parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
                     help='population model: a file with population sizes etc, and a file with migration rate matrix')
 parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
@@ -25,8 +27,8 @@ parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
 parser.add_argument('--suscepTransition', '-st', nargs=1, default=None,
                     help='susceptibility transition file')
 
-# parser.add_argument('--lockdownModel', '-ld', nargs=1, default=None,
-#                     help='lockdown model: a file with parameters for lockdowns')
+parser.add_argument('--lockdownModel', '-ld', nargs=1, default=None,
+                    help='lockdown model: a file with parameters for lockdowns')
 parser.add_argument('--seed', '-seed', nargs=1, type=int, default=None,
                     help='random seed')
 parser.add_argument("--createNewick", '-nwk',
@@ -86,11 +88,11 @@ print("Seed: ", rndseed)
 simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
 # simulation.Debug()
 # t1 = time.time()
-simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
+simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize, clargs.time)
 # simulation.Debug()
 # t2 = time.time()
 simulation.GetGenealogy()
-# simulation.Debug()
+simulation.Debug()
 # t3 = time.time()
 # simulation.Report()
 # print(t2 - t1)

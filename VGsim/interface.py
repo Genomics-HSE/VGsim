@@ -18,18 +18,18 @@ class Lockdown:
         self.endLD = endLD
 
 class Simulator:
-	def __init__(self, B=25, D=10, Sr=1, Sp=None, num_sites=0, mut_rate=None, mut_target_rate=None, num_pop=1, size_pop=1000000, contact_density=1.0, total_mig_rate=0.0, lockdown=None, sampling_multiplier=None, susc_type=None, susceptible=None, susc_trans=None):
+	def __init__(self, infection=25, uninfection=10, Sr=1, Sp=None, num_sites=0, mut_rate=None, mut_target_rate=None, num_pop=1, size_pop=1000000, contact_density=1.0, total_mig_rate=0.0, lockdown=None, sampling_multiplier=None, susc_type=None, susceptible=None, susc_trans=None):
 		#Get rates
-		if B > 0 and D > 0 and Sr > 0:
-			self.B_rate = [float(B) for _ in range(4**num_sites)]
+		if infection > 0 and uninfection > 0 and Sr > 0:
+			self.B_rate = [float(infection) for _ in range(4**num_sites)]
 			if Sp != None:
 				if 0 < Sp < 1:
-					self.D_rate = [float(D) * (1 - Sp) for _ in range(4**num_sites)]
-					self.S_rate = [float(D) * Sp for _ in range(4**num_sites)]
+					self.D_rate = [float(uninfection) * (1 - Sp) for _ in range(4**num_sites)]
+					self.S_rate = [float(uninfection) * Sp for _ in range(4**num_sites)]
 				else: 
 					self.Error("\"Sr\" should be more 0 and less 1!")
 			else:
-				self.D_rate = [float(D) for _ in range(4**num_sites)]
+				self.D_rate = [float(uninfection) for _ in range(4**num_sites)]
 				self.S_rate = [float(Sr) for _ in range(4**num_sites)]
 		else:
 			self.Error("\"B\" or \"D\" or \"S\" should be more 0!")
@@ -174,13 +174,13 @@ class Simulator:
 					print(self.suscTrans[i][j], end=" ")
 				print()
 
-	def simulate(self, _iterations=1000, _sampleSize=None, _seed=None):
+	def simulate(self, _iterations=1000, _sampleSize=None, _time=None, _seed=None):
 		if _seed == None:
 		    _seed = randrange(sys.maxsize)
 		if _sampleSize == None:
 			_sampleSize = _iterations
 		self.simulation = BirthDeathModel(int(_iterations), self.B_rate, self.D_rate, self.S_rate, self.mutations, populationModel=[self.populations, self.migration], susceptible=self.susc, suscepTransition=self.suscTrans, lockdownModel=self.lockdowns, samplingMultiplier=self.samplingMultiplier, rndseed=int(_seed))
-		self.simulation.SimulatePopulation(_iterations, _sampleSize)
+		self.simulation.SimulatePopulation(_iterations, _sampleSize, _time)
 		self.simulation.GetGenealogy()
 		self.simulation.Report()
 
@@ -251,34 +251,34 @@ class Simulator:
 		print(hap)
 
 
-	def change_B(self, target, value):
+	def set_Infection(self, target, value):
 		if value <= 0:
 			print("Birth rate less than 0!")
 			sys.exit(1)
-		if target < 0 and target >= len(self.arrB):
+		if target < 0 and target >= len(self.B_rate):
 			print("TODO")
 			sys.exit(1)
-		self.arrB[target] = value
+		self.B_rate[target] = float(value)
 
-	def change_D(self, target, value):
+	def set_Uninfection(self, target, value):
 		if value <= 0:
 			print("Death rate less than 0!")
 			sys.exit(1)
-		if target < 0 and target >= len(self.arrD):
+		if target < 0 and target >= len(self.D_rate):
 			print("TODO")
 			sys.exit(1)
-		self.arrD[target] = value
+		self.D_rate[target] = float(value)
 
-	def change_S(self, target, value):
+	def set_S(self, target, value):
 		if value <= 0:
 			print("Sampling rate less than 0!")
 			sys.exit(1)
-		if target < 0 and target >= len(self.arrS):
+		if target < 0 and target >= len(self.S_rate):
 			print("TODO")
 			sys.exit(1)
-		self.arrS[target] = value
+		self.S_rate[target] = float(value)
 
-	def change_M(self, target_1, target_2, value):
+	def set_M(self, target_1, target_2, value):
 		if value <= 0 and value > 1:
 			print("Mutation rate less than 0 or more than 1!")
 			sys.exit(1)
@@ -288,9 +288,9 @@ class Simulator:
 		if target_2 < 0 and target_2 >= len(self.mutations[0]):
 			print("TODO")
 			sys.exit(1)
-		self.mutations[target_1][target_2][0] = value
+		self.mutations[target_1][target_2][0] = float(value)
 
-	def change_MutRate(self, target_1, target_2, target_3, value):
+	def set_MutRate(self, target_1, target_2, target_3, value):
 		if value < 0:
 			print("Target mutation rate less than 0") #TODO
 			sys.exit(1)
@@ -303,9 +303,9 @@ class Simulator:
 		if target_3 < 1 and target_3 > 3:
 			print("TODO")
 			sys.exit(1)
-		self.mutations[target_1][target_2][target_3] = value
+		self.mutations[target_1][target_2][target_3] = float(value)
 
-	def change_Migration(self, target_1, target_2, value):
+	def set_Migration(self, target_1, target_2, value):
 		if value <= 0 and value > 1:
 			print("Migration rate less than 0 or more than 1!")
 			sys.exit(1)
@@ -315,45 +315,45 @@ class Simulator:
 		if target_2 < 0 and target_2 >= len(self.migRate[0]):
 			print("TODO")
 			sys.exit(1)
-		self.migRate[target_1][target_2] = value
+		self.migration[target_1][target_2] = float(value)
 
-	def change_startLD(self, target, value):
+	def set_startLD(self, target, value):
 		if value <= 0 and value > 100:
 			print("Proportion of start LD less than 0 or more than 100!")
 			sys.exit(1)
 		if target < 0 and target >= len(self.lockdowns):
 			print("TODO")
 			sys.exit(1)
-		self.lockdowns[target].startLD = value
+		self.lockdowns[target].startLD = float(value)
 
-	def change_endLD(self, target, value):
+	def set_endLD(self, target, value):
 		if value <= 0 and value > 100:
 			print("Proportion of end LD less than 0 or more than 100!")
 			sys.exit(1)
 		if target < 0 and target >= len(self.lockdowns):
 			print("TODO")
 			sys.exit(1)
-		self.lockdowns[target].endLD = value
+		self.lockdowns[target].endLD = float(value)
 
-	def change_conDenAfterLD(self, target, value):
+	def set_conDenAfterLD(self, target, value):
 		if value <= 0:
 			print("Contact density after LD less than 0!")
 			sys.exit(1)
 		if target < 0 and target >= len(self.lockdowns):
 			print("TODO")
 			sys.exit(1)
-		self.lockdowns[target].conDenAfterLD = value
+		self.lockdowns[target].conDenAfterLD = float(value)
 
-	def change_suscType(self, target, value):
+	def set_suscType(self, target, value):
 		if value < 0 and value >= len(self.susceptible[0]):
 			print("Susc type less than 0 or more number of type susceptible!") #TODO
 			sys.exit(1)
 		if target < 0 and target >= len(self.susceptible):
 			print("TODO")
 			sys.exit(1)
-		self.suscType[target] = value
+		self.suscType[target] = int(value)
 
-	def change_susceptible(self, target_1, target_2, value):
+	def set_susceptible(self, target_1, target_2, value):
 		if value < 0 and value > 1:
 			print("Susceptible rate less than 0 or more than 1!") #TODO
 			sys.exit(1)
@@ -365,7 +365,7 @@ class Simulator:
 			sys.exit(1)
 		self.susceptible[target_1][target_2] = value
 
-	def change_suscTrans(self, target_1, target_2, value):
+	def set_suscTrans(self, target_1, target_2, value):
 		if value < 0 and value > 1:
 			print("Susc rate less than 0 or more than 1!") #TODO
 			sys.exit(1)

@@ -492,9 +492,9 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize):
+    cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time):
         cdef Py_ssize_t popId, j = 0
-        while (j < iterations and self.sCounter < sampleSize):
+        while (j < iterations and self.sCounter < sampleSize and self.currentTime < time):
             self.SampleTime()
             popId = self.GenerateEvent()
             if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
@@ -598,7 +598,7 @@ cdef class BirthDeathModel:
                     liveBranchesS[e_population][e_newHaplotype][n1] = liveBranchesS[e_population][e_newHaplotype][lbs-1]
                     liveBranchesS[e_population][e_newHaplotype].pop_back()
                     liveBranchesS[e_population][e_haplotype].push_back(id1)
-                    self.mut.AddMutation(id1, e_haplotype, e_newHaplotype)
+                    self.mut.AddMutation(id1, e_haplotype, e_newHaplotype, e_time)
                 self.liveBranches[e_population][e_newHaplotype] -= 1
                 self.liveBranches[e_population][e_haplotype] += 1
             elif e_type_ == SUSCCHANGE:
@@ -717,6 +717,16 @@ cdef class BirthDeathModel:
                 pop.append(self.events.populations[i])
                 hap.append(self.events.haplotypes[i])
         return time, pop, hap
+
+    # def writeLog(self):
+    #     log = open('events.log', 'w')
+    #     for i in range(self.sCounter * 2 - 3):
+    #         log.write(str(self.tree[i]) + ", ")
+    #     log.write(str(self.tree[self.sCounter * 2 - 2]) + "\n")
+    #     for i in range(self.sCounter * 2 - 3):
+    #         log.write(str(self.times[i]) + ", ")
+    #     log.write(str(self.times[self.sCounter * 2 - 2]))
+    #     log.close()
 
     def Report(self):
         print("Number of samples:", self.sCounter)
@@ -888,12 +898,13 @@ cdef class BirthDeathModel:
         for i in range(self.tree.shape[0]):
             tree.append(self.tree[i])
             times.append(self.times[i])
-        mut = [[], [], [], []]
+        mut = [[], [], [], [], []]
         for i in range(self.mut.nodeId.size()):
             mut[0].append(self.mut.nodeId[i])
             mut[1].append(self.mut.AS[i])
             mut[2].append(self.mut.site[i])
             mut[3].append(self.mut.DS[i])
+            mut[4].append(self.mut.time[i])
 
         times_dict = {self.events.times[i]: i for i in range(len(self.events.times))}
         populations = {}
@@ -908,4 +919,3 @@ cdef class BirthDeathModel:
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
         file.close()
-
