@@ -174,7 +174,7 @@ class Simulator:
 					print(self.suscTrans[i][j], end=" ")
 				print()
 
-	def simulate(self, _iterations=1000, _sampleSize=None, _time=None, _seed=None):
+	def simulate(self, _iterations=1000, _sampleSize=None, _time=-1, _seed=None):
 		if _seed == None:
 		    _seed = randrange(sys.maxsize)
 		if _sampleSize == None:
@@ -190,46 +190,8 @@ class Simulator:
 	def log_dynamics(self, step=1000):
 		self.simulation.LogDynamics(step)
 
-	# def graph(self):
-		# if num_pop != None:
-	# 		time_points = [i*self.simulation.returnCurrentTime() /step_num for i in range(step_num+1)]
-	# 		suscepDate = np.zeros(step_num)
-	# 		hapDate = np.zeros(step_num)
-
-	# 		all_size = 0
-	# 		for i in range(self.simulation.returnPopNum()):
-	# 			all_size += self.simulation.pm.sizes[i]
-	# 		suscepDate[0] = all_size
-	# 		point = 0
-
-	# 		for j in range(self.events.ptr):
-	# 			if self.simulation.events.populations[j] == num_pop:
-	# 				if self.simulation.events.types[j] == BIRTH:
-	# 					hapDate[point] += 1
-	# 					suscepDate[point] -= 1
-	# 				elif self.simulation.events.types[j] == DEATH:
-	# 					hapDate[point] -= 1
-	# 					suscepDate[point] += 1
-	# 				elif self.simulation.events.types[j] == SAMPLING:
-	# 					hapDate[point] -= 1
-	# 					suscepDate[point] += 1
-	# 				elif self.simulation.events.types[j] == MUTATION:
-	# 					hapDate[point] -= 1
-	# 					hapDate[point] += 1
-	# 				elif self.simulation.events.types[j] == SUSCCHANGE:
-	# 					suscepDate[point] -= 1
-	# 					suscepDate[point] += 1
-	# 			elif self.simulation.events.types[j] == MIGRATION and self.simulation.events.newPopulations[j] == num_pop:
-	# 				suscepDate[point] -= 1
-	# 				hapDate[point] += 1
-	# 			if time_points[point] <= self.events.times[j]:
-	# 				suscepDate[point+1] = suscepDate[point]
-	# 				hapDate[point+1] = hapDate[point]
-	# 				point += 1
-
-	# 		plt.plot(suscepDate, time_points)
-
-	# 		plt.plot(hapDate, time_points)
+	def graph(self, pop, hap, step_num=10, option="True scale"):
+		self.simulation.Graph(pop, hap,  step_num, option)
 
 	def newick(self):
 		if self.pruferSeq == None:

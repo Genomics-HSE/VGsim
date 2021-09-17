@@ -11,6 +11,9 @@ from mc_lib.rndm cimport RndmWrapper
 import numpy as np
 import sys
 import os
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import pandas as pd
 
 include "fast_choose.pxi"
 include "models.pxi"
@@ -494,13 +497,22 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time):
         cdef Py_ssize_t popId, j = 0
-        while (j < iterations and self.sCounter < sampleSize and self.currentTime < time):
-            self.SampleTime()
-            popId = self.GenerateEvent()
-            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                break
-            self.CheckLockdown(popId)
-            j += 1
+        if time == -1:
+            while (j < iterations and self.sCounter < sampleSize):
+                self.SampleTime()
+                popId = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(popId)
+                j += 1
+        else:
+            while (j < iterations and self.sCounter < sampleSize and self.currentTime < time):
+                self.SampleTime()
+                popId = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(popId)
+                j += 1
             
         print("Total number of iterations: ", j)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
@@ -708,6 +720,73 @@ cdef class BirthDeathModel:
 
         for i in range(self.popNum-1, -1, -1):
             logDynamics[i].close()
+
+    def newnum(self, x):
+        return x * self.koef
+
+    def oldnum(self, x):
+        return x / self.koef
+
+    def Graph(self, pop, hap, step_num, option):
+        time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
+        Date = np.zeros(step_num+1)
+        Sample = np.zeros(step_num+1)
+
+        point = 0
+        for j in range(self.events.ptr):
+            if time_points[point] < self.events.times[j]:
+                Date[point+1] = Date[point]
+                Sample[point+1] = Sample[point]
+                point += 1
+            if self.events.populations[j] == pop and self.events.haplotypes[j] == hap:
+                if self.events.types[j] == BIRTH:
+                    Date[point] += 1
+                elif self.events.types[j] == DEATH:
+                    Date[point] -= 1
+                elif self.events.types[j] == SAMPLING:
+                    Date[point] -= 1
+                    Sample[point] += 1
+                elif self.events.types[j] == MIGRATION and self.events.populations[j] == pop:
+                    Date[point] -= 1
+                elif self.events.types[j] == MUTATION and self.events.haplotypes[j] == hap:
+                    Date[point] -= 1
+            elif self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == hap and self.events.populations[j] == pop:
+                Date[point] += 1
+            elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == hap:
+                Date[point] += 1
+
+        if option == "True scale":
+            plt.subplots(figsize=(8, 6))
+            plt.plot(time_points, Date, label='Infections')
+            plt.plot(time_points, Sample, label='Sampling')
+            plt.suptitle('Information about population ' + str(pop+1) + ' and haplotype ' + str(hap+1))
+            plt.legend()
+        elif option == "Two axes":
+            figure, axis_1 = plt.subplots(figsize=(8, 6))
+            axis_1.plot(time_points, Date, color='blue', label='Infections')
+            axis_2 = axis_1.twinx()
+            axis_2.plot(time_points, Sample, color='orange', label='Sampling')
+            lines_1, labels_1 = axis_1.get_legend_handles_labels()
+            lines_2, labels_2 = axis_2.get_legend_handles_labels()
+            lines = lines_1 + lines_2
+            labels = labels_1 + labels_2
+            axis_1.legend(lines, labels, loc=0)
+        elif option == "Two plots":
+            fig = plt.figure(figsize=(16, 6))
+            gs = gridspec.GridSpec(1, 2)
+            ax = fig.add_subplot(gs[0, 0])
+            ax.plot(time_points, Date)
+            ax.set_ylabel('Infections')
+            ax.set_xlabel('Time')
+
+            ax = fig.add_subplot(gs[0, 1])
+            ax.plot(time_points, Sample)
+            ax.set_ylabel('Sampling')
+            ax.set_xlabel('Time')
+
+            fig.suptitle('Information about population ' + str(pop) + ' and haplotype ' + str(hap), fontsize=16)
+
+        plt.show()
 
     def sampleDate(self):
         time, pop, hap = [], [], []
