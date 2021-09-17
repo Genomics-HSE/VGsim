@@ -721,12 +721,6 @@ cdef class BirthDeathModel:
         for i in range(self.popNum-1, -1, -1):
             logDynamics[i].close()
 
-    def newnum(self, x):
-        return x * self.koef
-
-    def oldnum(self, x):
-        return x / self.koef
-
     def Graph(self, pop, hap, step_num, option):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
         Date = np.zeros(step_num+1)
