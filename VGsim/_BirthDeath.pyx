@@ -10,6 +10,10 @@ from mc_lib.rndm cimport RndmWrapper
 
 import numpy as np
 import sys
+import os
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import pandas as pd
 
 include "fast_choose.pxi"
 include "models.pxi"
@@ -491,15 +495,24 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize):
+    cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time):
         cdef Py_ssize_t popId, j = 0
-        while (j < iterations and self.sCounter < sampleSize):
-            self.SampleTime()
-            popId = self.GenerateEvent()
-            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                break
-            self.CheckLockdown(popId)
-            j += 1
+        if time == -1:
+            while (j < iterations and self.sCounter < sampleSize):
+                self.SampleTime()
+                popId = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(popId)
+                j += 1
+        else:
+            while (j < iterations and self.sCounter < sampleSize and self.currentTime < time):
+                self.SampleTime()
+                popId = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(popId)
+                j += 1
             
         print("Total number of iterations: ", j)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
@@ -654,34 +667,139 @@ cdef class BirthDeathModel:
                 sys.exit(0)
 
     def LogDynamics(self, step_num = 1000):
-        count = 0
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
-        dynamics = [None for i in range(step_num+1)]
-        ptr = step_num
-        for e_id in range(self.events.ptr-1, -1, -1):
-            e_time = self.events.times[e_id]
-            e_type_ = self.events.types[e_id]
-            e_population = self.events.populations[e_id]
-            e_haplotype = self.events.haplotypes[e_id]
-            e_newHaplotype = self.events.newHaplotypes[e_id]
-            e_newPopulation = self.events.newPopulations[e_id]
+        suscepDate = np.zeros((self.popNum, self.susceptible_num), dtype=np.int64)
+        hapDate = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        if not os.path.isdir("logs"):
+            os.mkdir("logs")
 
-            if e_type_ == BIRTH:
-                self.liveBranches[e_population][e_haplotype] -= 1
-            elif e_type_ == DEATH:
-                self.liveBranches[e_population][e_haplotype] += 1
-            elif e_type_ == SAMPLING:
-                self.liveBranches[e_population][e_haplotype] += 1
-            elif e_type_ == MIGRATION:
-                self.liveBranches[e_newPopulation][e_haplotype] -= 1
-            elif e_type_ == MUTATION:
-                self.liveBranches[e_population][e_newHaplotype] -= 1
-                self.liveBranches[e_population][e_haplotype] += 1
+        logDynamics = []
+        for i in range(self.popNum):
+            logDynamics.append(open('logs/PID' + str(i) + '.log', 'w'))
+            logDynamics[i].write("time")
+            for sn in range(self.susceptible_num):
+                if sn == 0:
+                    suscepDate[i, sn] = self.pm.sizes[i]
+                else:
+                    suscepDate[i, sn] = 0
+                logDynamics[i].write(" S" + str(sn))
+            for hn in range(self.hapNum):
+                hapDate[i, hn] = 0
+                logDynamics[i].write(" H" + str(hn))
+            logDynamics[i].write("\n")
 
-            while ptr >= 0 and time_points[ptr] >= e_time:
-                dynamics[ptr] = [ [el for el in br] for br in self.liveBranches]
-                ptr -= 1
-        return([time_points, dynamics])
+        point = 0
+        for j in range(self.events.ptr):
+            if self.events.types[j] == BIRTH:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] += 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] -= 1
+            elif self.events.types[j] == DEATH:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == SAMPLING:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == MUTATION:
+                hapDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                hapDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == SUSCCHANGE:
+                suscepDate[self.events.populations[j], self.events.haplotypes[j]] -= 1
+                suscepDate[self.events.populations[j], self.events.newHaplotypes[j]] += 1
+            elif self.events.types[j] == MIGRATION:
+                suscepDate[self.events.newPopulations[j], self.events.newHaplotypes[j]] -= 1
+                hapDate[self.events.newPopulations[j], self.events.haplotypes[j]] += 1
+            if time_points[point] <= self.events.times[j]:
+                for i in range(self.popNum):
+                    logDynamics[i].write(str(time_points[point]) + " ")
+                    for k in range(self.susceptible_num):
+                        logDynamics[i].write(str(suscepDate[i, k]) + " ")
+                    for k in range(self.hapNum):
+                        logDynamics[i].write(str(hapDate[i, k]) + " ")
+                    logDynamics[i].write("\n")
+                point += 1 
+
+        for i in range(self.popNum-1, -1, -1):
+            logDynamics[i].close()
+
+    def Graph(self, pop, hap, step_num, option):
+        time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
+        Date = np.zeros(step_num+1)
+        Sample = np.zeros(step_num+1)
+
+        point = 0
+        for j in range(self.events.ptr):
+            if time_points[point] < self.events.times[j]:
+                Date[point+1] = Date[point]
+                Sample[point+1] = Sample[point]
+                point += 1
+            if self.events.populations[j] == pop and self.events.haplotypes[j] == hap:
+                if self.events.types[j] == BIRTH:
+                    Date[point] += 1
+                elif self.events.types[j] == DEATH:
+                    Date[point] -= 1
+                elif self.events.types[j] == SAMPLING:
+                    Date[point] -= 1
+                    Sample[point] += 1
+                elif self.events.types[j] == MIGRATION and self.events.populations[j] == pop:
+                    Date[point] -= 1
+                elif self.events.types[j] == MUTATION and self.events.haplotypes[j] == hap:
+                    Date[point] -= 1
+            elif self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == hap and self.events.populations[j] == pop:
+                Date[point] += 1
+            elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == hap:
+                Date[point] += 1
+
+        if option == "True scale":
+            plt.subplots(figsize=(8, 6))
+            plt.plot(time_points, Date, label='Infections')
+            plt.plot(time_points, Sample, label='Sampling')
+            plt.suptitle('Information about population ' + str(pop+1) + ' and haplotype ' + str(hap+1))
+            plt.legend()
+        elif option == "Two axes":
+            figure, axis_1 = plt.subplots(figsize=(8, 6))
+            axis_1.plot(time_points, Date, color='blue', label='Infections')
+            axis_2 = axis_1.twinx()
+            axis_2.plot(time_points, Sample, color='orange', label='Sampling')
+            lines_1, labels_1 = axis_1.get_legend_handles_labels()
+            lines_2, labels_2 = axis_2.get_legend_handles_labels()
+            lines = lines_1 + lines_2
+            labels = labels_1 + labels_2
+            axis_1.legend(lines, labels, loc=0)
+        elif option == "Two plots":
+            fig = plt.figure(figsize=(16, 6))
+            gs = gridspec.GridSpec(1, 2)
+            ax = fig.add_subplot(gs[0, 0])
+            ax.plot(time_points, Date)
+            ax.set_ylabel('Infections')
+            ax.set_xlabel('Time')
+
+            ax = fig.add_subplot(gs[0, 1])
+            ax.plot(time_points, Sample)
+            ax.set_ylabel('Sampling')
+            ax.set_xlabel('Time')
+
+            fig.suptitle('Information about population ' + str(pop) + ' and haplotype ' + str(hap), fontsize=16)
+
+        plt.show()
+
+    def sampleDate(self):
+        time, pop, hap = [], [], []
+        for i in range(self.events.ptr):
+            if self.events.types[i] == SAMPLING:
+                time.append(self.events.times[i])
+                pop.append(self.events.populations[i])
+                hap.append(self.events.haplotypes[i])
+        return time, pop, hap
+
+    # def writeLog(self):
+    #     log = open('events.log', 'w')
+    #     for i in range(self.sCounter * 2 - 3):
+    #         log.write(str(self.tree[i]) + ", ")
+    #     log.write(str(self.tree[self.sCounter * 2 - 2]) + "\n")
+    #     for i in range(self.sCounter * 2 - 3):
+    #         log.write(str(self.times[i]) + ", ")
+    #     log.write(str(self.times[self.sCounter * 2 - 2]))
+    #     log.close()
 
     def Report(self):
         print("Number of samples:", self.sCounter)
