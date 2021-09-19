@@ -35,13 +35,13 @@ DEF MIGRATION = 5
 cdef class Event:
     cdef:
         double time
-        Py_ssize_t type_, population, haplotype, newHaplotype, newPopulation
+        Py_ssize_t type_, haplotype, population, newHaplotype, newPopulation
 
     def __init__(self, double time, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
         self.time = time
         self.type_ = type_
-        self.population = population
         self.haplotype = haplotype
+        self.population = population
         self.newHaplotype = newHaplotype
         self.newPopulation = newPopulation
 
@@ -50,26 +50,26 @@ cdef class Events:
     cdef:
         double[::1] times
         Py_ssize_t size, ptr
-        Py_ssize_t[::1] types, populations, haplotypes, newHaplotypes, newPopulations
+        Py_ssize_t[::1] types, haplotypes, populations, newHaplotypes, newPopulations
 
-    def __init__(self, Py_ssize_t size_):
-        self.size = size_
+    def __init__(self):
+        self.size = 0
         self.ptr = 0#pointer to the first empty cell
 
-        self.times = np.zeros(self.size, dtype=float)
-        self.types = np.zeros(self.size, dtype=int)
-        self.populations = np.zeros(self.size, dtype=int)
-        self.haplotypes = np.zeros(self.size, dtype=int)
-        self.newHaplotypes = np.zeros(self.size, dtype=int)
-        self.newPopulations = np.zeros(self.size, dtype=int)
+        self.times = np.zeros(1, dtype=float)
+        self.types = np.zeros(1, dtype=int)
+        self.haplotypes = np.zeros(1, dtype=int)
+        self.populations = np.zeros(1, dtype=int)
+        self.newHaplotypes = np.zeros(1, dtype=int)
+        self.newPopulations = np.zeros(1, dtype=int)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
         self.times[ self.ptr ] = time_
         self.types[ self.ptr ] = type_
-        self.populations[ self.ptr ] = population
         self.haplotypes[ self.ptr ] = haplotype
+        self.populations[ self.ptr ] = population
         self.newHaplotypes[ self.ptr ] = newHaplotype
         self.newPopulations[ self.ptr ] = newPopulation
         self.ptr += 1
@@ -79,6 +79,15 @@ cdef class Events:
     cdef Event GetEvent(self, Py_ssize_t e_id):
         ev = Event( self.times[ e_id ], self.types[ e_id ], self.populations[ e_id ], self.haplotypes[ e_id ], self.newHaplotypes[ e_id ], self.newPopulations[ e_id ])
         return( ev )
+
+    cdef void CreateEvents(self, Py_ssize_t iterations):
+        self.size = iterations + self.ptr
+        self.times = np.resize(self.times, self.size)
+        self.types = np.resize(self.types, self.size)
+        self.haplotypes = np.resize(self.haplotypes, self.size)
+        self.populations = np.resize(self.populations, self.size)
+        self.newHaplotypes = np.resize(self.newHaplotypes, self.size)
+        self.newPopulations = np.resize(self.newPopulations, self.size)
 
 
 
@@ -100,14 +109,14 @@ cdef class BirthDeathModel:
         double[:,::1] pm_migrationRates, pm_effectiveMigration, birthHapPopRate, tEventHapPopRate, hapPopRate, mRate, susceptibility, totalHapMutType, suscepTransition, immuneSourcePopRate
         double[:,:,::1] eventHapPopRate, susceptHapPopRate, hapMutType
 
-    def __init__(self, iterations, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, suscepTransition=None, lockdownModel=None, samplingMultiplier=None, rndseed=1256, **kwargs):
+    def __init__(self, bRate, dRate, sRate, mRate, populationModel=None, susceptible=None, suscepTransition=None, lockdownModel=None, samplingMultiplier=None, rndseed=1256, **kwargs):
         self.currentTime = 0.0
         self.sCounter = 0 #sample counter
         self.bCounter = 0
         self.dCounter = 0
         self.migCounter = 0
         self.mutCounter = 0
-        self.events = Events(iterations+1)
+        self.events = Events()
         self.mut = Mutations()
         self.mig = Migrations()
         self.migPlus = 0
@@ -299,6 +308,40 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time):
+        cdef Py_ssize_t popId
+        self.events.CreateEvents(iterations)
+        if time == -1:
+            while (self.events.ptr < self.events.size and self.sCounter < sampleSize):
+                self.SampleTime()
+                popId = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(popId)
+        else:
+            while (self.events.ptr < self.events.size and self.sCounter < sampleSize and self.currentTime < time):
+                self.SampleTime()
+                popId = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(popId)
+            
+        print("Total number of iterations: ", self.events.ptr)
+        print("Size events: ", self.events.size)
+        if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
+            print("Less than two cases were sampled...")
+            print("_________________________________")
+            sys.exit(0)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef inline void SampleTime(self):
+        cdef double tau = - log(self.rndm.uniform()) / self.totalRate
+        self.currentTime += tau
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cdef Py_ssize_t GenerateEvent(self, useNumpy = False):
         cdef:
             Py_ssize_t popId, haplotype, eventType, et
@@ -308,8 +351,11 @@ cdef class BirthDeathModel:
         self.elementsArr2[0] = self.totalRate
         self.elementsArr2[1] = self.totalMigrationRate
         et, self.rn = fastChoose1( self.elementsArr2, self.totalRate+self.totalMigrationRate, self.rn)
-
         if et == 0:
+
+        # if self.totalRate > self.rn * (self.totalRate + self.totalMigrationRate):
+        #     self.rn = self.rn / self.totalRate
+
             popId, self.rn = fastChoose1( self.popRate, self.totalRate, self.rn)
             self.elementsArr2[0] = self.immunePopRate[popId]
             self.elementsArr2[1] = self.infectPopRate[popId]
@@ -352,33 +398,50 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    @cython.cdivision(True)
-    cdef Py_ssize_t GenerateMigration(self):
-        cdef:
-            Py_ssize_t targetPopId, sourcePopId, haplotype, suscType
-            double p_accept
-        targetPopId, self.rn = fastChoose1( self.migPopRate, self.totalMigrationRate, self.rn)
-        sourcePopId, self.rn = fastChoose2_skip( self.pm.totalInfectious, self.pm.globalInfectious-self.pm.totalInfectious[targetPopId], self.rn, skip = targetPopId)
-        haplotype, self.rn = fastChoose2( self.liveBranches[sourcePopId], self.pm.totalInfectious[sourcePopId], self.rn)
-        suscType, self.rn = fastChoose2( self.pm.susceptible[targetPopId], self.pm.totalSusceptible[targetPopId], self.rn)
-        p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[haplotype, suscType]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth
-        if self.rn < p_accept:
-            self.liveBranches[targetPopId, haplotype] += 1
-            self.pm.NewInfection(targetPopId, suscType)
+    cdef void Birth(self, Py_ssize_t popId, Py_ssize_t haplotype):
+        self.liveBranches[popId, haplotype] += 1
 
-            self.immuneSourcePopRate[targetPopId, suscType] = self.pm.susceptible[targetPopId, suscType]*self.suscepCumulTransition[suscType]
-            self.immunePopRate[targetPopId] = 0.0
-            for j in range(self.susceptible_num):
-                self.immunePopRate[targetPopId] += self.immuneSourcePopRate[targetPopId, j]
+        cdef double ws = 0.0
+        for i in range(self.susceptible_num):
+            ws += self.susceptHapPopRate[popId, haplotype, i]
+        st, self.rn = fastChoose1(self.susceptHapPopRate[popId, haplotype], ws, self.rn)
 
-            self.UpdateRates(targetPopId)
-            self.MigrationRates()
-            self.events.AddEvent(self.currentTime, MIGRATION, sourcePopId, haplotype, 0, targetPopId)
-            self.migPlus += 1
-            self.migCounter += 1
-        else:
-            self.migNonPlus += 1
-        return targetPopId
+        self.pm.NewInfection(popId, st)
+
+        self.events.AddEvent(self.currentTime, BIRTH, popId, haplotype, 0, 0)
+        self.immuneSourcePopRate[popId, st] = self.pm.susceptible[popId, st]*self.suscepCumulTransition[st]
+        self.immunePopRate[popId] = 0.0
+        for j in range(self.susceptible_num):
+            self.immunePopRate[popId] += self.immuneSourcePopRate[popId, j]
+        self.UpdateRates(popId)
+        self.bCounter += 1
+        self.MigrationRates()
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void Death(self, Py_ssize_t popId, Py_ssize_t haplotype, bint add_event = True):
+        self.liveBranches[popId, haplotype] -= 1
+        self.pm.NewRecovery(popId, self.suscType[haplotype])
+
+        self.immuneSourcePopRate[popId, self.suscType[haplotype]] = self.pm.susceptible[popId, self.suscType[haplotype]]*self.suscepCumulTransition[self.suscType[haplotype]]
+        self.immunePopRate[popId] = 0.0
+        for j in range(self.susceptible_num):
+            self.immunePopRate[popId] += self.immuneSourcePopRate[popId, j]
+
+        if add_event:
+            self.dCounter += 1
+            self.events.AddEvent(self.currentTime, DEATH, popId, haplotype, 0, 0)
+
+        self.UpdateRates(popId)
+        self.MigrationRates()
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void Sampling(self, Py_ssize_t popId, Py_ssize_t haplotype):
+        self.events.AddEvent(self.currentTime, SAMPLING, popId, haplotype, 0, 0)
+
+        self.Death(popId, haplotype, False)
+        self.sCounter += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -417,30 +480,32 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef inline void SampleTime(self):
-        cdef double tau = - log(self.rndm.uniform()) / self.totalRate
-        self.currentTime += tau
+    cdef Py_ssize_t GenerateMigration(self):
+        cdef:
+            Py_ssize_t targetPopId, sourcePopId, haplotype, suscType
+            double p_accept
+        targetPopId, self.rn = fastChoose1( self.migPopRate, self.totalMigrationRate, self.rn)
+        sourcePopId, self.rn = fastChoose2_skip( self.pm.totalInfectious, self.pm.globalInfectious-self.pm.totalInfectious[targetPopId], self.rn, skip = targetPopId)
+        haplotype, self.rn = fastChoose2( self.liveBranches[sourcePopId], self.pm.totalInfectious[sourcePopId], self.rn)
+        suscType, self.rn = fastChoose2( self.pm.susceptible[targetPopId], self.pm.totalSusceptible[targetPopId], self.rn)
+        p_accept = self.pm_effectiveMigration[sourcePopId, targetPopId]*self.bRate[haplotype]*self.susceptibility[haplotype, suscType]/self.pm_maxEffectiveMigration[targetPopId]/self.maxEffectiveBirth
+        if self.rn < p_accept:
+            self.liveBranches[targetPopId, haplotype] += 1
+            self.pm.NewInfection(targetPopId, suscType)
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef void Birth(self, Py_ssize_t popId, Py_ssize_t haplotype):
-        self.liveBranches[popId, haplotype] += 1
+            self.immuneSourcePopRate[targetPopId, suscType] = self.pm.susceptible[targetPopId, suscType]*self.suscepCumulTransition[suscType]
+            self.immunePopRate[targetPopId] = 0.0
+            for j in range(self.susceptible_num):
+                self.immunePopRate[targetPopId] += self.immuneSourcePopRate[targetPopId, j]
 
-        cdef double ws = 0.0
-        for i in range(self.susceptible_num):
-            ws += self.susceptHapPopRate[popId, haplotype, i]
-        st, self.rn = fastChoose1(self.susceptHapPopRate[popId, haplotype], ws, self.rn)
-
-        self.pm.NewInfection(popId, st)
-
-        self.events.AddEvent(self.currentTime, BIRTH, popId, haplotype, 0, 0)
-        self.immuneSourcePopRate[popId, st] = self.pm.susceptible[popId, st]*self.suscepCumulTransition[st]
-        self.immunePopRate[popId] = 0.0
-        for j in range(self.susceptible_num):
-            self.immunePopRate[popId] += self.immuneSourcePopRate[popId, j]
-        self.UpdateRates(popId)
-        self.bCounter += 1
-        self.MigrationRates()
+            self.UpdateRates(targetPopId)
+            self.MigrationRates()
+            self.events.AddEvent(self.currentTime, MIGRATION, sourcePopId, haplotype, 0, targetPopId)
+            self.migPlus += 1
+            self.migCounter += 1
+        else:
+            self.migNonPlus += 1
+        return targetPopId
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -469,59 +534,6 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void Death(self, Py_ssize_t popId, Py_ssize_t haplotype, bint add_event = True):
-        self.liveBranches[popId, haplotype] -= 1
-        self.pm.NewRecovery(popId, self.suscType[haplotype])
-
-        self.immuneSourcePopRate[popId, self.suscType[haplotype]] = self.pm.susceptible[popId, self.suscType[haplotype]]*self.suscepCumulTransition[self.suscType[haplotype]]
-        self.immunePopRate[popId] = 0.0
-        for j in range(self.susceptible_num):
-            self.immunePopRate[popId] += self.immuneSourcePopRate[popId, j]
-
-        if add_event:
-            self.dCounter += 1
-            self.events.AddEvent(self.currentTime, DEATH, popId, haplotype, 0, 0)
-
-        self.UpdateRates(popId)
-        self.MigrationRates()
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef void Sampling(self, Py_ssize_t popId, Py_ssize_t haplotype):
-        self.events.AddEvent(self.currentTime, SAMPLING, popId, haplotype, 0, 0)
-
-        self.Death(popId, haplotype, False)
-        self.sCounter += 1
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time):
-        cdef Py_ssize_t popId, j = 0
-        if time == -1:
-            while (j < iterations and self.sCounter < sampleSize):
-                self.SampleTime()
-                popId = self.GenerateEvent()
-                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                    break
-                self.CheckLockdown(popId)
-                j += 1
-        else:
-            while (j < iterations and self.sCounter < sampleSize and self.currentTime < time):
-                self.SampleTime()
-                popId = self.GenerateEvent()
-                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                    break
-                self.CheckLockdown(popId)
-                j += 1
-            
-        print("Total number of iterations: ", j)
-        if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
-            print("Less than two cases were sampled...")
-            print("_________________________________")
-            sys.exit(0)
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
     cdef void UpdateContactDensity(self, Py_ssize_t popId, float newCD):
         self.pm.contactDensity[popId] = newCD
         self.SetEffectiveMigration()
@@ -540,6 +552,17 @@ cdef class BirthDeathModel:
             self.UpdateContactDensity(popId, self.pm.contactDensityBeforeLockdown[popId] )
             self.swapLockdown += 1
             self.pm.lockdownON[popId] = 0
+
+    cpdef void UpdateMigration(self, float total_mig_rate):
+        for pn1 in range(self.popNum):
+            for pn2 in range(self.popNum):
+                if pn1 != pn2:
+                    self.pm_migrationRates[pn1, pn2] = total_mig_rate / (self.popNum-1)
+        self.SetEffectiveMigration()
+        self.SetMaxBirth()
+        self.MigrationRates()
+        for pn in range(self.popNum):
+            self.UpdateRates(pn)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -722,6 +745,7 @@ cdef class BirthDeathModel:
             logDynamics[i].close()
 
     def Graph(self, pop, hap, step_num, option):
+
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
         Date = np.zeros(step_num+1)
         Sample = np.zeros(step_num+1)
@@ -740,15 +764,17 @@ cdef class BirthDeathModel:
                 elif self.events.types[j] == SAMPLING:
                     Date[point] -= 1
                     Sample[point] += 1
-                elif self.events.types[j] == MIGRATION and self.events.populations[j] == pop:
+                elif self.events.types[j] == MIGRATION:
                     Date[point] -= 1
-                elif self.events.types[j] == MUTATION and self.events.haplotypes[j] == hap:
+                elif self.events.types[j] == MUTATION:
                     Date[point] -= 1
             elif self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == hap and self.events.populations[j] == pop:
                 Date[point] += 1
             elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == hap:
                 Date[point] += 1
 
+
+        #Graphs
         if option == "True scale":
             plt.subplots(figsize=(8, 6))
             plt.plot(time_points, Date, label='Infections')

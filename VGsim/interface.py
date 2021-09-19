@@ -174,15 +174,22 @@ class Simulator:
 					print(self.suscTrans[i][j], end=" ")
 				print()
 
-	def simulate(self, _iterations=1000, _sampleSize=None, _time=-1, _seed=None):
+	def create_class(self, _seed=None):
 		if _seed == None:
 		    _seed = randrange(sys.maxsize)
+		self.simulation = BirthDeathModel(self.B_rate, self.D_rate, self.S_rate, self.mutations, populationModel=[self.populations, self.migration], susceptible=self.susc, suscepTransition=self.suscTrans, lockdownModel=self.lockdowns, samplingMultiplier=self.samplingMultiplier, rndseed=int(_seed))
+
+	def update_rates(self, total_mig_rate):
+		self.simulation.UpdateMigration(float(total_mig_rate))
+
+	def simulate(self, _iterations=1000, _sampleSize=None, _time=-1):
 		if _sampleSize == None:
 			_sampleSize = _iterations
-		self.simulation = BirthDeathModel(int(_iterations), self.B_rate, self.D_rate, self.S_rate, self.mutations, populationModel=[self.populations, self.migration], susceptible=self.susc, suscepTransition=self.suscTrans, lockdownModel=self.lockdowns, samplingMultiplier=self.samplingMultiplier, rndseed=int(_seed))
 		self.simulation.SimulatePopulation(_iterations, _sampleSize, _time)
-		self.simulation.GetGenealogy()
 		self.simulation.Report()
+
+	def get_genealogy(self):
+		self.simulation.GetGenealogy()
 
 	def debug(self):
 		self.simulation.Debug()
@@ -211,7 +218,6 @@ class Simulator:
 		print(time)
 		print(pop)
 		print(hap)
-
 
 	def set_Infection(self, target, value):
 		if value <= 0:
