@@ -34,10 +34,10 @@ DEF MIGRATION = 5
 
 cdef class Event:
     cdef:
-        double time
         Py_ssize_t type_, haplotype, population, newHaplotype, newPopulation
+        double time
 
-    def __init__(self, double time, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
+    def __init__(self, double time, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
         self.time = time
         self.type_ = type_
         self.haplotype = haplotype
@@ -48,9 +48,10 @@ cdef class Event:
 
 cdef class Events:
     cdef:
-        double[::1] times
         Py_ssize_t size, ptr
+
         Py_ssize_t[::1] types, haplotypes, populations, newHaplotypes, newPopulations
+        double[::1] times
 
     def __init__(self):
         self.size = 0
@@ -65,7 +66,7 @@ cdef class Events:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
+    cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
         self.times[ self.ptr ] = time_
         self.types[ self.ptr ] = type_
         self.haplotypes[ self.ptr ] = haplotype
@@ -77,7 +78,7 @@ cdef class Events:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef Event GetEvent(self, Py_ssize_t e_id):
-        ev = Event( self.times[ e_id ], self.types[ e_id ], self.populations[ e_id ], self.haplotypes[ e_id ], self.newHaplotypes[ e_id ], self.newPopulations[ e_id ])
+        ev = Event( self.times[ e_id ], self.types[ e_id ], self.haplotypes[ e_id ], self.populations[ e_id ], self.newHaplotypes[ e_id ], self.newPopulations[ e_id ])
         return( ev )
 
     cdef void CreateEvents(self, Py_ssize_t iterations):
@@ -95,8 +96,9 @@ cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
 
-        double currentTime, rn, totalRate, maxEffectiveBirth, totalMigrationRate
         Py_ssize_t bCounter, dCounter, sCounter, migCounter, mutCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus, swapLockdown
+        double currentTime, rn, totalRate, maxEffectiveBirth, totalMigrationRate
+
         Events events
         PopulationModel pm
         Mutations mut
@@ -381,7 +383,7 @@ cdef class BirthDeathModel:
             Py_ssize_t sourceImmune, targetImmune
         sourceImmune, self.rn = fastChoose1( self.immuneSourcePopRate[popId], self.immunePopRate[popId], self.rn)
         targetImmune, self.rn = fastChoose1( self.suscepTransition[sourceImmune], self.suscepCumulTransition[sourceImmune], self.rn)
-        self.events.AddEvent(self.currentTime, SUSCCHANGE, popId, sourceImmune, targetImmune, 0)
+        self.events.AddEvent(self.currentTime, SUSCCHANGE, sourceImmune, popId, targetImmune, 0)
         self.pm.susceptible[popId, sourceImmune] -= 1
         self.pm.susceptible[popId, targetImmune] += 1
 
@@ -404,7 +406,7 @@ cdef class BirthDeathModel:
 
         self.pm.NewInfection(popId, st)
 
-        self.events.AddEvent(self.currentTime, BIRTH, popId, haplotype, 0, 0)
+        self.events.AddEvent(self.currentTime, BIRTH, haplotype, popId, 0, 0)
         self.immuneSourcePopRate[popId, st] = self.pm.susceptible[popId, st]*self.suscepCumulTransition[st]
         self.immunePopRate[popId] = 0.0
         for j in range(self.susceptible_num):
@@ -426,7 +428,7 @@ cdef class BirthDeathModel:
 
         if add_event:
             self.dCounter += 1
-            self.events.AddEvent(self.currentTime, DEATH, popId, haplotype, 0, 0)
+            self.events.AddEvent(self.currentTime, DEATH, haplotype, popId, 0, 0)
 
         self.UpdateRates(popId)
         self.MigrationRates()
@@ -434,7 +436,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Sampling(self, Py_ssize_t popId, Py_ssize_t haplotype):
-        self.events.AddEvent(self.currentTime, SAMPLING, popId, haplotype, 0, 0)
+        self.events.AddEvent(self.currentTime, SAMPLING, haplotype, popId, 0, 0)
 
         self.Death(popId, haplotype, False)
         self.sCounter += 1
@@ -457,7 +459,7 @@ cdef class BirthDeathModel:
         self.liveBranches[popId, newHaplotype] += 1
         self.liveBranches[popId, haplotype] -= 1
 
-        self.events.AddEvent(self.currentTime, MUTATION, popId, haplotype, newHaplotype, 0)
+        self.events.AddEvent(self.currentTime, MUTATION, haplotype, popId, newHaplotype, 0)
 
         self.HapPopRate(popId, haplotype)
         self.HapPopRate(popId, newHaplotype)
@@ -496,7 +498,7 @@ cdef class BirthDeathModel:
 
             self.UpdateRates(targetPopId)
             self.MigrationRates()
-            self.events.AddEvent(self.currentTime, MIGRATION, sourcePopId, haplotype, 0, targetPopId)
+            self.events.AddEvent(self.currentTime, MIGRATION, haplotype, sourcePopId, 0, targetPopId)
             self.migPlus += 1
             self.migCounter += 1
         else:

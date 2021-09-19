@@ -57,8 +57,10 @@ class Lockdown:
 cdef class PopulationModel:
     cdef:
         Py_ssize_t globalInfectious
+
         long[::1] sizes, totalSusceptible, totalInfectious, lockdownON
         long[:,::1] susceptible
+
         double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier
 
     def __init__(self, populations, susceptible_num, lockdownModel=None, samplingMultiplier=None):
@@ -106,16 +108,16 @@ cdef class PopulationModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewInfection(self, Py_ssize_t popId, Py_ssize_t suscId):
-        self.susceptible[popId, suscId] -= 1
-        self.totalSusceptible[popId] -= 1
-        self.totalInfectious[popId] += 1
+    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si):
+        self.susceptible[pi, si] -= 1
+        self.totalSusceptible[pi] -= 1
+        self.totalInfectious[pi] += 1
         self.globalInfectious += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewRecovery(self, Py_ssize_t popId, Py_ssize_t suscId):
-        self.susceptible[popId, suscId] += 1
-        self.totalSusceptible[popId] += 1
-        self.totalInfectious[popId] -= 1
+    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si):
+        self.susceptible[pi, si] += 1
+        self.totalSusceptible[pi] += 1
+        self.totalInfectious[pi] -= 1
         self.globalInfectious -= 1
