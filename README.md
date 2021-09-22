@@ -84,8 +84,6 @@ Column `D` (for Death rate) is the rate for an individual to get uninfectious.
 
 Column `S` is the rate for an individual to be sampled. Sampling also means that the individual got isolated and treated, hence become uninfectious immediately.
 
-(Optional) Column `SP` is the proportion of samples to be taken. This column replaces the column `S`. If there is column `SP` death rate is calculated `D * (1 - SP)` and sampling rate is calculated `D * SP`.
-
 `M1` and `M2` are two sites where non-neutral mutations can be ovserved. The user can specify mutation rates only (see haplotype `AA`), and the substitution rates are assumed to be unifrom. Also weights (probabilities, but not necessariliy normalised) can be specified for each substitution (see haplotype `AT` - in the first site susbstitions `A->T`, `A->C`, `A->G` occur with probabilities 3/8, 4/8 and 1/8 respectively, and for the second site substitutions `T->A`, `T->C`, `T->G` occur with probabilities 0.4, 0.6 and 0.0 respectively).
 
 Setting population model
