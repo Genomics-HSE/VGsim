@@ -2,7 +2,6 @@ cdef class Mutations:
     cdef:
         vector[Py_ssize_t] nodeId, AS, DS, site
         vector[double] time
-
     def __init__(self):#AS = ancestral state, DS = derived state
         pass
 
@@ -85,7 +84,7 @@ cdef class PopulationModel:
         self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
         self.startLD = np.zeros(sizePop, dtype=float)
         self.endLD = np.zeros(sizePop, dtype=float)
-        if lockdownModel != None:
+        if len(lockdownModel) != 0:
             for i in range(sizePop):
                 self.contactDensityBeforeLockdown[i] = populations[i].contactDensity
                 self.contactDensityAfterLockdown[i] = lockdownModel[i].conDenAfterLD
@@ -98,7 +97,7 @@ cdef class PopulationModel:
                 self.startLD[i] = 1.01*self.sizes[i]
                 self.endLD[i] = 1.0*self.sizes[i]
         self.lockdownON = np.zeros(sizePop, dtype=np.int64)
-        if samplingMultiplier != None:
+        if len(samplingMultiplier) != 0:
             self.samplingMultiplier = np.asarray(samplingMultiplier)
         else:
             self.samplingMultiplier = np.ones(sizePop)
