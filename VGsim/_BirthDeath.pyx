@@ -82,7 +82,7 @@ cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
 
-        double currentTime, rn, totalRate, maxEffectiveBirth, totalMigrationRate
+        double currentTime, totalLen, rn, totalRate, maxEffectiveBirth, totalMigrationRate
         Py_ssize_t bCounter, dCounter, sCounter, migCounter, mutCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus, swapLockdown
         Events events
         PopulationModel pm
@@ -416,6 +416,7 @@ cdef class BirthDeathModel:
     cdef inline void SampleTime(self):
         cdef double tau = - log(self.rndm.uniform()) / self.totalRate
         self.currentTime += tau
+        #self.totalLen += tau*self.pm.globalInfectious
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -493,6 +494,7 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize):
         cdef Py_ssize_t popId, j = 0
+        #self.totalLen = 0.0
         while (j < iterations and self.sCounter < sampleSize):
             self.SampleTime()
             popId = self.GenerateEvent()
@@ -500,7 +502,7 @@ cdef class BirthDeathModel:
                 break
             self.CheckLockdown(popId)
             j += 1
-            
+
         print("Total number of iterations: ", j)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
@@ -562,7 +564,7 @@ cdef class BirthDeathModel:
             if e_type_ == BIRTH:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
                 lbs_e = self.liveBranches[e_population][e_haplotype]
-                p = lbs*(lbs-1)/ lbs_e / (lbs_e - 1)
+                p = lbs*(lbs-1.0)/ lbs_e / (lbs_e - 1.0)
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
                     n2 = int(floor( (lbs-1)*self.rndm.uniform() ))
@@ -590,7 +592,7 @@ cdef class BirthDeathModel:
                 ptrTreeAndTime += 1
             elif e_type_ == MUTATION:
                 lbs = liveBranchesS[e_population][e_newHaplotype].size()
-                p = lbs/self.liveBranches[e_population][e_newHaplotype]
+                p = float(lbs)/self.liveBranches[e_population][e_newHaplotype]
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
                     id1 = liveBranchesS[e_population][e_newHaplotype][n1]

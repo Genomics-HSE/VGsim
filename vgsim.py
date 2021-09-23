@@ -106,5 +106,3 @@ if clargs.writeMutations:
     writeMutations(mut, len(pruferSeq))
 if clargs.writeMigrations:
     simulation.writeMigrations()
-
-

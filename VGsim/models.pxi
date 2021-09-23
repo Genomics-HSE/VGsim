@@ -22,6 +22,9 @@ cdef class Mutations:
         self.AS.push_back(int(floor(haplotype/digit4) % 4))
         self.site.push_back(int(site))
         self.time.push_back(time)
+
+    def GetData(self):
+        return {'node': self.nodeId, 'AS': self.AS, 'DS': self.DS, 'site': self.site, 'time': self.time}
         # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
 cdef class Migrations:
