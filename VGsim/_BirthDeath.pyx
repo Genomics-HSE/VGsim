@@ -606,11 +606,11 @@ cdef class BirthDeathModel:
                 pass
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
-                p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
+                p = float(lbs)/self.liveBranches[e_newPopulation][e_haplotype]
                 if self.rndm.uniform() < p:
                     nt = int(floor( lbs*self.rndm.uniform() ))
                     lbss = liveBranchesS[e_population][e_haplotype].size()
-                    p1 = lbss/self.liveBranches[e_population][e_haplotype]
+                    p1 = float(lbss)/self.liveBranches[e_population][e_haplotype]
                     if self.rndm.uniform() < p1:
                         ns = int(floor( lbss*self.rndm.uniform() ))
                         idt = liveBranchesS[e_newPopulation][e_haplotype][nt]
