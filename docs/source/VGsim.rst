@@ -100,7 +100,7 @@ initialize
      - Meaning
    * - ``_seed``
      - ``double``
-     - parameter for recovering the simulation
+     - #TODO
 
 simulate
 --------
@@ -174,7 +174,7 @@ plot
      - Population
    * - ``haplotype``
      - ``int``
-     - haplotype
+     - Haplotype
 
 
 System methods
@@ -197,31 +197,31 @@ Change values
      - Meaning
    * - ``set_infectious_rate``
      - ``haplotype, rate``
-     -
+     - #TODO
    * - ``set_uninfectious_rate``
      - ``haplotype, rate``
-     -
+     - #TODO
    * - ``set_sampling_rate``
      - ``haplotype, rate``
-     -
+     - #TODO
    * - ``set_mutation_rate``
      - ``haplotype, site, rate=None, probabilities=None``
-     - frequency of transition between sets of mutations
+     - Frequency of transition between sets of mutations
    * - ``set_migration_probability``
      - ``source_population, target_population, probability``
-     - displays shift from one migration to another one
+     - Displays shift from one migration to another one
    * - ``set_start_lockdown``
      - ``population, infectious_fraction=None, contact_density=None``
-     - initial population
+     - #TODO
    * - ``set_end_lockdown``
      - ``population, infectious_fraction``
-     - final population
+     - #TODO
    * - ``set_immunity_type``
      - ``haplotype, immunity``
-     -  susceptibility type for a particular haplotype
+     - Susceptibility type for a particular haplotype
    * - ``set_susceptibility``
      - ``haplotype, immunity, susceptibility``
-     -  haplotype to be changed
+     - #TODO
    * - ``set_immunity_transition``
      - ``source_immunity, target_immunity, probability``
-     -   matrix of susceptibility type
+     - #TODO
