@@ -138,7 +138,7 @@ def ReadSusceptibilityTransition(fn):
             suscepTransition[i][i] = 0.0
         return(suscepTransition)
 
-def writeMutations(mut, len_prufer):
+def writeMutations(mut, len_prufer, name_file):
     #digits replacement
     alleles = ["A","T","C","G"]
     for i in [1,3]:
@@ -159,7 +159,7 @@ def writeMutations(mut, len_prufer):
     for nodeId in mutations_dict:
         mutations_dict[nodeId] = mutations_dict[nodeId][:-1]
 
-    f_mut = open('mutation_output.tsv', 'w')
+    f_mut = open(name_file, 'w')
     for i in range(len_prufer):
         if i in mutations_dict:
             f_mut.write(str(i)+'\t'+str(mutations_dict[i])+'\n')
@@ -232,11 +232,11 @@ def writeGenomeNewick(pruferSeq, times, populations):
 
     result = Vertex(root, root_time, children, populations)
 
-    f_nwk = open('newick_output.nwk', 'w')
+    f_nwk = open('newick_output.nwk', 'w') # file_name + _tree.nwk
     f_nwk.write(result.get_children(root_time))
     f_nwk.write(';')
     f_nwk.close()
 
-    f_pop = open('tree_populations.txt', 'w')
+    f_pop = open('tree_populations.txt', 'w') # file_name + sample_population.txt
     f_pop.write(result.write_population())
     f_pop.close()

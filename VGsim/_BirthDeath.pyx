@@ -97,7 +97,7 @@ cdef class BirthDeathModel:
         RndmWrapper rndm
 
         Py_ssize_t bCounter, dCounter, sCounter, migCounter, mutCounter, popNum, dim, hapNum, susceptible_num, migPlus, migNonPlus, swapLockdown
-        double currentTime, rn, totalRate, maxEffectiveBirth, totalMigrationRate
+        double currentTime, totalLen, rn, totalRate, maxEffectiveBirth, totalMigrationRate
 
         Events events
         PopulationModel pm
@@ -309,23 +309,17 @@ cdef class BirthDeathModel:
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time):
         cdef Py_ssize_t popId
         self.events.CreateEvents(iterations)
-        if time == -1:
-            while (self.events.ptr < self.events.size and self.sCounter < sampleSize):
-                self.SampleTime()
-                popId = self.GenerateEvent()
-                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                    break
-                self.CheckLockdown(popId)
-        else:
-            while (self.events.ptr < self.events.size and self.sCounter < sampleSize and self.currentTime < time):
-                self.SampleTime()
-                popId = self.GenerateEvent()
-                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                    break
-                self.CheckLockdown(popId)
+        #self.totalLen = 0.0
+        print("Check!")
+        while (self.events.ptr < self.events.size and self.sCounter < sampleSize and (time == -1 or self.currentTime < time)):
+            self.SampleTime()
+            popId = self.GenerateEvent()
+            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                break
+            self.CheckLockdown(popId)
             
-        print("Total number of iterations: ", self.events.ptr)
-        print("Size events: ", self.events.size)
+        print("Total number of iterations: ", self.events.ptr-1)
+        print("Size events: ", self.events.size-1)
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
             print("_________________________________")
@@ -337,6 +331,7 @@ cdef class BirthDeathModel:
     cdef inline void SampleTime(self):
         cdef double tau = - log(self.rndm.uniform()) / self.totalRate
         self.currentTime += tau
+        #self.totalLen += tau*self.pm.globalInfectious
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -428,7 +423,7 @@ cdef class BirthDeathModel:
 
         if add_event:
             self.dCounter += 1
-            self.events.AddEvent(self.currentTime, DEATH, haplotype, popId, 0, 0)
+            self.events.AddEvent(self.currentTime, DEATH, haplotype, popId, self.suscType[haplotype], 0)
 
         self.UpdateRates(popId)
         self.MigrationRates()
@@ -436,7 +431,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Sampling(self, Py_ssize_t popId, Py_ssize_t haplotype):
-        self.events.AddEvent(self.currentTime, SAMPLING, haplotype, popId, 0, 0)
+        self.events.AddEvent(self.currentTime, SAMPLING, haplotype, popId, self.suscType[haplotype], 0)
 
         self.Death(popId, haplotype, False)
         self.sCounter += 1
@@ -450,7 +445,7 @@ cdef class BirthDeathModel:
 
         mutationType, self.rn = fastChoose1( self.mRate[haplotype], self.tmRate[haplotype], self.rn)
         digit4 = 4**mutationType
-        AS = int(floor(haplotype/digit4) % 4)
+        AS = int(floor(haplotype/digit4) % 4) #А тут хорошо всё?
         DS, self.rn = fastChoose1(self.hapMutType[haplotype, mutationType], self.totalHapMutType[haplotype, mutationType], self.rn)#TODO non-uniform rates???
         if DS >= AS:
             DS += 1
@@ -564,7 +559,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cpdef GetGenealogy(self):
+    cpdef GetGenealogy(self, rndseed):
         cdef:
             Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs, lbs_e, ns, nt, idt, ids, lbss
             double p
@@ -574,6 +569,9 @@ cdef class BirthDeathModel:
 
             double e_time
             Py_ssize_t e_type_, e_population, e_haplotype, e_newHaplotype, e_newPopulation
+
+        if rndseed != None:
+            self.rndm = RndmWrapper(seed=(rndseed, 0))
 
         ptrTreeAndTime = 0
         self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
@@ -595,7 +593,7 @@ cdef class BirthDeathModel:
             if e_type_ == BIRTH:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
                 lbs_e = self.liveBranches[e_population][e_haplotype]
-                p = lbs*(lbs-1)/ lbs_e / (lbs_e - 1)
+                p = float(lbs)*(float(lbs)-1.0)/ float(lbs_e) / (float(lbs_e) - 1.0)
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
                     n2 = int(floor( (lbs-1)*self.rndm.uniform() ))
@@ -623,7 +621,7 @@ cdef class BirthDeathModel:
                 ptrTreeAndTime += 1
             elif e_type_ == MUTATION:
                 lbs = liveBranchesS[e_population][e_newHaplotype].size()
-                p = lbs/self.liveBranches[e_population][e_newHaplotype]
+                p = float(lbs)/self.liveBranches[e_population][e_newHaplotype]
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
                     id1 = liveBranchesS[e_population][e_newHaplotype][n1]
@@ -637,11 +635,11 @@ cdef class BirthDeathModel:
                 pass
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
-                p = lbs/self.liveBranches[e_newPopulation][e_haplotype]
+                p = float(lbs)/self.liveBranches[e_newPopulation][e_haplotype]
                 if self.rndm.uniform() < p:
                     nt = int(floor( lbs*self.rndm.uniform() ))
                     lbss = liveBranchesS[e_population][e_haplotype].size()
-                    p1 = lbss/self.liveBranches[e_population][e_haplotype]
+                    p1 = float(lbss)/self.liveBranches[e_population][e_haplotype]
                     if self.rndm.uniform() < p1:
                         ns = int(floor( lbss*self.rndm.uniform() ))
                         idt = liveBranchesS[e_newPopulation][e_haplotype][nt]
@@ -686,27 +684,42 @@ cdef class BirthDeathModel:
                 print("_________________________________")
                 sys.exit(0)
 
-    def LogDynamics(self, step_num = 1000):
+    def LogDynamics(self, step_num, output_file):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
         suscepDate = np.zeros((self.popNum, self.susceptible_num), dtype=np.int64)
         hapDate = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
-        if not os.path.isdir("logs"):
-            os.mkdir("logs")
-
-        logDynamics = []
         for i in range(self.popNum):
-            logDynamics.append(open('logs/PID' + str(i) + '.log', 'w'))
-            logDynamics[i].write("time")
             for sn in range(self.susceptible_num):
                 if sn == 0:
                     suscepDate[i, sn] = self.pm.sizes[i]
                 else:
                     suscepDate[i, sn] = 0
-                logDynamics[i].write(" S" + str(sn))
             for hn in range(self.hapNum):
                 hapDate[i, hn] = 0
-                logDynamics[i].write(" H" + str(hn))
-            logDynamics[i].write("\n")
+        hapDate[0][0] += 1
+        suscepDate[0][0] -= 1
+        if output_file == True:
+            if not os.path.isdir("logs"):
+                os.mkdir("logs")
+            logDynamics = []
+            for i in range(self.popNum):
+                logDynamics.append(open('logs/PID' + str(i) + '.log', 'w'))
+                logDynamics[i].write("time")
+                for sn in range(self.susceptible_num):
+                    logDynamics[i].write(" S" + str(sn))
+                for hn in range(self.hapNum):
+                    logDynamics[i].write(" H" + str(hn))
+                logDynamics[i].write("\n")
+        else:
+            log = dict()
+            log["time"] = list()
+            for i in range(self.popNum):
+                log["P" + str(i)] = dict()
+                for j  in range(self.susceptible_num):
+                    log["P" + str(i)]["S" + str(j)] = list()
+                for j  in range(self.hapNum):
+                    log["P" + str(i)]["H" + str(j)] = list()
+
 
         point = 0
         for j in range(self.events.ptr):
@@ -729,20 +742,30 @@ cdef class BirthDeathModel:
                 suscepDate[self.events.newPopulations[j], self.events.newHaplotypes[j]] -= 1
                 hapDate[self.events.newPopulations[j], self.events.haplotypes[j]] += 1
             if time_points[point] <= self.events.times[j]:
-                for i in range(self.popNum):
-                    logDynamics[i].write(str(time_points[point]) + " ")
-                    for k in range(self.susceptible_num):
-                        logDynamics[i].write(str(suscepDate[i, k]) + " ")
-                    for k in range(self.hapNum):
-                        logDynamics[i].write(str(hapDate[i, k]) + " ")
-                    logDynamics[i].write("\n")
-                point += 1 
+                if output_file == True:
+                    for i in range(self.popNum):
+                        logDynamics[i].write(str(time_points[point]) + " ")
+                        for k in range(self.susceptible_num):
+                            logDynamics[i].write(str(suscepDate[i, k]) + " ")
+                        for k in range(self.hapNum):
+                            logDynamics[i].write(str(hapDate[i, k]) + " ")
+                        logDynamics[i].write("\n")
+                    point += 1 
+                else:
+                    log["time"].append(time_points[point])
+                    for i in range(self.popNum):
+                        for j  in range(self.susceptible_num):
+                            log["P" + str(i)]["S" + str(j)].append(suscepDate[i, j])
+                        for j  in range(self.hapNum):
+                            log["P" + str(i)]["H" + str(j)].append(hapDate[i, j])
 
-        for i in range(self.popNum-1, -1, -1):
-            logDynamics[i].close()
+        if output_file == True:
+            for i in range(self.popNum-1, -1, -1):
+                logDynamics[i].close()
+        else: 
+            return log
 
-    def Graph(self, pop, hap, step_num, option):
-
+    def get_data(self, pop, hap, step_num):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
         Date = np.zeros(step_num+1)
         Sample = np.zeros(step_num+1)
@@ -769,41 +792,7 @@ cdef class BirthDeathModel:
                 Date[point] += 1
             elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == hap:
                 Date[point] += 1
-
-
-        #Graphs
-        if option == "True scale":
-            plt.subplots(figsize=(8, 6))
-            plt.plot(time_points, Date, label='Infections')
-            plt.plot(time_points, Sample, label='Sampling')
-            plt.suptitle('Information about population ' + str(pop+1) + ' and haplotype ' + str(hap+1))
-            plt.legend()
-        elif option == "Two axes":
-            figure, axis_1 = plt.subplots(figsize=(8, 6))
-            axis_1.plot(time_points, Date, color='blue', label='Infections')
-            axis_2 = axis_1.twinx()
-            axis_2.plot(time_points, Sample, color='orange', label='Sampling')
-            lines_1, labels_1 = axis_1.get_legend_handles_labels()
-            lines_2, labels_2 = axis_2.get_legend_handles_labels()
-            lines = lines_1 + lines_2
-            labels = labels_1 + labels_2
-            axis_1.legend(lines, labels, loc=0)
-        elif option == "Two plots":
-            fig = plt.figure(figsize=(16, 6))
-            gs = gridspec.GridSpec(1, 2)
-            ax = fig.add_subplot(gs[0, 0])
-            ax.plot(time_points, Date)
-            ax.set_ylabel('Infections')
-            ax.set_xlabel('Time')
-
-            ax = fig.add_subplot(gs[0, 1])
-            ax.plot(time_points, Sample)
-            ax.set_ylabel('Sampling')
-            ax.set_xlabel('Time')
-
-            fig.suptitle('Information about population ' + str(pop) + ' and haplotype ' + str(hap), fontsize=16)
-
-        plt.show()
+        return Date, Sample, time_points
 
     def sampleDate(self):
         time, pop, hap = [], [], []
@@ -813,16 +802,6 @@ cdef class BirthDeathModel:
                 pop.append(self.events.populations[i])
                 hap.append(self.events.haplotypes[i])
         return time, pop, hap
-
-    # def writeLog(self):
-    #     log = open('events.log', 'w')
-    #     for i in range(self.sCounter * 2 - 3):
-    #         log.write(str(self.tree[i]) + ", ")
-    #     log.write(str(self.tree[self.sCounter * 2 - 2]) + "\n")
-    #     for i in range(self.sCounter * 2 - 3):
-    #         log.write(str(self.times[i]) + ", ")
-    #     log.write(str(self.times[self.sCounter * 2 - 2]))
-    #     log.close()
 
     def Report(self):
         print("Number of samples:", self.sCounter)
@@ -1004,8 +983,8 @@ cdef class BirthDeathModel:
 
         return tree, times, mut, populations
 
-    def writeMigrations(self):
-        file = open('migrations.txt', 'w')
+    def writeMigrations(self, name_file):
+        file = open(name_file, 'w')
         file.write("Node Time OldPopulation NewPopulation\n")
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
