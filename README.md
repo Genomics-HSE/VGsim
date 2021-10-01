@@ -164,3 +164,8 @@ python setup.py build_ext --inplace
 
 for n in {1..5}; do ./VGsim.py example/example.rt -it 1000000 -pm example/example.pp example/example.mg -su example/example.su; done >> errors.txt
 ```
+
+Wiki
+----
+
+https://vgsim-interface.readthedocs.io/en/latest/
