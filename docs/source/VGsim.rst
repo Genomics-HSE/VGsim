@@ -95,6 +95,9 @@ initialize
    :widths: 15 15 70
    :header-rows: 1
 
+   * - Parameter
+     - Type
+     - Meaning
    * - ``_seed``
      - ``double``
      - parameter for recovering the simulation
@@ -130,6 +133,9 @@ update_migration
    :widths: 15 15 70
    :header-rows: 1
 
+   * - Parameter
+     - Type
+     - Meaning
    * - ``total_migration_probability``
      - ``double`` 
      - #TODO
@@ -141,6 +147,9 @@ epidemiology_timeline
    :widths: 15 15 70
    :header-rows: 1
 
+   * - Parameter
+     - Type
+     - Meaning
    * - ``_seed``
      - ``double`` 
      - #TODO
