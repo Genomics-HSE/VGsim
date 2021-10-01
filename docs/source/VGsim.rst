@@ -88,6 +88,17 @@ For example, this is the introductory paragraph
 Model simulation
 ================
 
+initialize
+----------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - ``_seed``
+     - ``double``
+     - parameter for recovering the simulation
+
 simulate
 --------
 
@@ -111,9 +122,28 @@ Parameters of model halt
    * - ``_time``
      - ``double``
      - time-based halt
+
+update_migration
+----------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - ``total_migration_probability``
+     - ``double`` 
+     - #TODO
+
+epidemiology_timeline
+---------------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
    * - ``_seed``
-     - ``double``
-     - parameter for recovering the simulation
+     - ``double`` 
+     - #TODO
 
 plot
 ----
@@ -142,7 +172,7 @@ System methods
 ::
    output_newick(name_file="newick_output"): - record format of binary trees
    output_mutations(name_file="mutation_output"): - information about all mutations
-   output_migrations(name_file="migrations")(): - information about all migrations
+   output_migrations(name_file="migrations"): - information about all migrations
    sampleDate(): - show all information about sampling, time, place, etc.
    log_dynamics(self, step=1000, output_file=False): - records simulation state changes over some period of time. step - a number of parts log_dynamics is split on.
 

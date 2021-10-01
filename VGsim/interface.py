@@ -189,8 +189,8 @@ class Simulator:
 		self.simulation.SimulatePopulation(_iterations, _sampleSize, _time)
 		self.simulation.Report()
 
-	def epidemiology_timeline(self, rndseed=None):
-		self.simulation.GetGenealogy(rndseed)
+	def epidemiology_timeline(self, _seed=None):
+		self.simulation.GetGenealogy(_seed)
 
 	def debug(self):
 		self.simulation.Debug()
