@@ -13,12 +13,12 @@ init
    :widths: 15 15 70
    :header-rows: 1
 
-   * - Parameter
+   * - Basic parameters
      - Type
      - Meaning
    * - ``infectious_rate``
      - ``double``
-     - Frequency of incidence, how many people could become sick per period of time.
+     - Frequency of incidence, how many people could become sick per period of time
    * - ``uninfectious_rate``
      - ``double``
      - A number of people recovered from the disease per period of time
@@ -27,7 +27,7 @@ init
      - Sampling frequency, getting a virus dna through testing people to track any virus mutations
    * - ``sampling_proportion``
      - ``double``
-     - second recovery model, percentage of people from a total sample of infected who recovered
+     - Second recovery model, percentage of people from a total sample of infected who recovered
    * - ``sites_number``
      - ``int``
      - Amount of parts of the genome where mutations can occur
@@ -127,22 +127,22 @@ plot
    * - Parameter
      - Type
      - Meaning
-   * - ``pop``
-     - ``int``
-     - Population
-   * - ``hap``
-     - ``int``
-     - haplotype
    * - ``step_num``
      - ``int``
      - A number of time intervals
+   * - ``population``
+     - ``int``
+     - Population
+   * - ``haplotype``
+     - ``int``
+     - haplotype
 
 
 System methods
 ::
-   newick(): - record format of binary trees
-   mut(): - information about all mutations
-   mig(): - information about all migrations
+   output_newick(name_file="newick_output"): - record format of binary trees
+   output_mutations(name_file="mutation_output"): - information about all mutations
+   output_migrations(name_file="migrations")(): - information about all migrations
    sampleDate(): - show all information about sampling, time, place, etc.
    log_dynamics(self, step=1000, output_file=False): - records simulation state changes over some period of time. step - a number of parts log_dynamics is split on.
 
@@ -157,7 +157,7 @@ Change values
      - Parameters
      - Meaning
    * - ``set_infectious_rate``
-     - ``haplotype, rate
+     - ``haplotype, rate``
      -
    * - ``set_uninfectious_rate``
      - ``haplotype, rate``

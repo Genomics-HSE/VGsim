@@ -244,7 +244,7 @@ class Simulator:
 	def output_newick(self, name_file="newick_output"):
 		if self.pruferSeq == None:
 			pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()
-		writeGenomeNewick(pruferSeq, times, populations)
+		writeGenomeNewick(pruferSeq, times, populations, name_file)
 
 	def output_mutations(self, name_file="mutation_output"):
 		if self.pruferSeq == None:

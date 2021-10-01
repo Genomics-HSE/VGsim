@@ -984,8 +984,8 @@ cdef class BirthDeathModel:
         return tree, times, mut, populations
 
     def writeMigrations(self, name_file):
-        file = open(name_file, 'w')
-        file.write("Node Time OldPopulation NewPopulation\n")
+        file = open(name_file + '.mig', 'w')
+        file.write("Node Time Old_population New_population\n")
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
         file.close()
