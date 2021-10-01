@@ -4,6 +4,7 @@ Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/)
 [![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/)
+[![Documentation Status](https://readthedocs.org/projects/vgsim-interface/badge/?version=latest)](https://vgsim-interface.readthedocs.io/en/latest/?badge=latest)
 
 
 Building the package
