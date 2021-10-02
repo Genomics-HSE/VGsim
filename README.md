@@ -6,6 +6,7 @@ Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 [![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/)
 [![Documentation Status](https://readthedocs.org/projects/vgsim-interface/badge/?version=latest)](https://vgsim-interface.readthedocs.io/en/latest/?badge=latest)
 
+Preprint: https://doi.org/10.1101/2021.04.21.21255891
 
 Building the package
 --------------------
@@ -152,16 +153,3 @@ Adding neutral mutations
 ------------------------
 
 We suggest to pipe the tree and non-neautral sites into phastSim (https://github.com/NicolaDM/phastSim) by Nicola de Maio to add neutral mutations and to obtain full sequences.
-
-The rest of the README
-----------------------
-
-File with rates is required.
-
-Example:
-```
-python setup.py build_ext --inplace
-./VGsim.py example/example.rt -it 100000000 -pm example/example.pp example/example.mg -su example/example.su
-
-for n in {1..5}; do ./VGsim.py example/example.rt -it 1000000 -pm example/example.pp example/example.mg -su example/example.su; done >> errors.txt
-```
