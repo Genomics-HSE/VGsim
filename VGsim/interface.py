@@ -175,6 +175,11 @@ class Simulator:
 					print(self.suscTrans[i][j], end=" ")
 				print()
 
+	def citation(self):
+		print("VGsim: scalable viral genealogy simulator for global pandemic")
+		print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
+   		print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
+
 	def initialize(self, _seed=None):
 		if _seed == None:
 		    _seed = randrange(sys.maxsize)

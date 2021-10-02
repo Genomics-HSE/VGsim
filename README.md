@@ -7,6 +7,7 @@ Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 [![Documentation Status](https://readthedocs.org/projects/vgsim-interface/badge/?version=latest)](https://vgsim-interface.readthedocs.io/en/latest/?badge=latest)
 
 Preprint: https://doi.org/10.1101/2021.04.21.21255891
+When using our work, we ask you to indicate us in the bibliography.
 
 Building the package
 --------------------
