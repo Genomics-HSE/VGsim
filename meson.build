@@ -42,5 +42,5 @@ incdir_numpy = run_command(py3,
 # Declare numpy as dependency
 inc_np = include_directories(incdir_numpy)
 
-subdir('source')
+subdir('src')
 
