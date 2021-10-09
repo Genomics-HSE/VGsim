@@ -15,20 +15,11 @@ to build them yourself. For this, you need a working toolchain for building C++
 code (gcc and clang are known to work). Since you are going to build Python extensions,
 you will need python development headers (e.g. on ubuntu linux the package name is `python-dev`).
 
-You can use either `pip` or `conda`. With `pip`, proceed as follows
-(with `conda`, the process should be similar):
-First, install the dependencies
+
+To build the C extensions, run
 
 ```
-$ python -m pip install numpy>=1.19.5 cython
-$ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.3
-```
-
-Then, build the C extensions (note that we are doing an inplace, editable build
-with `-e .`),
-
-```
-$ python -m pip install -e .
+$ python -m pip install .
 ```
 
 That's it! 
@@ -40,21 +31,12 @@ $ python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example
 ```
 
 If you encounter problems with either of these steps, please file an issue at
-`https://github.com/Genomics-HSE/VGsim` and include the build log.
-
+`https://github.com/Genomics-HSE/VGsim`: please rerun with the `-v` flag,
+`$ python -mpip install . -v` and include the output.
 
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. 
 On Apple Silicon, you need to have `numpy >= 1.21` (which is the first NumPy
 version to support this hardware).
-
-
-Troubleshooting
----------------
-
-In some setups, the following was needed to install `mc_lib`
-```
-$ python -m pip install -t ./ git+https://github.com/ev-br/mc_lib.git@v0.1
-```
 
 
 Stopping criterion
