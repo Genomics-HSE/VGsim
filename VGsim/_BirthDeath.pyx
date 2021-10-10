@@ -991,27 +991,32 @@ cdef class BirthDeathModel:
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
         file.close()
 
-    # def check_ratio(self):
-    #     time_points = [i * self.currentTime / 1000 for i in range(1000)]
-    #     number_migration = [0 for _ in range(1000)]
-    #     total_len = [0.0 for _ in range(1000)]
-    #     pointer = 999
-    #     for i in range(len(self.times)-1, -1, -1):
-    #         if self.times[self.tree[i]] < time_points[pointer-1]:
+    def check_ratio(self):
+        time_points = [i * self.currentTime / 1000 for i in range(1000)]
+        number_migration = [0 for _ in range(1000)]
+        total_len = [0.0 for _ in range(1000)]
+        pointer = 999
+        for i in range(2 * self.sCounter - 1):
+            if self.times[self.tree[i]] < time_points[pointer]:
+                total_len[pointer] += time_points[pointer] - self.times[i]
+                total_len[pointer-1] += self.times[self.tree[i]] - time_points[pointer]
+                pointer -= 1
 
-    #         else:
-    #             total_len[pointer] += self.times[i] - self.times[self.tree[i]]
+            else:
+                total_len[pointer] += self.times[i] - self.times[self.tree[i]]
+        pointer = 999
+        for i in range(self.mig.time.size()-1, -1, -1):
+            if self.mig.time[i] > time_points[pointer]:
+                number_migration[pointer] += 1
+                pointer -= 1
+            if self.mig.time[i] < time_points[pointer]:
+                number_migration[pointer] += 1
 
+        print(number_migration)
+        print(total_len)
 
-
-    #     pointer = 999
-    #     for i in range(self.mig.times.size()-1, -1, -1):
-    #         if self.mig.times[i] > time_points[pointer]:
-    #             pointer += 1
-    #         if self.mig.times[i] < time_points[pointer]:
-    #             number_migration[pointer] += 1
-
-
+        for i in range(1000):
+            print(number_migration[i] / total_len[i])
 
 
 

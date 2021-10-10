@@ -269,7 +269,7 @@ class Simulator:
 		print(hap)
 
 	def set_infectious_rate(self, haplotype, rate):
-		if rate <= 0:
+		if rate < 0:
 			print("Infectious rate is less than 0!")
 			sys.exit(1)
 		if haplotype < 0 and haplotype >= len(self.B_rate):
@@ -278,7 +278,7 @@ class Simulator:
 		self.B_rate[haplotype] = float(rate)
 
 	def set_uninfectious_rate(self, haplotype, rate):
-		if rate <= 0:
+		if rate < 0:
 			print("Uninfectious rate is less than 0!")
 			sys.exit(1)
 		if haplotype < 0 and haplotype >= len(self.D_rate):
@@ -287,7 +287,7 @@ class Simulator:
 		self.D_rate[haplotype] = float(rate)
 
 	def set_sampling_rate(self, haplotype, rate):
-		if rate <= 0:
+		if rate < 0:
 			print("Sampling rate is less than 0!")
 			sys.exit(1)
 		if haplotype < 0 and haplotype >= len(self.S_rate):
@@ -403,5 +403,8 @@ class Simulator:
 
 	def check_migration(self):
 		self.simulation.check_ratio()
+
+	def print_times(self):
+		self.simulation.times_print()
 
 
