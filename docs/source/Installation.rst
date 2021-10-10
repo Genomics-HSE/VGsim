@@ -10,21 +10,21 @@ you will need python development headers (e.g. on ubuntu linux the package name 
 
 To build the C extensions, run
 
-```
+``
 $ python -m pip install .
-```
+``
 
 That's it! 
 
 You may now run simulations:
 
-```
+``
 $ python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
-```
+``
 
 If you encounter problems with either of these steps, please file an issue at
-`https://github.com/Genomics-HSE/VGsim`: please rerun with the `-v` flag,
-`$ python -mpip install . -v` and include the output.
+``https://github.com/Genomics-HSE/VGsim``: please rerun with the ``-v`` flag,
+``$ python -mpip install . -v`` and include the output.
 
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. 
 On Apple Silicon, you need to have `numpy >= 1.21` (which is the first NumPy
