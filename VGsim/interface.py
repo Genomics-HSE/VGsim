@@ -178,7 +178,7 @@ class Simulator:
 	def citation(self):
 		print("VGsim: scalable viral genealogy simulator for global pandemic")
 		print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
-   		print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
+		print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
 
 	def initialize(self, _seed=None):
 		if _seed == None:
@@ -201,7 +201,10 @@ class Simulator:
 		self.simulation.Debug()
 
 	def log_dynamics(self, step=1000, output_file=False):
-		self.simulation.LogDynamics(step, output_file)
+		if output_file == True:
+			self.simulation.LogDynamics(step, output_file)
+		else:
+			return self.simulation.LogDynamics(step, output_file)
 
 	def plot(self, step_num=100, population=None, haplotype=None):
 		if population == None and haplotype == None:
@@ -397,3 +400,8 @@ class Simulator:
 			print("There is not this target immunity!")
 			sys.exit(1)
 		self.suscTrans[source_immunity][target_immunity] = probability
+
+	def check_migration(self):
+		self.simulation.check_ratio()
+
+

@@ -758,6 +758,7 @@ cdef class BirthDeathModel:
                             log["P" + str(i)]["S" + str(j)].append(suscepDate[i, j])
                         for j  in range(self.hapNum):
                             log["P" + str(i)]["H" + str(j)].append(hapDate[i, j])
+                    point += 1 
 
         if output_file == True:
             for i in range(self.popNum-1, -1, -1):
@@ -989,3 +990,37 @@ cdef class BirthDeathModel:
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
         file.close()
+
+    # def check_ratio(self):
+    #     time_points = [i * self.currentTime / 1000 for i in range(1000)]
+    #     number_migration = [0 for _ in range(1000)]
+    #     total_len = [0.0 for _ in range(1000)]
+    #     pointer = 999
+    #     for i in range(len(self.times)-1, -1, -1):
+    #         if self.times[self.tree[i]] < time_points[pointer-1]:
+
+    #         else:
+    #             total_len[pointer] += self.times[i] - self.times[self.tree[i]]
+
+
+
+    #     pointer = 999
+    #     for i in range(self.mig.times.size()-1, -1, -1):
+    #         if self.mig.times[i] > time_points[pointer]:
+    #             pointer += 1
+    #         if self.mig.times[i] < time_points[pointer]:
+    #             number_migration[pointer] += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
