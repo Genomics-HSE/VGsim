@@ -31,7 +31,7 @@ Then, build the C extensions (note that we are doing an inplace, editable build
 with `-e .`),
 
 ```
-$ python -m pip install -e .
+$ python -m pip install .
 ```
 
 That's it! 
