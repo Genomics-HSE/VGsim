@@ -262,11 +262,14 @@ class Simulator:
 	def output_migrations(self, name_file="migrations"):
 		self.simulation.writeMigrations(name_file)
 
-	def sample_list(self):
+	def sample_list(self, output_print=False):
 		time, pop, hap = self.simulation.sampleDate()
-		print(time)
-		print(pop)
-		print(hap)
+		if output_print:
+			return time, pop, hap
+		else:
+			print(time)
+			print(pop)
+			print(hap)
 
 	def set_infectious_rate(self, haplotype, rate):
 		if rate < 0:
