@@ -18,17 +18,9 @@ to build them yourself. For this, you need a working toolchain for building C++
 code (gcc and clang are known to work). Since you are going to build Python extensions,
 you will need python development headers (e.g. on ubuntu linux the package name is `python-dev`).
 
-You can use either `pip` or `conda`. With `pip`, proceed as follows
-(with `conda`, the process should be similar):
-First, install the dependencies
+**For MacOS users: please make sure to use Python with Homebrew or Conda. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too.**
 
-```
-$ python -m pip install numpy>=1.19.5 cython
-$ python -m pip install git+https://github.com/ev-br/mc_lib.git@v0.3
-```
-
-Then, build the C extensions (note that we are doing an inplace, editable build
-with `-e .`),
+To build the C extensions, run
 
 ```
 $ python -m pip install .
@@ -43,21 +35,12 @@ $ python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example
 ```
 
 If you encounter problems with either of these steps, please file an issue at
-`https://github.com/Genomics-HSE/VGsim` and include the build log.
-
+`https://github.com/Genomics-HSE/VGsim`: please rerun with the `-v` flag,
+`$ python -mpip install . -v` and include the output.
 
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. 
 On Apple Silicon, you need to have `numpy >= 1.21` (which is the first NumPy
 version to support this hardware).
-
-
-Troubleshooting
----------------
-
-In some setups, the following was needed to install `mc_lib`
-```
-$ python -m pip install -t ./ git+https://github.com/ev-br/mc_lib.git@v0.1
-```
 
 
 Stopping criterion
@@ -86,8 +69,6 @@ Column `B` (for Birth rate) is the base rate for an individual carrying the corr
 Column `D` (for Death rate) is the rate for an individual to get uninfectious.
 
 Column `S` is the rate for an individual to be sampled. Sampling also means that the individual got isolated and treated, hence become uninfectious immediately.
-
-(Optional) Column `SP` is the proportion of samples to be taken. This column replaces the column `S`. If there is column `SP` death rate is calculated `D * (1 - SP)` and sampling rate is calculated `D * SP`.
 
 `M1` and `M2` are two sites where non-neutral mutations can be ovserved. The user can specify mutation rates only (see haplotype `AA`), and the substitution rates are assumed to be unifrom. Also weights (probabilities, but not necessariliy normalised) can be specified for each substitution (see haplotype `AT` - in the first site susbstitions `A->T`, `A->C`, `A->G` occur with probabilities 3/8, 4/8 and 1/8 respectively, and for the second site substitutions `T->A`, `T->C`, `T->G` occur with probabilities 0.4, 0.6 and 0.0 respectively).
 

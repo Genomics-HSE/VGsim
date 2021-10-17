@@ -88,7 +88,6 @@ cdef class Events:
         self.newPopulations = np.resize(self.newPopulations, self.size)
 
 
-
 cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
@@ -262,7 +261,7 @@ cdef class BirthDeathModel:
 
         self.immuneSourcePopRate = np.zeros((self.popNum, self.susceptible_num), dtype=float)
         self.immunePopRate = np.zeros(self.popNum, dtype=float)
-
+a
         for pn in range(self.popNum):
             for j in range(self.susceptible_num):
                 self.immuneSourcePopRate[pn, j] += self.suscepCumulTransition[j]*self.pm.susceptible[pn, j]
@@ -442,7 +441,7 @@ cdef class BirthDeathModel:
 
         mutationType, self.rn = fastChoose1( self.mRate[haplotype], self.tmRate[haplotype], self.rn)
         digit4 = 4**mutationType
-        AS = int(floor(haplotype/digit4) % 4) #А тут хорошо всё?
+        AS = int(floor(haplotype/digit4) % 4)
         DS, self.rn = fastChoose1(self.hapMutType[haplotype, mutationType], self.totalHapMutType[haplotype, mutationType], self.rn)#TODO non-uniform rates???
         if DS >= AS:
             DS += 1
@@ -552,6 +551,7 @@ cdef class BirthDeathModel:
         self.MigrationRates()
         for pn in range(self.popNum):
             self.UpdateRates(pn)
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -801,6 +801,7 @@ cdef class BirthDeathModel:
                 hap.append(self.events.haplotypes[i])
         return time, pop, hap
 
+
     def Report(self):
         print("Number of samples:", self.sCounter)
 
@@ -1014,15 +1015,3 @@ cdef class BirthDeathModel:
 
         for i in range(1000):
             print(number_migration[i] / total_len[i])
-
-
-
-
-
-
-
-
-
-
-
-
