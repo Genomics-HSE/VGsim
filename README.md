@@ -5,6 +5,11 @@ Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 [![pip](https://github.com/Genomics-HSE/VGsim/actions/workflows/pip.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/pip.yml)
 [![Documentation Status](https://readthedocs.org/projects/vgsim-interface/badge/?version=latest)](https://vgsim-interface.readthedocs.io/en/latest/?badge=latest)
 
+Documentation
+-------------
+
+We keep on updating the detailed documentation (https://vgsim-interface.readthedocs.io/). In particular, there is a Python API which allows to build complicated simulations, which are currently not supported from the command line.
+
 Building the package
 --------------------
 
