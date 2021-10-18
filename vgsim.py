@@ -97,7 +97,7 @@ simulation = BirthDeathModel(bRate, dRate, sRate, mRate, populationModel=popMode
 simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
 # simulation.Debug()
 # t2 = time.time()
-simulation.GetGenealogy()
+simulation.GetGenealogy(rndseed)
 # simulation.Debug()
 # t3 = time.time()
 # simulation.Report()
