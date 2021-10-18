@@ -106,6 +106,10 @@ def ReadPopulations(fn):
                 elif len(part_line1) == 3:
                     samplingMultiplier.append(float(part_line2[0]))
                     lockdown.append( Lockdown(float(part_line1[0]), float(part_line1[1]), float(part_line1[2])) )
+        if len(lockdown) == 0:
+            lockdown = None
+        if len(samplingMultiplier) == 0:
+            samplingMultiplier = None
         return(populations, lockdown, samplingMultiplier)
 
 def ReadMigrationRates(fn):
