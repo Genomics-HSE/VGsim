@@ -261,7 +261,7 @@ cdef class BirthDeathModel:
 
         self.immuneSourcePopRate = np.zeros((self.popNum, self.susceptible_num), dtype=float)
         self.immunePopRate = np.zeros(self.popNum, dtype=float)
-a
+        
         for pn in range(self.popNum):
             for j in range(self.susceptible_num):
                 self.immuneSourcePopRate[pn, j] += self.suscepCumulTransition[j]*self.pm.susceptible[pn, j]
