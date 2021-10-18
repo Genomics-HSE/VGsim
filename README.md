@@ -6,9 +6,6 @@ Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 [![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/)
 [![Documentation Status](https://readthedocs.org/projects/vgsim-interface/badge/?version=latest)](https://vgsim-interface.readthedocs.io/en/latest/?badge=latest)
 
-Preprint: https://doi.org/10.1101/2021.04.21.21255891
-When using our work, we ask you to indicate us in the bibliography.
-
 Building the package
 --------------------
 
@@ -135,3 +132,12 @@ Adding neutral mutations
 ------------------------
 
 We suggest to pipe the tree and non-neautral sites into phastSim (https://github.com/NicolaDM/phastSim) by Nicola de Maio to add neutral mutations and to obtain full sequences.
+
+Citation
+--------
+
+Please cite our preprint (https://www.medrxiv.org/content/10.1101/2021.04.21.21255891) when using VGsim in your research.
+```
+Shchur et al. VGsim: scalable viral genealogy simulator for global pandemic.
+medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891
+```
