@@ -91,7 +91,7 @@ else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)
 
-simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
+simulation = BirthDeathModel(bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
 # simulation.Debug()
 # t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
