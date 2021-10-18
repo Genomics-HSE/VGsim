@@ -5,12 +5,15 @@ def ReadRates(fn):
     with open(fn) as f:
         line = next(f).rstrip()#header with version etc
         line = line.split(" ")
+        flag = 0
 
         line = next(f).rstrip()
         line = line.split(" ")
         hapFilled = False
         if line[0] == "H":
             hapFilled = True
+        if line[3] == "SP":
+            flag = 1
         shift = int(hapFilled)
         dim = len(line) - shift
         hapNum = int( 4**(dim - 3) )
@@ -28,8 +31,12 @@ def ReadRates(fn):
             line = line.split(" ")
             line = [el for el in line[shift:]]
             bRate.append(float(line[0]))
-            dRate.append(float(line[1]))
-            sRate.append(float(line[2]))
+            if flag == 0:
+                dRate.append(float(line[1]))
+                sRate.append(float(line[2]))
+            else:
+                dRate.append(float(line[1]) * (1 - float(line[2])))
+                sRate.append(float(line[1]) * float(line[2]))
             mRate.append( [] )
             mutations = line[3:]
             for mut in mutations:
@@ -99,7 +106,10 @@ def ReadPopulations(fn):
                 elif len(part_line1) == 3:
                     samplingMultiplier.append(float(part_line2[0]))
                     lockdown.append( Lockdown(float(part_line1[0]), float(part_line1[1]), float(part_line1[2])) )
-        print(samplingMultiplier)
+        if len(lockdown) == 0:
+            lockdown = None
+        if len(samplingMultiplier) == 0:
+            samplingMultiplier = None
         return(populations, lockdown, samplingMultiplier)
 
 def ReadMigrationRates(fn):
@@ -132,7 +142,7 @@ def ReadSusceptibilityTransition(fn):
             suscepTransition[i][i] = 0.0
         return(suscepTransition)
 
-def writeMutations(mut, len_prufer):
+def writeMutations(mut, len_prufer, name_file):
     #digits replacement
     alleles = ["A","T","C","G"]
     for i in [1,3]:
@@ -153,7 +163,7 @@ def writeMutations(mut, len_prufer):
     for nodeId in mutations_dict:
         mutations_dict[nodeId] = mutations_dict[nodeId][:-1]
 
-    f_mut = open('mutation_output.tsv', 'w')
+    f_mut = open(name_file + ".tsv", 'w')
     for i in range(len_prufer):
         if i in mutations_dict:
             f_mut.write(str(i)+'\t'+str(mutations_dict[i])+'\n')
@@ -219,18 +229,18 @@ def get_last(output_string):
     except:
         return "notDigit"
 
-def writeGenomeNewick(pruferSeq, times, populations):
+def writeGenomeNewick(pruferSeq, times, populations, name_file):
     children = find_children(pruferSeq, times)
     root = children[-1][0][0]
     root_time = children[-1][0][1]
 
     result = Vertex(root, root_time, children, populations)
 
-    f_nwk = open('newick_output.nwk', 'w')
+    f_nwk = open(name_file + '_tree.nwk', 'w')
     f_nwk.write(result.get_children(root_time))
     f_nwk.write(';')
     f_nwk.close()
 
-    f_pop = open('tree_populations.txt', 'w')
+    f_pop = open(name_file + '_sample_population.txt', 'w')
     f_pop.write(result.write_population())
     f_pop.close()

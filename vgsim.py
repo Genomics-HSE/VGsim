@@ -39,7 +39,15 @@ parser.add_argument("--writeMigrations",
                     help="Create a migration file *.txt ",
                     action="store_true")
 
+parser.add_argument("-citation", '-c', help="Information for citation.")
+
 clargs = parser.parse_args()
+
+if clargs.citation != None:
+    print("VGsim: scalable viral genealogy simulator for global pandemic")
+    print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
+    print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
+    sys.exit(1)
 
 if isinstance(clargs.frate, list):
     clargs.frate = clargs.frate[0]
@@ -83,13 +91,13 @@ else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)
 
-simulation = BirthDeathModel(clargs.iterations, bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
+simulation = BirthDeathModel(bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
 # simulation.Debug()
 # t1 = time.time()
 simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
 # simulation.Debug()
 # t2 = time.time()
-simulation.GetGenealogy()
+simulation.GetGenealogy(rndseed)
 # simulation.Debug()
 # t3 = time.time()
 # simulation.Report()

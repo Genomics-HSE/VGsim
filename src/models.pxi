@@ -2,6 +2,7 @@ cdef class Mutations:
     cdef:
         vector[Py_ssize_t] nodeId, AS, DS, site
         vector[double] time
+
     def __init__(self):#AS = ancestral state, DS = derived state
         pass
 
@@ -23,9 +24,9 @@ cdef class Mutations:
         self.site.push_back(int(site))
         self.time.push_back(time)
 
-    def GetData(self):
-        return {'node': self.nodeId, 'AS': self.AS, 'DS': self.DS, 'site': self.site, 'time': self.time}
-        # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
+        def GetData(self):
+            return {'node': self.nodeId, 'AS': self.AS, 'DS': self.DS, 'site': self.site, 'time': self.time}
+            # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
 
 cdef class Migrations:
     cdef:
@@ -59,8 +60,10 @@ class Lockdown:
 cdef class PopulationModel:
     cdef:
         Py_ssize_t globalInfectious
+
         long[::1] sizes, totalSusceptible, totalInfectious, lockdownON
         long[:,::1] susceptible
+
         double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier
 
     def __init__(self, populations, susceptible_num, lockdownModel=None, samplingMultiplier=None):
@@ -87,7 +90,7 @@ cdef class PopulationModel:
         self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
         self.startLD = np.zeros(sizePop, dtype=float)
         self.endLD = np.zeros(sizePop, dtype=float)
-        if len(lockdownModel) != 0:
+        if lockdownModel != None:
             for i in range(sizePop):
                 self.contactDensityBeforeLockdown[i] = populations[i].contactDensity
                 self.contactDensityAfterLockdown[i] = lockdownModel[i].conDenAfterLD
@@ -100,7 +103,7 @@ cdef class PopulationModel:
                 self.startLD[i] = 1.01*self.sizes[i]
                 self.endLD[i] = 1.0*self.sizes[i]
         self.lockdownON = np.zeros(sizePop, dtype=np.int64)
-        if len(samplingMultiplier) != 0:
+        if samplingMultiplier != None:
             self.samplingMultiplier = np.asarray(samplingMultiplier)
         else:
             self.samplingMultiplier = np.ones(sizePop)
@@ -108,16 +111,16 @@ cdef class PopulationModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewInfection(self, Py_ssize_t popId, Py_ssize_t suscId):
-        self.susceptible[popId, suscId] -= 1
-        self.totalSusceptible[popId] -= 1
-        self.totalInfectious[popId] += 1
+    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si):
+        self.susceptible[pi, si] -= 1
+        self.totalSusceptible[pi] -= 1
+        self.totalInfectious[pi] += 1
         self.globalInfectious += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewRecovery(self, Py_ssize_t popId, Py_ssize_t suscId):
-        self.susceptible[popId, suscId] += 1
-        self.totalSusceptible[popId] += 1
-        self.totalInfectious[popId] -= 1
+    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si):
+        self.susceptible[pi, si] += 1
+        self.totalSusceptible[pi] += 1
+        self.totalInfectious[pi] -= 1
         self.globalInfectious -= 1
