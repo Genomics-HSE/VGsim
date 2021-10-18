@@ -43,7 +43,7 @@ parser.add_argument("-citation", '-c', help="Information for citation.")
 
 clargs = parser.parse_args()
 
-if clargs.citation == None:
+if clargs.citation != None:
     print("VGsim: scalable viral genealogy simulator for global pandemic")
     print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
     print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
