@@ -10,17 +10,13 @@ you will need python development headers (e.g. on ubuntu linux the package name 
 
 To build the C extensions, run
 
-``
-$ python -m pip install .
-``
+``$ python -m pip install .``
 
 That's it! 
 
 You may now run simulations:
 
-``
-$ python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
-``
+``$ python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020``
 
 If you encounter problems with either of these steps, please file an issue at
 ``https://github.com/Genomics-HSE/VGsim``: please rerun with the ``-v`` flag,

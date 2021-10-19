@@ -47,7 +47,7 @@ if clargs.citation != None:
     print("VGsim: scalable viral genealogy simulator for global pandemic")
     print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
     print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
-    sys.exit(1)
+    sys.exit(0)
 
 if isinstance(clargs.frate, list):
     clargs.frate = clargs.frate[0]
@@ -105,7 +105,8 @@ simulation.GetGenealogy(rndseed)
 # print(t3 - t2)
 print("_________________________________")
 
-pruferSeq, times, mut, populations = simulation.Output_tree_mutations()
+if clargs.createNewick or clargs.writeMutations:
+    pruferSeq, times, mut, populations = simulation.Output_tree_mutations()
 
 if clargs.createNewick:
     writeGenomeNewick(pruferSeq, times, populations)

@@ -397,7 +397,7 @@ cdef class BirthDeathModel:
 
         self.pm.NewInfection(popId, st)
 
-        self.events.AddEvent(self.currentTime, BIRTH, haplotype, popId, 0, 0)
+        self.events.AddEvent(self.currentTime, BIRTH, haplotype, popId, st, 0)
         self.immuneSourcePopRate[popId, st] = self.pm.susceptible[popId, st]*self.suscepCumulTransition[st]
         self.immunePopRate[popId] = 0.0
         for j in range(self.susceptible_num):
@@ -763,7 +763,7 @@ cdef class BirthDeathModel:
         else: 
             return log
 
-    def get_data(self, pop, hap, step_num):
+    def get_data_infectious(self, pop, hap, step_num):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
         Date = np.zeros(step_num+1)
         Sample = np.zeros(step_num+1)
@@ -791,6 +791,34 @@ cdef class BirthDeathModel:
             elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == hap:
                 Date[point] += 1
         return Date, Sample, time_points
+
+    def get_data_susceptible(self, pop, sus, step_num):
+        time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
+        Date = np.zeros(step_num+1)
+        Date[0] = self.pm.sizes[pop]
+
+        point = 0
+        for j in range(self.events.ptr):
+            if time_points[point] < self.events.times[j]:
+                Date[point+1] = Date[point]
+                point += 1
+            if self.events.populations[j] == pop and self.events.newHaplotypes[j] == sus:
+                if self.events.types[j] == BIRTH:
+                    Date[point] -= 1
+                elif self.events.types[j] == DEATH:
+                    Date[point] += 1
+                elif self.events.types[j] == SAMPLING:
+                    Date[point] += 1
+                elif self.events.types[j] == MIGRATION:
+                    Date[point] += 1
+                elif self.events.types[j] == MUTATION:
+                    Date[point] += 1
+            elif self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == sus and self.events.populations[j] == pop:
+                Date[point] -= 1
+            elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == sus:
+                Date[point] -= 1
+
+        return Date, time_points
 
     def sampleDate(self):
         time, pop, hap = [], [], []
