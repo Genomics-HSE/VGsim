@@ -1,11 +1,9 @@
 Various Examples
 ================
 
-``
-import VGsim.interface as inter
+``import VGsim.interface as inter
 
 a = inter.Simulator()
 
 a.initialize(2020)
-a.simulate(200000)
-``
+a.simulate(200000)``
