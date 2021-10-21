@@ -782,8 +782,6 @@ cdef class BirthDeathModel:
                 elif self.events.types[j] == SAMPLING:
                     Date[point] -= 1
                     Sample[point] += 1
-                elif self.events.types[j] == MIGRATION:
-                    Date[point] -= 1
                 elif self.events.types[j] == MUTATION:
                     Date[point] -= 1
             elif self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == hap and self.events.populations[j] == pop:
@@ -795,7 +793,8 @@ cdef class BirthDeathModel:
     def get_data_susceptible(self, pop, sus, step_num):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
         Date = np.zeros(step_num+1)
-        Date[0] = self.pm.sizes[pop]
+        if sus == 0:
+            Date[0] = self.pm.sizes[pop]
 
         point = 0
         for j in range(self.events.ptr):
@@ -809,13 +808,9 @@ cdef class BirthDeathModel:
                     Date[point] += 1
                 elif self.events.types[j] == SAMPLING:
                     Date[point] += 1
-                elif self.events.types[j] == MIGRATION:
+                elif self.events.types[j] == SUSCCHANGE:
                     Date[point] += 1
-                elif self.events.types[j] == MUTATION:
-                    Date[point] += 1
-            elif self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == sus and self.events.populations[j] == pop:
-                Date[point] -= 1
-            elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == sus:
+            elif self.events.types[j] == SUSCCHANGE and self.events.haplotypes[j] == sus and self.events.populations[j] == pop:
                 Date[point] -= 1
 
         return Date, time_points

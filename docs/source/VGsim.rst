@@ -3,6 +3,7 @@ VGsim
 
 Our model of epidemiological spread is built as a compartmental model, and the random realisations of the corresponding stochastic process are drawn using the Gillespie algorithm. The different compartments in our model are defined based on several real-world complexities that interact with each other in a complex way and can affect epidemiological dynamics: population structure (which means defining separate host populations and assigning different frequencies to within-population and between-population contacts), separate infectious groups (which means that host individuals carrying different viral haplotypes are modeled differently, since some viral variants might be more transmissible than others), and different susceptible groups (different hosts having different types of immunity response to different haplotypes).
 
+
 Interface
 =========
 
@@ -78,11 +79,13 @@ Show initial parameters
 -----------------------
 
 For example, this is the introductory paragraph
-::
-    print_basic_rates()
-    print_populations()
-    print_migration_matrix()
-    print_immunity_model()
+
+.. code-block:: python
+
+  print_basic_rates()
+  print_populations()
+  print_migration_matrix()
+  print_immunity_model()
 
 
 Model simulation
@@ -154,8 +157,8 @@ epidemiology_timeline
      - ``double`` 
      - #TODO
 
-plot
-----
+plot_infectious
+---------------
 
 **Graph for particular population and particular haplotype**
 
@@ -176,14 +179,37 @@ plot
      - ``int``
      - Haplotype
 
+plot_susceptible
+----------------
+
+**Graph for particular population and particular susceptibility type**
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Parameter
+     - Type
+     - Meaning
+   * - ``step_num``
+     - ``int``
+     - A number of time intervals
+   * - ``population``
+     - ``int``
+     - Population
+   * - ``susceptibility_type``
+     - ``int``
+     - Haplotype
 
 System methods
-::
-   output_newick(name_file="newick_output"): - record format of binary trees
-   output_mutations(name_file="mutation_output"): - information about all mutations
-   output_migrations(name_file="migrations"): - information about all migrations
-   sampleDate(): - show all information about sampling, time, place, etc.
-   log_dynamics(self, step=1000, output_file=False): - records simulation state changes over some period of time. step - a number of parts log_dynamics is split on.
+
+.. code-block:: python
+
+  output_newick(name_file="newick_output"): - record format of binary trees
+  output_mutations(name_file="mutation_output"): - information about all mutations
+  output_migrations(name_file="migrations"): - information about all migrations
+  sampleDate(): - show all information about sampling, time, place, etc.
+  log_dynamics(self, step=1000, output_file=False): - records simulation state changes over some period of time. step - a number of parts log_dynamics is split on.
 
 Change values
 -------------

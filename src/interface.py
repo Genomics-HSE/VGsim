@@ -82,7 +82,6 @@ class Simulator:
 
 		self.suscType = None
 		self.susceptible = None
-		self.susc = None
 		#Get types of susceptible
 		if immunity_type != None and susceptibility != None:
 			for i in susceptibility:
@@ -95,7 +94,11 @@ class Simulator:
 				self.susceptible = [susceptibility for _ in range(4**sites_number)]
 			else:
 				self.Error("\"immunity_type\" should be more or equal 0 and less lenght of \"susceptibility\"!")	
-			self.susc = [self.suscType, self.susceptible]			
+			self.susc = [self.suscType, self.susceptible]	
+			self.sus_num = len(susceptibility)
+		else:
+			self.susc = None
+			self.sus_num = 2	
 
 		self.suscTrans = None
 		#Get matrix of transition of type of susceptible
@@ -111,7 +114,6 @@ class Simulator:
 							self.suscTrans[i].append(total_immunity_transition/(len(susceptibility)-1))
 			else:
 				self.Error("\"total_immunity_transition\" should be more or equal 0 and less or equal 1!")
-
 		#Other date
 		self.pruferSeq = None
 
@@ -181,18 +183,18 @@ class Simulator:
 		print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
 		print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
 
-	def initialize(self, _seed=None):
-		if _seed == None:
-		    _seed = randrange(sys.maxsize)
-		self.simulation = BirthDeathModel(self.B_rate, self.D_rate, self.S_rate, self.mutations, populationModel=[self.populations, self.migration], susceptible=self.susc, suscepTransition=self.suscTrans, lockdownModel=self.lockdowns, samplingMultiplier=self.samplingMultiplier, rndseed=int(_seed))
+	def initialize(self, seed=None):
+		if seed == None:
+		    seed = randrange(sys.maxsize)
+		self.simulation = BirthDeathModel(self.B_rate, self.D_rate, self.S_rate, self.mutations, populationModel=[self.populations, self.migration], susceptible=self.susc, suscepTransition=self.suscTrans, lockdownModel=self.lockdowns, samplingMultiplier=self.samplingMultiplier, rndseed=int(seed))
 
 	def update_migration(self, total_migration_probability):
 		self.simulation.UpdateMigration(float(total_migration_probability))
 
-	def simulate(self, _iterations=1000, _sampleSize=None, _time=-1):
-		if _sampleSize == None:
-			_sampleSize = _iterations
-		self.simulation.SimulatePopulation(_iterations, _sampleSize, _time)
+	def simulate(self, iterations=1000, sampleSize=None, time=-1):
+		if sampleSize == None:
+			sampleSize = iterations
+		self.simulation.SimulatePopulation(iterations, sampleSize, time)
 		self.simulation.Report()
 
 	def epidemiology_timeline(self, _seed=None):
@@ -207,30 +209,30 @@ class Simulator:
 		else:
 			return self.simulation.LogDynamics(step, output_file)
 
-	def plot_infectious(self, step_num=100, population=None, haplotype=None):
+	def plot_infectious(self, population=None, haplotype=None, step_num=100):
 		if population == None and haplotype == None:
 			infections, sample, time_points = self.simulation.get_data_infectious(0, 0, step_num)
 			for i in range(1, self.num_pop):
 				for j in range(1, 4**self.num_sites):
-					intections_2, sample_2, time_points_2 = self.simulation.get_data_infectious(i, j, step_num)
+					infections_2, sample_2, time_points_2 = self.simulation.get_data_infectious(i, j, step_num)
 					for k in range(step_num + 1):
-						intections[k] += intections_2[k]
+						infections[k] += infections_2[k]
 						sample[k] += sample_2[k]
 
 		elif population == None:
 			infections, sample, time_points = self.simulation.get_data_infectious(population, 0, step_num)
 			for i in range(1, self.num_pop):
-				intections_2, sample_2, time_points_2 = self.simulation.get_data_infectious(i, haplotype, step_num)
+				infections_2, sample_2, time_points_2 = self.simulation.get_data_infectious(i, haplotype, step_num)
 				for j in range(step_num + 1):
-					intections[j] += intections_2[j]
+					infections[j] += infections_2[j]
 					sample[j] += sample_2[j]
 
 		elif haplotype == None:
 			infections, sample, time_points = self.simulation.get_data_infectious(population, 0, step_num)
 			for i in range(1, 4**self.num_sites):
-				intections_2, sample_2, time_points_2 = self.simulation.get_data_infectious(pop, i, step_num)
+				infections_2, sample_2, time_points_2 = self.simulation.get_data_infectious(population, i, step_num)
 				for j in range(step_num + 1):
-					intections[j] += intections_2[j]
+					infections[j] += infections_2[j]
 					sample[j] += sample_2[j]
 
 		else:
@@ -251,12 +253,11 @@ class Simulator:
 
 		plt.show()
 
-
-	def plot_susceptible(self, step_num=100, population=None, susceptibility_type=None):
+	def plot_susceptible(self, population=None, susceptibility_type=None, step_num=100):
 		if population == None and susceptibility_type == None:
 			susceptible, time_points = self.simulation.get_data_susceptible(0, 0, step_num)
 			for i in range(1, self.num_pop):
-				for j in range(1, len(self.susceptible[0])):
+				for j in range(1, self.sus_num):
 					susceptible_2, time_points_2 = self.simulation.get_data_susceptible(i, j, step_num)
 					for k in range(step_num + 1):
 						susceptible[k] += susceptible_2[k]
@@ -264,14 +265,14 @@ class Simulator:
 		elif population == None:
 			susceptible, time_points = self.simulation.get_data_susceptible(population, 0, step_num)
 			for i in range(1, self.num_pop):
-				susceptible_2, time_points_2 = self.simulation.get_data_susceptible(i, haplotype, step_num)
+				susceptible_2, time_points_2 = self.simulation.get_data_susceptible(i, susceptibility_type, step_num)
 				for j in range(step_num + 1):
 					susceptible[j] += susceptible_2[j]
 
 		elif susceptibility_type == None:
 			susceptible, time_points = self.simulation.get_data_susceptible(population, 0, step_num)
-			for i in range(1, len(self.susceptible[0])):
-				susceptible_2, time_points_2 = self.simulation.get_data_susceptible(pop, i, step_num)
+			for i in range(1, self.sus_num):
+				susceptible_2, time_points_2 = self.simulation.get_data_susceptible(population, i, step_num)
 				for j in range(step_num + 1):
 					susceptible[j] += susceptible_2[j]
 

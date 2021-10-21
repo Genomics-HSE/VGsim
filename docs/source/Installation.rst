@@ -24,4 +24,4 @@ If you encounter problems with either of these steps, please file an issue at
 
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. 
 On Apple Silicon, you need to have `numpy >= 1.21` (which is the first NumPy
-version to support this hardware).s
+version to support this hardware).
