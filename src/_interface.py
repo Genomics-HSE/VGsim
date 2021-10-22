@@ -4,7 +4,6 @@ from random import randrange
 import sys
 # import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 class Population:
     def __init__(self, size=1000000, contactDensity=1.0):
