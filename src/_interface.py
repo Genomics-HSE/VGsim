@@ -2,7 +2,7 @@ from ._BirthDeath import BirthDeathModel
 from .IO import writeGenomeNewick, writeMutations
 from random import randrange
 import sys
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -161,21 +161,22 @@ class Simulator:
 			self.paint_infections(population, haplotype, time_points, infections, sample)
 		
 	def paint_infections(self, pop, hap, time_points, infections, sample):
-		figure, axis_1 = plt.subplots(figsize=(8, 6))
-		axis_1.plot(time_points, infections, color='blue', label='Infections')
-		axis_1.set_ylabel('Infections')
-		axis_1.set_xlabel('Time')
-		axis_1.set_title('Population ' + str(pop) + ' and hapotype ' + str(hap))
-		axis_2 = axis_1.twinx()
-		axis_2.plot(time_points, sample, color='orange', label='Sampling')
-		axis_2.set_ylabel('Sampling')
-		lines_1, labels_1 = axis_1.get_legend_handles_labels()
-		lines_2, labels_2 = axis_2.get_legend_handles_labels()
-		lines = lines_1 + lines_2
-		labels = labels_1 + labels_2
-		axis_1.legend(lines, labels, loc=0)
+		# figure, axis_1 = plt.subplots(figsize=(8, 6))
+		# axis_1.plot(time_points, infections, color='blue', label='Infections')
+		# axis_1.set_ylabel('Infections')
+		# axis_1.set_xlabel('Time')
+		# axis_1.set_title('Population ' + str(pop) + ' and hapotype ' + str(hap))
+		# axis_2 = axis_1.twinx()
+		# axis_2.plot(time_points, sample, color='orange', label='Sampling')
+		# axis_2.set_ylabel('Sampling')
+		# lines_1, labels_1 = axis_1.get_legend_handles_labels()
+		# lines_2, labels_2 = axis_2.get_legend_handles_labels()
+		# lines = lines_1 + lines_2
+		# labels = labels_1 + labels_2
+		# axis_1.legend(lines, labels, loc=0)
 
-		plt.show()
+		# plt.show()
+		pass
 
 	def plot_susceptible(self, population=None, susceptibility_type=None, step_num=100):
 		if population == None and susceptibility_type == None:
@@ -196,14 +197,15 @@ class Simulator:
 			self.paint_susceptible(population, susceptibility_type, susceptible, time_points)
 		
 	def paint_susceptible(self, population, susceptibility_type, susceptible, time_points): 
-		figure, axis_1 = plt.subplots(figsize=(8, 6))
-		axis_1.plot(time_points, susceptible, color='blue', label='Susceptible')
-		axis_1.set_ylabel('Susceptible')
-		axis_1.set_xlabel('Time')
-		axis_1.set_title('Population ' + str(population) + ' and susceptibility type ' + str(susceptibility_type))
-		axis_1.legend()
+		# figure, axis_1 = plt.subplots(figsize=(8, 6))
+		# axis_1.plot(time_points, susceptible, color='blue', label='Susceptible')
+		# axis_1.set_ylabel('Susceptible')
+		# axis_1.set_xlabel('Time')
+		# axis_1.set_title('Population ' + str(population) + ' and susceptibility type ' + str(susceptibility_type))
+		# axis_1.legend()
 
-		plt.show()
+		# plt.show()
+		pass
 
 	def output_newick(self, name_file="newick_output"):
 		pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()
