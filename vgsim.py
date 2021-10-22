@@ -91,26 +91,40 @@ else:
     rndseed = clargs.seed
 print("Seed: ", rndseed)
 
-simulation = BirthDeathModel(bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
-# simulation.Debug()
-# t1 = time.time()
-simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
-# simulation.Debug()
-# t2 = time.time()
-simulation.GetGenealogy(rndseed)
-# simulation.Debug()
-# t3 = time.time()
-# simulation.Report()
-# print(t2 - t1)
-# print(t3 - t2)
-print("_________________________________")
+# simulation = BirthDeathModel(bRate, dRate, sRate, mRate, populationModel=popModel, susceptible=susceptible, suscepTransition=suscepTransition, lockdownModel=lockdownModel, samplingMultiplier=samplingMulti, rndseed=rndseed)
+# # simulation.Debug()
+# # t1 = time.time()
+# simulation.SimulatePopulation(clargs.iterations, clargs.sampleSize)
+# # simulation.Debug()
+# # t2 = time.time()
+# simulation.GetGenealogy(rndseed)
+# # simulation.Debug()
+# # t3 = time.time()
+# # simulation.Report()
+# # print(t2 - t1)
+# # print(t3 - t2)
+# print("_________________________________")
 
-if clargs.createNewick or clargs.writeMutations:
-    pruferSeq, times, mut, populations = simulation.Output_tree_mutations()
+# if clargs.createNewick or clargs.writeMutations:
+#     pruferSeq, times, mut, populations = simulation.Output_tree_mutations()
 
-if clargs.createNewick:
-    writeGenomeNewick(pruferSeq, times, populations)
-if clargs.writeMutations:
-    writeMutations(mut, len(pruferSeq))
-if clargs.writeMigrations:
-    simulation.writeMigrations()
+# if clargs.createNewick:
+#     writeGenomeNewick(pruferSeq, times, populations)
+# if clargs.writeMutations:
+#     writeMutations(mut, len(pruferSeq))
+# if clargs.writeMigrations:
+#     simulation.writeMigrations()
+
+import VGsim
+simulator = VGsim.Simulator(2,[300000, 300000, 300000], 3, 1234)
+simulator.set_infectious_rate(40)
+simulator.set_uninfectious_rate(15)
+simulator.set_sampling_rate(4)
+simulator.set_mutation_rate(0.2, [4,2,2])
+simulator.set_migration_rate(0.01)
+simulator.set_lockdown([0.5, 20, 5])
+simulator.set_sampling_multiplier(1.8)
+simulator.set_susceptibility_type(2)
+simulator.set_susceptibility(0.5, susceptibility_type=1)
+simulator.set_immunity_transition(0.00001)
+simulator.simulate(10000)

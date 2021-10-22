@@ -24,7 +24,7 @@ py3.extension_module(
 python_sources = [
     '__init__.py',
     'IO.py',
-    'interface.py',
+    '_interface.py',
 ]
 
 # install source files in current dir

@@ -1,50 +1,21 @@
 Examples
 ========
 
-Базовый пример
---------------
-
-В данном примере создаётся самая базовая модель, которая имеет 1 популяцию, 1 гаплотип и 2 типа уязвимости.
-
 .. code-block:: python
 
-    import VGsim.interface
-
-    simulator = VGsim.interface.Simulator()
-    simulator.initialize()
-    simulator.simulate()
-    simulator.epidemiology_timeline()
-    simulator.log_dynamics()
-    simulator.plot_infectious()
-
-
-simulator.initialize() - инициализирует модель с теми параметрами, которые были заданы для класса Simulator()
-
-simulator.simulate() - симулирует последовательность событий
-
-simulator.epidemiology_timeline() - воссоздаёт по цепи событий генеалогическое древо на основе сэмплированных образцов
-
-simulator.log_dynamics() - записывает информацию о динамике развития симуляции по всем популяциям
-
-simulator.plot_infectious() - отображает общую динамику заболевших по всем гаплотипам и всем популяциям
-
-Более сложная модель
---------------------
-
-В данном примере создаётся модель, которая имеет 1 мутацию, то есть 4 гаплотипа, 3 популяции и 2 типа уязвимости.
-
-.. code-block:: python
-
-    import VGsim.interface
-
-    simulator = VGsim.interface.Simulator(infectious_rate=40, uninfectious_rate=15, sampling_rate=4,
-     sites_number=1, mutation_rate=0.2, mutation_probabilities=[4,2,2], populations_number=3, 
-     population_size=300000, contact_density=1.0, total_migration_probability=0.2)
-    simulator.initialize(seed=1234)
-    simulator.simulate(iterations=200000, time=0.3)
-    simulator.epidemiology_timeline()
-    simulator.log_dynamics()
-    simulator.plot_infectious()
-
+    import VGsim
     
+    simulator = VGsim.Simulator(2,[300000, 300000, 300000], 3, 1234)
+    simulator.set_infectious_rate(40)
+    simulator.set_uninfectious_rate(15)
+    simulator.set_sampling_rate(4)
+    simulator.set_mutation_rate(0.2, [4,2,2])
+    simulator.set_migration_rate(0.01)
+    simulator.set_lockdown([0.5, 20, 5])
+    simulator.set_sampling_multiplier(1.8)
+    simulator.set_susceptibility_type(2)
+    simulator.set_susceptibility(0.5, susceptibility_type=1)
+    simulator.set_immunity_transition(0.00001)
+    simulator.simulate(100000)
+        
 

@@ -17,62 +17,18 @@ init
    * - Basic parameters
      - Type
      - Meaning
-   * - ``infectious_rate``
-     - ``double``
-     - Frequency of incidence, how many people could become sick per period of time
-   * - ``uninfectious_rate``
-     - ``double``
-     - A number of people recovered from the disease per period of time
-   * - ``sampling_rate``
-     - ``double``
-     - Sampling frequency, getting a virus dna through testing people to track any virus mutations
-   * - ``sampling_proportion``
-     - ``double``
-     - Second recovery model, percentage of people from a total sample of infected who recovered
    * - ``sites_number``
      - ``int``
      - Amount of parts of the genome where mutations can occur
-   * - ``mutation_rate``
-     - ``double``
-     - Frequency rate of certain mutations
-   * - ``mutation_probabilities``
-     - ``[double, double, double]``
-     - Frequency of transition from a particular nucleic acid to the other one  (e.g. Adenine to Thymine). Example [2,3,5]
-   * - **Population parameters**
-     -
-     -
-   * - ``populations_number``
-     - ``int``
-     - Population scope (e.g. five countries)
-   * - ``population_size``
-     - ``int``
-     - Population size
-   * - ``contact_density``
-     - ``double``
-     - Frequency of contacts between people in one population.
-   * - ``total_migration_probability``
-     - ``double``
-     - Migration rate (e.g. probability of movement from one population to another one)
-   * - ``lockdown``
-     - ``[double, int, int]``
-     - Set of 3 criterias (threshold of incidents which leads to lockdown, lifting of lockdown, updated contact_density) Example [2.0, 5, 2]
-   * - ``sampling_multiplier``
-     - ``double``
-     - Virus sampling is multiplied by sampling rate to get the final amount for the population.
-   * - **Susceptibility**
-     -
-     -
-   * - ``immunity_type``
-     - ``int``
-     - Post recovery type of individual
-   * - ``susceptibility``
+   * - ``population_sizes``
      - ``list``
-     - #TODO
-   * - ``total_immunity_transition``
+     - Population sizes
+   * - ``susceptibility_types``
+     - ``list``
+     - Number of susceptibility types
+   * - ``seed``
      - ``double``
-     - Susceptibility matrix, the way susceptibility transitions
-
-
+     - #TODO
 
 
 Show initial parameters
@@ -91,20 +47,6 @@ For example, this is the introductory paragraph
 Model simulation
 ================
 
-initialize
-----------
-
-.. list-table::
-   :widths: 15 15 70
-   :header-rows: 1
-
-   * - Parameter
-     - Type
-     - Meaning
-   * - ``_seed``
-     - ``double``
-     - #TODO
-
 simulate
 --------
 
@@ -119,32 +61,18 @@ Parameters of model halt
    * - Parameter
      - Type
      - Meaning
-   * - ``_iterations``
+   * - ``iterations``
      - ``int``
      - Amount of iterations which will take place before the halt
-   * - ``_sampleSize``
+   * - ``sampleSize``
      - ``int``
      - Halt the simulation when a particular number of participants was sampled
-   * - ``_time``
+   * - ``time``
      - ``double``
      - time-based halt
 
-update_migration
-----------------
-
-.. list-table::
-   :widths: 15 15 70
-   :header-rows: 1
-
-   * - Parameter
-     - Type
-     - Meaning
-   * - ``total_migration_probability``
-     - ``double`` 
-     - #TODO
-
-epidemiology_timeline
----------------------
+genealogy
+---------
 
 .. list-table::
    :widths: 15 15 70
@@ -209,7 +137,7 @@ System methods
   output_mutations(name_file="mutation_output"): - information about all mutations
   output_migrations(name_file="migrations"): - information about all migrations
   sampleDate(): - show all information about sampling, time, place, etc.
-  log_dynamics(self, step=1000, output_file=False): - records simulation state changes over some period of time. step - a number of parts log_dynamics is split on.
+  epidemiology_timelines(self, step=1000, output_file=False): - records simulation state changes over some period of time. step - a number of parts epidemiology_timelines is split on.
 
 Change values
 -------------
