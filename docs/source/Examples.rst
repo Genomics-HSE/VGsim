@@ -11,7 +11,7 @@ Examples
     simulator.set_sampling_rate(4)
     simulator.set_mutation_rate(0.2, [4,2,2])
     simulator.set_migration_probability(0.01)
-    simulator.set_lockdown([0.5, 20, 5])
+    simulator.set_lockdown([0.5, 0.2, 0.05])
     simulator.set_sampling_multiplier(1.8)
     simulator.set_immunity_type(2)
     simulator.set_susceptibility(0.5, susceptibility_type=1)
