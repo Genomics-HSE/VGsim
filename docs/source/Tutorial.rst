@@ -22,10 +22,8 @@ The user can also specify a random seed.
 	number_of_susceptible_groups = 3
 	simulator = VGsim.Simulator(number_of_sites, population_sizes, number_of_susceptible_groups, seed=1234)
 
-Choosing simulation parameters
-------------------------------
-
-**Transmission, recovery and sampling rates**
+Transmission, recovery and sampling rates
+-----------------------------------------
 
 Assume that a patient becomes uninfectious within 10 days on average. Remember, that sampling an individual also means that this person becomes uninfectious. So, the sum of recovery and sampling rates is 1/10=0.1.
 
@@ -46,7 +44,8 @@ Now let us assume that the original virus has haplotype AA. And the haplotype GG
 	simulator.set_infectious_rate(0.5, haplotype=”GG”)
 
 
-**Mutation rates and substitution probabilities**
+Mutation rates and substitution probabilities
+---------------------------------------------
 
 The GG haplotype can appear in the population only through mutations an both sites. For example, for SARS-CoV-2, there is roughly on average one new mutation per three transmissions (average time between transmissions are 1/0.25=4 days in our model) per approximately 30000bp genome. So, the per-site mutation rate is 1/(3*4*30000)≈0.000003. We also set the substitution probabilities. In fact, it might be more convenient sometimes to use unnormalised weights instead. Here we assume that the A->G substitution is twice more likely than A->T or A->C (the A->A substitution is not allowed, so the first entry of the array will be dropped for the corresponding haplotypes). Let’s also assume that having allele G at the first site increases the mutation rate at the second site by three times.
 
@@ -57,7 +56,8 @@ The GG haplotype can appear in the population only through mutations an both sit
 	simulator.set_mutation_rate(mutation_rate, substitution_weights)
 	simulator.set_mutation_rate(3*mutation_rate, XXX)
 
-**Susceptibility types**
+Susceptibility types
+--------------------
 
 At the beginning of the epidemics all the individuals do not have any special immunity, and thus we assign them by default susceptibility type 0. Now let us assume that after recovery individuals get some immunity. If an individual was infected with haplotype carrying G at the first site (we will denote them by G*), the susceptibility type after recovery will be 2. For all other haplotypes it will be 1.
 
@@ -81,7 +81,8 @@ Susceptibility type 2 will be a result of recovery from haplotype G* or vaccinat
 	simulator.set_susceptibility(0.0, susceptibility_type=2)
 	simulator.set_immunity_transition(1/180, from_population=2, to_population=0)
 
-**Population model**
+Population model
+----------------
 
 We have already set the population sizes. Now let us add some more heterogeneity. First of all assume that population 1 has a three times higher sampling rate than population 0, while population 2 does not sequence at all.
 
@@ -90,16 +91,120 @@ We have already set the population sizes. Now let us add some more heterogeneity
 	simulator.set_sampling_multiplier(3, population=1)
 	simulator.set_sampling_multiplier(0, population=2)
 
-Now, all the countries impose lockdowns when 20% of its population is infected simultaneously. The lockdowns are lifted if this number drops to 5%. The amount of contacts is ten times less during the lockdown.
+Now, all the countries impose lockdowns when 1% of its population is infected simultaneously. The lockdowns are lifted if this number drops to 0.2%. The amount of contacts is ten times less during the lockdown.
+
 
 .. code-block:: python
 
-	simulator.set_lockdown([0.5, 0.2, 0.05])
+	simulator.set_lockdown([0.5, 0.01, 0.002])
 
-**Migration**
+Migration
+---------
 
 There are 3 populations in our scenario. Assume that an average individual from one population spends on average 10 days per year outside of its population of origin. The chance to travel to any destination is the same. The cumulative migration probability is 10/365. The probability to travel to a particular destination is 10 (days)/365 (days)/2 (the number of possible destinations). So, we can set
 
 .. code-block:: python
 
 	simulator.set_migration_rate(10/365)
+
+
+
+Running the simulation
+----------------------
+
+Let us simulate the first 90 days. The first argument is the maximal number of iterations to be performed. Notice that the simulation will stop if this number is achieved even if 90 days (of virtual epidemics) did not pass.
+
+.. code-block:: python
+
+	simulator.simulate(10000000, time=90)
+
+After these 90 days, the vaccine was developed, and the susceptible individuals of types 0 and 1 can move to type 2 with the rate 0.05 (average waiting time of 20 days to get vaccinated).
+
+.. code-block:: python
+
+	simulator.set_immunity_transition(0.05, source=0, target=1)
+	simulator.set_immunity_transition(0.05, source=0, target=2)
+
+Also, the rising awareness in the population reduces the contact density (e.g. because of masks) in populations 0 and 1.
+
+.. code-block:: python
+
+	simulator.set_contact_density(0.7, populations=0)
+	simulator.set_contact_density(0.7, populations=1)
+
+
+And the amount of travels is reduced with population 2
+
+.. code-block:: python
+
+	simulator.set_migration_rate(2/365, source=0, target=2)
+	simulator.set_migration_rate(2/365, source=1, target=2)
+
+Let’s run the simulation for some more iterations.
+
+.. code-block:: python
+
+	simulator.simulate(10000000)
+
+Visualizing epidemiological trajectories
+----------------------------------------
+
+Now let us plot how the haplotypes appear and spread in each population.
+
+.. code-block:: python
+
+	simulator.plot_infections()
+
+Now let’s also plot how haplotype GG spreads in different populations.
+
+.. code-block:: python
+
+	simulator.plot_infections(haplotype="GG")
+
+And finally let us look how the susceptible group sizes change.
+
+.. code-block:: python
+
+	simulator.plot_susceptible()
+
+Extracting the genealogy
+------------------------
+
+Finally, we extract the genealogy of the sampled cases. We write the genealogy and mutations on it into a file in MAT format. These files can be used as phastSim input to add neutral mutations.
+
+.. code-block:: python
+
+	simulator.genealogy()
+	simulator.output_newick(file_name)
+	simulator.output_mutations(file_name)
+
+The user can also output the migrations of the genealogy lineages to have the detailed information about population structure.
+
+.. code-block:: python
+
+	simulator.output_migrations(file_name)
+
+Print all the parameters
+------------------------
+One can check the parametrization of the model by printing all the parameters. The basic parameters (transmission, recovery, sampling, mutation rates, substitution weights, susceptibility type after recovery)
+
+.. code-block:: python
+
+	simulator.print_basic_parameters()
+
+Susceptibility matrix (how each immunity type affects susceptibility to each of the haplotypes) and the susceptibility type transition matrix
+
+.. code-block:: python
+
+	simulator.print_immunity_model()
+
+Finally, let’s print population information (size, contact density, sampling modifier, lockdown settings) and migration matrix
+
+.. code-block:: python
+
+	simulator.print_populations()
+
+
+
+
+

@@ -8,6 +8,7 @@ from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
 
+from prettytable import PrettyTable
 import numpy as np
 import sys
 import os
@@ -544,6 +545,8 @@ cdef class BirthDeathModel:
     def set_infectious_rate(self, rate, haplotype):
         if rate<0:
             self.Error("#TODO")
+        if isinstance(haplotype, str) and len(haplotype) == self.sites:
+            haplotype = self.calculate_haplotype(haplotype)
         if isinstance(rate, (int, float)) and haplotype == None:
             for hn in range(self.hapNum):
                 self.bRate[hn] = rate
@@ -560,6 +563,8 @@ cdef class BirthDeathModel:
     def set_uninfectious_rate(self, rate, haplotype):
         if rate<0:
             self.Error("#TODO")
+        if isinstance(haplotype, str) and len(haplotype) == self.sites:
+            haplotype = self.calculate_haplotype(haplotype)
         if isinstance(rate, (int, float)) and haplotype == None:
             for hn in range(self.hapNum):
                 self.dRate[hn] = rate
@@ -576,6 +581,8 @@ cdef class BirthDeathModel:
     def set_sampling_rate(self, rate, haplotype):
         if rate<0:
             self.Error("#TODO")
+        if isinstance(haplotype, str) and len(haplotype) == self.sites:
+            haplotype = self.calculate_haplotype(haplotype)
         if isinstance(rate, (int, float)) and haplotype == None:
             for hn in range(self.hapNum):
                 self.sRate[hn] = rate
@@ -590,6 +597,8 @@ cdef class BirthDeathModel:
         self.SetRates()
 
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
+        if isinstance(haplotype, str) and len(haplotype) == self.sites:
+            haplotype = self.calculate_haplotype(haplotype)
         if isinstance(rate, (int, float)) and probabilities==None and haplotype==None and mutation==None:
             if rate<0:
                 self.Error("#TODO")
@@ -756,7 +765,7 @@ cdef class BirthDeathModel:
                 self.pm.contactDensity[pn] = value
                 self.pm.contactDensityBeforeLockdown[pn] = value
         elif isinstance(value, (int, float)) and isinstance(population, int):
-            if population<0 and population>=self.popNum:
+            if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.contactDensity[population] = value
@@ -779,7 +788,7 @@ cdef class BirthDeathModel:
                 self.pm.startLD[pn] = parameters[1]*self.pm.sizes[pn]
                 self.pm.endLD[pn] = parameters[2]*self.pm.sizes[pn]
         elif isinstance(parameters, list) and isinstance(population, int):
-            if population<0 and population>=self.popNum:
+            if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.contactDensityAfterLockdown[population] = parameters[0]
@@ -795,7 +804,7 @@ cdef class BirthDeathModel:
             for pn in range(self.popNum):
                 self.pm.samplingMultiplier[pn] = multiplier
         elif isinstance(multiplier, (int, float)) and isinstance(population, int):
-            if population<0 and population>=self.popNum:
+            if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.samplingMultiplier[population] = multiplier
@@ -807,29 +816,29 @@ cdef class BirthDeathModel:
     def set_migration_rate(self, rate, from_population, to_population):
         if rate<0:
             self.Error("#TODO")
-        if isinstance(rate, (int, float)) and from_population==None and to_population==None:
+        if from_population==None and to_population==None:
             for pn1 in range(self.popNum):
                 for pn2 in range(self.popNum):
                     if pn1 != pn2:
                         self.pm.migrationRates[pn1, pn2] = rate
-        elif isinstance(rate, (int, float)) and isinstance(from_population, int) and to_population==None:
-            if from_population<0 and from_population>=self.popNum:
+        elif isinstance(from_population, int) and to_population==None:
+            if from_population<0 or from_population>=self.popNum:
                 self.Error("#TODO")
 
             for pn2 in range(self.popNum):
                 if from_population != pn2:
                     self.pm.migrationRates[from_population, pn2] = rate
-        elif isinstance(rate, (int, float)) and from_population==None and isinstance(to_population, int):
-            if to_population<0 and to_population>-self.popNum:
+        elif from_population==None and isinstance(to_population, int):
+            if to_population<0 or to_population>-self.popNum:
                 self.Error("#TODO")
 
             for pn1 in range(self.popNum):
                 if pn1 != to_population:
                         self.pm.migrationRates[pn1, to_population] = rate
-        elif isinstance(rate, (int, float)) and isinstance(from_population, int) and isinstance(to_population, int):
-            if from_population<0 and from_population>=self.popNum:
+        elif isinstance(from_population, int) and isinstance(to_population, int):
+            if from_population<0 or from_population>=self.popNum:
                 self.Error("#TODO")
-            if to_population<0 and to_population>-self.popNum:
+            if to_population<0 or to_population>-self.popNum:
                 self.Error("#TODO")
             if from_population==to_population:
                 self.Error("#TODO")
@@ -841,16 +850,30 @@ cdef class BirthDeathModel:
         self.pm.SetEffectiveMigration()
         self.MigrationRates()
 
-    def set_susceptible(self, amount, from_type, to_type, population):
-        pass
+    def set_susceptible(self, amount, source_type, target_type, population):
+        if source_type<0 and source_type>=self.susNum:
+            self.Error("#TODO")
+        if target_type<0 and target_type>=self.susNum:
+            self.Error("#TODO")
+        if source_type==target_type:
+            self.Error("#TODO")
+        if population==None:
+            for pn in range(self.popNum):
+                if amount<0 or amount>self.pm.susceptible[pn, source_type]:
+                    self.Error("#TODO")
+                self.pm.susceptible[pn, source_type] -= amount
+                self.pm.susceptible[pn, target_type] += amount
+        elif isinstance(population, int):
+            if amount<0 or amount>self.pm.susceptible[population, source_type]:
+                self.Error("#TODO")
+            self.pm.susceptible[population, source_type] -= amount
+            self.pm.susceptible[population, target_type] += amount
+        else:
+            self.Error("#TODO")
 
-    def set_infections(self, amount, from_type, to_haplotype, population):
-        pass
-
-    def set_infections_2(self, amount, from_haplotype, to_haplotype, population):
-        pass
-
-    def set_susceptibility_type(self, susceptibility_type, haplotype):
+        self.SetRates()
+        
+    def set_immunity_type(self, susceptibility_type, haplotype):
         if susceptibility_type<0 and susceptibility_type>=self.susNum:
             self.Error("#TODO")
         if isinstance(susceptibility_type, int) and haplotype == None:
@@ -872,21 +895,21 @@ cdef class BirthDeathModel:
                 for sn in range(self.susNum):
                     self.susceptibility[hn, sn] = rate
         elif isinstance(haplotype, int) and susceptibility_type==None:
-            if haplotype<0 and haplotype>=self.hapNum:
+            if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("#TODO")
 
             for sn in range(self.susNum):
                 self.susceptibility[haplotype, sn] = rate
         elif haplotype==None and isinstance(susceptibility_type, int):
-            if susceptibility_type<0 and susceptibility_type>=self.susNum:
+            if susceptibility_type<0 or susceptibility_type>=self.susNum:
                 self.Error("#TODO")
 
             for hn in range(self.hapNum):
                 self.susceptibility[hn, susceptibility_type] = rate
         elif isinstance(haplotype, int) and isinstance(susceptibility_type, int):
-            if haplotype<0 and haplotype>=self.hapNum:
+            if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("#TODO")
-            if susceptibility_type<0 and susceptibility_type>=self.susNum:
+            if susceptibility_type<0 or susceptibility_type>=self.susNum:
                 self.Error("#TODO")
 
             self.susceptibility[haplotype, susceptibility_type] = rate
@@ -904,23 +927,23 @@ cdef class BirthDeathModel:
                     if sn1 != sn2:
                         self.suscepTransition[sn1, sn2] = rate
         elif isinstance(rate, (int, float)) and isinstance(from_population, int) and to_population==None:
-            if from_population<0 and from_population>=self.susNum:
+            if from_population<0 or from_population>=self.susNum:
                 self.Error("#TODO")
 
             for sn2 in range(self.susNum):
                 if from_population != sn2:
                     self.suscepTransition[from_population, sn2] = rate
         elif isinstance(rate, (int, float)) and from_population==None and isinstance(to_population, int):
-            if to_population<0 and to_population>-self.susNum:
+            if to_population<0 or to_population>-self.susNum:
                 self.Error("#TODO")
 
             for sn1 in range(self.susNum):
                 if sn1 != to_population:
                         self.suscepTransition[sn1, to_population] = rate
         elif isinstance(rate, (int, float)) and isinstance(from_population, int) and isinstance(to_population, int):
-            if from_population<0 and from_population>=self.susNum:
+            if from_population<0 or from_population>=self.susNum:
                 self.Error("#TODO")
-            if to_population<0 and to_population>-self.susNum:
+            if to_population<0 or to_population>-self.susNum:
                 self.Error("#TODO")
             if from_population==to_population:
                 self.Error("#TODO")
@@ -930,6 +953,101 @@ cdef class BirthDeathModel:
             self.Error("#TODO")
 
         self.SetRates()
+
+    def print_basic_parameters(self):
+        print("Basic rates")
+        table = PrettyTable()
+
+        field = ["H", "IR", "UR", "SR"]
+        for i in range(self.sites):
+            field.append("M-" + str(i))
+            field.append("MP" + str(i))
+        table.field_names = field
+        for hn in range(self.hapNum):
+            list = [self.calculate_string(hn), self.bRate[hn], self.dRate[hn], self.sRate[hn]]
+            for s in range(self.sites):
+                list.append(self.mRate[hn, s])
+                list.append([self.hapMutType[hn, s, 0], self.hapMutType[hn, s, 1], self.hapMutType[hn, s, 2]])
+            table.add_row(list)
+
+        print(table)
+
+    def print_populations(self):
+        print("Populations")
+        table_populations = PrettyTable()
+
+        table_populations.field_names = ["Id", "Size", "CD", "CDALD", "SLD", "ELD", "SM"]
+        for pn in range(self.popNum):
+            table_populations.add_row([pn, self.pm.sizes[pn], self.pm.contactDensity[pn], self.pm.contactDensityAfterLockdown[pn], self.pm.startLD[pn], self.pm.endLD[pn], self.pm.samplingMultiplier[pn]])
+        
+        print(table_populations)
+
+        print("Migration matrix")
+        table_migration = PrettyTable()
+
+        field = [""]
+        for pn1 in range(self.popNum):
+            field.append(pn1)
+            row = [pn1]
+            for pn2 in range(self.popNum):
+                row.append(self.pm.migrationRates[pn1, pn2])
+            table_migration.add_row(row)
+        table_migration.field_names = field
+
+        print(table_migration)
+
+    def print_immunity_model(self):
+        print("Immunity model")
+        table_immunity = PrettyTable()
+
+        field = ["ST"]
+        for sn in range(self.susNum):
+            field.append("S" + str(sn))
+        table_immunity.field_names = field
+        for hn in range(self.hapNum):
+            row = [self.suscType[hn]]
+            for sn in range(self.susNum):
+                row.append(self.susceptibility[hn, sn])
+            table_immunity.add_row(row)
+
+        print(table_immunity)
+
+        print("Immunity transition rates")
+        table_immunity_transition = PrettyTable()
+
+        field = [""]
+        for sn1 in range(self.susNum):
+            field.append(sn1)
+            row = [sn1]
+            for sn2 in range(self.susNum):
+                row.append(self.suscepTransition[sn1, sn2])
+            table_immunity_transition.add_row(row)
+        table_immunity_transition.field_names = field
+
+        print(table_immunity_transition)
+
+    def calculate_string(self, hapNum):
+        letters = ["A", "T", "C", "G"]
+        string = ""
+        for s in range(self.sites):
+            string = letters[hapNum%4] + string
+            hapNum = hapNum // 4
+        return string
+
+    def calculate_haplotype(self, string):
+        string = string[::-1]
+        haplotype = 0
+        for s in range(self.sites):
+            if string[s]=="T":
+                haplotype += (4**s)
+            elif string[s]=="C":
+                haplotype += 2*(4**s)
+            elif string[s]=="G":
+                haplotype += 3*(4**s)
+        return haplotype
+
+    def get_sites(self):
+        return self.sites
 
     def get_hapNum(self):
         return self.hapNum
@@ -1181,10 +1299,10 @@ cdef class BirthDeathModel:
 
         point = 0
         for j in range(self.events.ptr):
-            if time_points[point] <= self.events.times[j]:
+            if time_points[point] < self.events.times[j]:
+                Date[point+1] = Date[point]
+                Sample[point+1] = Sample[point]
                 point += 1
-                Date[point] = Date[point-1]
-                Sample[point] = Sample[point-1]
             if self.events.populations[j] == pop and self.events.haplotypes[j] == hap:
                 if self.events.types[j] == BIRTH:
                     Date[point] += 1
