@@ -5,6 +5,7 @@ requires  = [
     "mesonpep517",
     "ninja",
     "mc_lib @ git+http://github.com/ev-br/mc_lib.git@v0.3",
+    "matplotlib",
     "prettytable"
 ]
 
@@ -31,5 +32,6 @@ requires  = [
     "numpy>=1.19.5",
     "mc_lib @ git+http://github.com/ev-br/mc_lib.git@v0.3",
     "prettytable",
+    "matplotlib",
     "pytest"
 ]
