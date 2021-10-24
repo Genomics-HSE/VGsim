@@ -6,6 +6,14 @@ VGsim
 
    VGsim
 
+Tutorial
+========
+
+.. toctree::
+   :maxdepth: 4
+
+   Tutorial
+
 Examples
 ========
 

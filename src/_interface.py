@@ -17,10 +17,10 @@ class Lockdown:
         self.endLD = endLD
 
 class Simulator:
-	def __init__(self, sites_number=0, population_sizes=[1000000], susceptibility_types=2, seed=None):
+	def __init__(self, number_of_sites=0, population_sizes=[1000000], number_of_susceptible_groups=2, seed=None):
 		if seed == None:
 			seed = randrange(sys.maxsize)
-		self.simulation = BirthDeathModel(sites_number, population_sizes, susceptibility_types, seed)
+		self.simulation = BirthDeathModel(number_of_sites, population_sizes, number_of_susceptible_groups, seed)
 
 	def simulate(self, iterations=1000, sampleSize=None, time=-1):
 		if sampleSize==None:
@@ -49,8 +49,8 @@ class Simulator:
 	def set_sampling_multiplier(self, multiplier, population=None):
 		self.simulation.set_sampling_multiplier(multiplier, population)
 
-	def set_migration_rate(self, rate, from_population=None, to_population=None):
-		self.simulation.set_migration_rate(rate, from_population, to_population)
+	def set_migration_probability(self, probability, from_population=None, to_population=None):
+		self.simulation.set_migration_rate(probability, from_population, to_population)
 
 	def set_susceptible(self, amount, from_type, to_type, population=None):
 		self.simulation.set_susceptible(amount, from_type, to_type, population)
@@ -61,7 +61,7 @@ class Simulator:
 	def set_infections_2(self, amount, from_haplotype, to_haplotype, population=None):
 		self.simulation.set_infections(amount, from_haplotype, to_haplotype, population)
 
-	def set_susceptibility_type(self, susceptibility_type, haplotype=None):
+	def set_immunity_type(self, susceptibility_type, haplotype=None):
 		self.simulation.set_susceptibility_type(susceptibility_type, haplotype)
 
 	def set_susceptibility(self, rate, haplotype=None, susceptibility_type=None):
@@ -231,5 +231,23 @@ class Simulator:
 
 	def print_times(self):
 		self.simulation.times_print()
+
+	def save_data(self):
+		# events, event_times, times, tree = self.simulation.save_data()
+		events, event_times = self.simulation.save_data()
+		file = open('data.txt', 'w')
+		file.write("events: ")
+		for i in range(len(events)):
+			file.write(str(events[i]) + " ")
+		file.write("\nevent times: ")
+		for i in range(len(events)):
+			file.write(str(event_times[i]) + " ")
+	# 	file.write("\ntimes: ")
+	# 	for i in range(len(times)):
+	# 		file.write(str(times[i]) + " ")
+	# 	file.write("\ntree: ")
+	# 	for i in range(len(times)):
+	# 		file.write(str(tree[i]) + " ")
+		file.close()
 
 

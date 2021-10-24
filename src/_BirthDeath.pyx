@@ -95,13 +95,12 @@ cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
 
-        Py_ssize_t bCounter, dCounter, sCounter, migCounter, mutCounter, popNum, sites, hapNum, susNum
+        Py_ssize_t bCounter, dCounter, sCounter, mCounter, iCounter, popNum, sites, hapNum, susNum
         double currentTime, totalLen, rn, totalRate, maxEffectiveBirth, totalMigrationRate
 
         Events events
         PopulationModel pm
         Mutations mut
-        Migrations mig
 
         long[::1] tree, suscType
         long[:,::1] liveBranches
@@ -115,7 +114,8 @@ cdef class BirthDeathModel:
         self.bCounter = 0
         self.dCounter = 0
         self.sCounter = 0
-        self.mutCounter = 0
+        self.mCounter = 0
+        self.iCounter = 0
         self.events = Events()
         self.mut = Mutations()
 
@@ -126,7 +126,11 @@ cdef class BirthDeathModel:
 
         self.pm = PopulationModel(population_sizes, self.susNum)
 
-        self.InitLiveBranches()
+        self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        self.events.AddEvent(0, 0, 0, 0, 0, 0)
+        self.liveBranches[0, 0] += 2
+        self.pm.NewInfection(0, 0)
+        self.pm.NewInfection(0, 0)
  
         self.susceptibility = np.zeros((self.hapNum, self.susNum), dtype=float)
         self.suscType = np.zeros(self.hapNum, dtype=np.int64)
@@ -152,44 +156,11 @@ cdef class BirthDeathModel:
         self.immuneSourcePopRate = np.zeros((self.popNum, self.susNum), dtype=float)
         self.immunePopRate = np.zeros(self.popNum, dtype=float)
         self.popRate = np.zeros(self.popNum, dtype=float)
-        self.totalRate = 0
-
-        self.SetRates()
-
-        self.SetMaxBirth()
-
         self.migPopRate = np.zeros(self.popNum, dtype=float)
         self.totalMigrationRate = 0.0
-        self.MigrationRates()
-
-        #Set random generator
-        self.rndm = RndmWrapper(seed=(seed, 0))
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef void InitLiveBranches(self):
-        self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
-        self.events.AddEvent(0, 0, 0, 0, 0, 0)
-        self.liveBranches[0, 0] += 2
-        self.pm.NewInfection(0, 0)
-        self.pm.NewInfection(0, 0)
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef void SetMaxBirth(self):
-        for hn in range(self.hapNum):
-            self.maxSusceptibility[hn] = 0.0
-            for sn in range(self.susNum):
-                if self.susceptibility[hn, sn] > self.maxSusceptibility[hn]:
-                    self.maxSusceptibility[hn] = self.susceptibility[hn, sn]
+        self.totalRate = 0
         self.maxEffectiveBirth = 0.0
-        for hn in range(self.hapNum):
-            if self.maxEffectiveBirth < self.bRate[hn]*self.maxSusceptibility[hn]:
-                self.maxEffectiveBirth = self.bRate[hn]*self.maxSusceptibility[hn]
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef void SetRates(self):
         for hn in range(self.hapNum):
             self.bRate[hn] = 2
             self.dRate[hn] = 1
@@ -226,7 +197,6 @@ cdef class BirthDeathModel:
             for sn2 in range(self.susNum):
                 self.suscepCumulTransition[sn1] += self.suscepTransition[sn1, sn2]
 
-        self.totalRate = 0
         for pn in range(self.popNum):
             self.popRate[pn] = 0
             self.immunePopRate[pn] = 0
@@ -236,6 +206,22 @@ cdef class BirthDeathModel:
                 self.immunePopRate[pn] += self.immuneSourcePopRate[pn, sn]
             self.popRate[pn] = self.infectPopRate[pn] + self.immunePopRate[pn]
             self.totalRate += self.popRate[pn]
+
+        for hn in range(self.hapNum):
+            self.maxSusceptibility[hn] = 0.0
+            for sn in range(self.susNum):
+                if self.susceptibility[hn, sn] > self.maxSusceptibility[hn]:
+                    self.maxSusceptibility[hn] = self.susceptibility[hn, sn]
+        for hn in range(self.hapNum):
+            if self.maxEffectiveBirth < self.bRate[hn]*self.maxSusceptibility[hn]:
+                self.maxEffectiveBirth = self.bRate[hn]*self.maxSusceptibility[hn]
+        
+        for pn in range(self.popNum):
+            self.migPopRate[pn] = self.pm.maxEffectiveMigration[pn]*self.maxEffectiveBirth*self.pm.totalSusceptible[pn]*(self.pm.globalInfectious-self.pm.totalInfectious[pn])
+            self.totalMigrationRate += self.migPopRate[pn]
+
+        #Set random generator
+        self.rndm = RndmWrapper(seed=(seed, 0))
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -250,19 +236,9 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    @cython.cdivision(True)
-    cdef inline double MigrationRates(self):
-        self.totalMigrationRate = 0.0
-        for pn in range(self.popNum):
-            self.migPopRate[pn] = self.pm.maxEffectiveMigration[pn]*self.maxEffectiveBirth*self.pm.totalSusceptible[pn]*(self.pm.globalInfectious-self.pm.totalInfectious[pn])
-            self.totalMigrationRate += self.migPopRate[pn]
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sampleSize, float time=-1):
         cdef Py_ssize_t pi
         self.events.CreateEvents(iterations)
-        self.SetRates_2()
         #self.totalLen = 0.0
         while (self.events.ptr<self.events.size and self.sCounter<sampleSize and (time==-1 or self.currentTime<time)):
             self.SampleTime()
@@ -271,7 +247,7 @@ cdef class BirthDeathModel:
                 break
             self.CheckLockdown(pi)
 
-    cdef void SetRates_2(self):
+    cdef void SetRates(self):
         self.pm.SetEffectiveMigration()
 
         for hn in range(self.hapNum):
@@ -370,7 +346,7 @@ cdef class BirthDeathModel:
             Py_ssize_t si, ti
         si, self.rn = fastChoose1( self.immuneSourcePopRate[pi], self.immunePopRate[pi], self.rn)
         ti, self.rn = fastChoose1( self.suscepTransition[si], self.suscepCumulTransition[si], self.rn)
-        self.events.AddEvent(self.currentTime, SUSCCHANGE, si, pi, ti, 0)
+
         self.pm.susceptible[pi, si] -= 1
         self.pm.susceptible[pi, ti] += 1
 
@@ -379,18 +355,21 @@ cdef class BirthDeathModel:
         self.immunePopRate[pi] = 0.0
         for sn in range(self.susNum):
             self.immunePopRate[pi] += self.immuneSourcePopRate[pi, sn]
+
+        self.iCounter += 1
+        self.events.AddEvent(self.currentTime, SUSCCHANGE, si, pi, ti, 0)
+
         self.UpdateRates(pi)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Birth(self, Py_ssize_t pi, Py_ssize_t hi):
-        self.liveBranches[pi, hi] += 1
-
         cdef double ws = 0.0
         for sn in range(self.susNum):
             ws += self.susceptHapPopRate[pi, hi, sn]
         si, self.rn = fastChoose1(self.susceptHapPopRate[pi, hi], ws, self.rn)
 
+        self.liveBranches[pi, hi] += 1
         self.pm.NewInfection(pi, si)
 
         self.immuneSourcePopRate[pi, si] = self.pm.susceptible[pi, si]*self.suscepCumulTransition[si]
@@ -407,8 +386,8 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Death(self, Py_ssize_t pi, Py_ssize_t hi, bint add_event = True):
-        self.liveBranches[pi, hi] -= 1
 
+        self.liveBranches[pi, hi] -= 1
         self.pm.NewRecovery(pi, self.suscType[hi])
 
         self.immuneSourcePopRate[pi, self.suscType[hi]] = self.pm.susceptible[pi, self.suscType[hi]]*self.suscepCumulTransition[self.suscType[hi]]
@@ -451,17 +430,15 @@ cdef class BirthDeathModel:
 
         self.hapPopRate[pi, hi] = self.tEventHapPopRate[pi, hi]*self.liveBranches[pi, hi]
         self.hapPopRate[pi, nhi] = self.tEventHapPopRate[pi, nhi]*self.liveBranches[pi, nhi]
-
         self.infectPopRate[pi] = 0
         for hn in range(self.hapNum):
             self.infectPopRate[pi] += self.hapPopRate[pi, hn]
         self.popRate[pi] = self.infectPopRate[pi] + self.immunePopRate[pi]
-
         self.totalRate = 0
         for pn in range(self.popNum):
             self.totalRate += self.popRate[pn]
 
-        self.mutCounter += 1
+        self.mCounter += 1
         self.events.AddEvent(self.currentTime, MUTATION, hi, pi, nhi, 0)
 
         self.MigrationRates()
@@ -534,9 +511,31 @@ cdef class BirthDeathModel:
     cdef void UpdateContactDensity(self, Py_ssize_t pi, float newCD):
         self.pm.contactDensity[pi] = newCD
         self.pm.SetEffectiveMigration()
+        self.UpdateRates(pi)
         self.SetMaxBirth()
         self.MigrationRates()
-        self.UpdateRates(pi)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void SetMaxBirth(self):
+        for hn in range(self.hapNum):
+            self.maxSusceptibility[hn] = 0.0
+            for sn in range(self.susNum):
+                if self.susceptibility[hn, sn] > self.maxSusceptibility[hn]:
+                    self.maxSusceptibility[hn] = self.susceptibility[hn, sn]
+        self.maxEffectiveBirth = 0.0
+        for hn in range(self.hapNum):
+            if self.maxEffectiveBirth < self.bRate[hn]*self.maxSusceptibility[hn]:
+                self.maxEffectiveBirth = self.bRate[hn]*self.maxSusceptibility[hn]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef inline double MigrationRates(self):
+        self.totalMigrationRate = 0.0
+        for pn in range(self.popNum):
+            self.migPopRate[pn] = self.pm.maxEffectiveMigration[pn]*self.maxEffectiveBirth*self.pm.totalSusceptible[pn]*(self.pm.globalInfectious-self.pm.totalInfectious[pn])
+            self.totalMigrationRate += self.migPopRate[pn]
 
     def Error(self, text):
         print(text)
@@ -556,6 +555,8 @@ cdef class BirthDeathModel:
         else:
             self.Error("#TODO")
 
+        self.SetRates()
+
     def set_uninfectious_rate(self, rate, haplotype):
         if rate<0:
             self.Error("#TODO")
@@ -570,6 +571,8 @@ cdef class BirthDeathModel:
         else:
             self.Error("#TODO")
 
+        self.SetRates()
+
     def set_sampling_rate(self, rate, haplotype):
         if rate<0:
             self.Error("#TODO")
@@ -583,6 +586,8 @@ cdef class BirthDeathModel:
             self.sRate[haplotype] = rate
         else:
             self.Error("#TODO")
+
+        self.SetRates()
 
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
         if isinstance(rate, (int, float)) and probabilities==None and haplotype==None and mutation==None:
@@ -741,6 +746,8 @@ cdef class BirthDeathModel:
         else:
             self.Error("#TODO")
 
+        self.SetRates()
+
     def set_contact_density(self, value, population):
         if value<0:
             self.Error("#TODO")
@@ -757,25 +764,27 @@ cdef class BirthDeathModel:
         else:
             self.Error("#TODO")
 
+        self.SetRates()
+
     def set_lockdown(self, parameters, population):
         if parameters[0]<0:
             self.Error("#TODO")
-        if parameters[1]<0 or parameters[1]>100:
+        if parameters[1]<0 or parameters[1]>1:
             self.Error("#TODO")
-        if parameters[2]<0 or parameters[2]>100:
+        if parameters[2]<0 or parameters[2]>1:
             self.Error("#TODO")
         if isinstance(parameters, list) and population == None:
             for pn in range(self.popNum):
                 self.pm.contactDensityAfterLockdown[pn] = parameters[0]
-                self.pm.startLD[pn] = parameters[1]*self.pm.sizes[pn]/100
-                self.pm.endLD[pn] = parameters[2]*self.pm.sizes[pn]/100
+                self.pm.startLD[pn] = parameters[1]*self.pm.sizes[pn]
+                self.pm.endLD[pn] = parameters[2]*self.pm.sizes[pn]
         elif isinstance(parameters, list) and isinstance(population, int):
             if population<0 and population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.contactDensityAfterLockdown[population] = parameters[0]
-            self.pm.startLD[population] = parameters[1]*self.pm.sizes[population]/100
-            self.pm.endLD[population] = parameters[2]*self.pm.sizes[population]/100
+            self.pm.startLD[population] = parameters[1]*self.pm.sizes[population]
+            self.pm.endLD[population] = parameters[2]*self.pm.sizes[population]
         else:
             self.Error("#TODO")
 
@@ -792,6 +801,8 @@ cdef class BirthDeathModel:
             self.pm.samplingMultiplier[population] = multiplier
         else:
             self.Error("#TODO")
+
+        self.SetRates()
 
     def set_migration_rate(self, rate, from_population, to_population):
         if rate<0:
@@ -826,6 +837,9 @@ cdef class BirthDeathModel:
             self.pm.migrationRates[from_population, to_population] = rate
         else:
             self.Error("#TODO")
+
+        self.pm.SetEffectiveMigration()
+        self.MigrationRates()
 
     def set_susceptible(self, amount, from_type, to_type, population):
         pass
@@ -879,6 +893,8 @@ cdef class BirthDeathModel:
         else:
             self.Error("#TODO")
 
+        self.SetRates()
+
     def set_immunity_transition(self, rate, from_population, to_population):
         if rate<0:
             self.Error("#TODO")
@@ -912,6 +928,8 @@ cdef class BirthDeathModel:
             self.suscepTransition[from_population, to_population] = rate
         else:
             self.Error("#TODO")
+
+        self.SetRates()
 
     def get_hapNum(self):
         return self.hapNum
@@ -952,6 +970,7 @@ cdef class BirthDeathModel:
             liveBranchesS.push_back(vecint2)
             for _ in range( self.hapNum ):
                 liveBranchesS[i].push_back(vecint1)
+
         for e_id in range(self.events.ptr-1, -1, -1):
             # this event
             e_time = self.events.times[e_id]
@@ -960,6 +979,26 @@ cdef class BirthDeathModel:
             e_population = self.events.populations[e_id]
             e_newHaplotype = self.events.newHaplotypes[e_id]
             e_newPopulation = self.events.newPopulations[e_id]
+            if e_id == 7169:
+
+                print("new event: ", e_id)
+                print(e_type_)
+                print(e_haplotype)
+                print(e_population)
+                print(e_newHaplotype)
+                print(e_newPopulation)
+                for pn in range(self.popNum):
+                    for hn in range(self.hapNum):
+                        print(self.liveBranches[pn, hn], end=" ")
+                    print()
+
+                print()
+                for pn in range(self.popNum):
+                    for hn in range(self.hapNum):
+                        print(len(liveBranchesS[pn][hn]), end=" ")
+                    print()
+
+
             if e_type_ == BIRTH:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
                 lbs_e = self.liveBranches[e_population, e_haplotype]
@@ -1023,12 +1062,12 @@ cdef class BirthDeathModel:
                         self.tree[ptrTreeAndTime] = -1
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
-                        self.mig.AddMigration(idt, e_time, e_population, e_newPopulation)
+                        self.pm.mig.AddMigration(idt, e_time, e_population, e_newPopulation)
                     else:
                         liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
                         liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                         liveBranchesS[e_newPopulation][e_haplotype].pop_back()
-                self.liveBranches[e_newPopulation][e_haplotype] -= 1
+                self.liveBranches[e_newPopulation, e_haplotype] -= 1
             else:
                 print("Unknown event type: ", e_type_)
                 print("_________________________________")
@@ -1218,7 +1257,8 @@ cdef class BirthDeathModel:
         print("Death counter(mutable): ", self.dCounter)
         print("Sampling counter(mutable): ", self.sCounter)
         print("Migration counter(mutable): ", self.pm.migCounter)
-        print("Mutation counter(mutable): ", self.mutCounter)
+        print("Mutation counter(mutable): ", self.mCounter)
+        print("Immunity transition counter(mutable):", self.iCounter)
         print("Populations number(const): ", self.popNum)
         print("Mutations number(const): ", self.sites)
         print("Haplotypes number(const): ", self.hapNum)
@@ -1414,3 +1454,18 @@ cdef class BirthDeathModel:
 
         for i in range(1000):
             print(number_migration[i] / total_len[i])
+
+    def save_data(self):
+        # events, event_times, times, tree = [], [], [], []
+        events, event_times = [], []
+        
+        for i in range(self.events.ptr):
+            events.append(self.events.types[i])
+            event_times.append(self.events.times[i])
+
+    #     for i in range(2 * self.sCounter - 1):
+    #         times.append(self.times[i])
+    #         tree.append(self.tree[i])
+
+        return events, event_times
+    #     return events, event_times, times, tree

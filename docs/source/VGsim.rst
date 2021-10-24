@@ -7,8 +7,8 @@ Our model of epidemiological spread is built as a compartmental model, and the r
 Interface
 =========
 
-init
-----
+VGsim.Simulator(sites_number=0, population_sizes=[1000000], susceptibility_types=2, seed=None)
+----------------------------------------------------------------------------------------------
 
 .. list-table::
    :widths: 15 15 70
@@ -24,7 +24,7 @@ init
      - ``list``
      - Population sizes
    * - ``susceptibility_types``
-     - ``list``
+     - ``int``
      - Number of susceptibility types
    * - ``seed``
      - ``double``
@@ -164,13 +164,10 @@ Change values
    * - ``set_migration_probability``
      - ``source_population, target_population, probability``
      - Displays shift from one migration to another one
-   * - ``set_start_lockdown``
+   * - ``set_lockdown``
      - ``population, infectious_fraction=None, contact_density=None``
      - #TODO
-   * - ``set_end_lockdown``
-     - ``population, infectious_fraction``
-     - #TODO
-   * - ``set_immunity_type``
+   * - ``set_susceptibility_type``
      - ``haplotype, immunity``
      - Susceptibility type for a particular haplotype
    * - ``set_susceptibility``
