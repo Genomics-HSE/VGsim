@@ -46,3 +46,7 @@ jobs:
     - name: Run an example
       run: |
         python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+    - name : Run tests
+      run: |
+        pytest --pyargs VGsim -v
+
