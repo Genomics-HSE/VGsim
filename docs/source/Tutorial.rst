@@ -10,7 +10,7 @@ We begin with choosing the number of mutable sites, where single nucleotide subs
 
 Next, we need to decide how many populations (demes) there are in the simulation, and choose the population sizes. Let’s create three populations with sizes 10000000, 5000000 and 1000000.
 
-We will also create 3 types of susceptibility. Initially, all the individuals start with the absence of any specific immunity types.
+We will also create 3 types of susceptibility. Initially, all of the individuals start with the absence of any specific immunity types.
 
 The user can also specify a random seed.
 
@@ -27,7 +27,7 @@ Transmission, recovery and sampling rates
 
 Assume that a patient becomes uninfectious within 10 days on average. Remember, that sampling an individual also means that this person becomes uninfectious. So, the sum of recovery and sampling rates is 1/10=0.1.
 
-If 1 in 100 cases are sampled, then the recovery rate to sampling rate ratio is 99:1. Hence, recovery rate is 0.099 and sampling rate is 0.001.
+If 1 in 100 cases are sampled, then the recovery rate to sampling rate ratio is 99:1. Hence, the recovery rate is 0.099 and the sampling rate is 0.001.
 
 Now, if in the absence of immune individuals in the population (e.g., in the beginning of the pandemic) an infectious person transmits the disease to 2.5 individuals on average, the birth rate is 2.5/10=0.25 (because if there are 2.5 transmissions in 10 days, hence there are 0.25 transmission in a single day).
 
@@ -47,7 +47,7 @@ Now let us assume that the original virus has haplotype AA. And the haplotype GG
 Mutation rates and substitution probabilities
 ---------------------------------------------
 
-The GG haplotype can appear in the population only through mutations an both sites. For example, for SARS-CoV-2, there is roughly on average one new mutation per three transmissions (average time between transmissions are 1/0.25=4 days in our model) per approximately 30000bp genome. So, the per-site mutation rate is 1/(3*4*30000)≈0.000003. We also set the substitution probabilities. In fact, it might be more convenient sometimes to use unnormalised weights instead. Here we assume that the A->G substitution is twice more likely than A->T or A->C (the A->A substitution is not allowed, so the first entry of the array will be dropped for the corresponding haplotypes). Let’s also assume that having allele G at the first site increases the mutation rate at the second site by three times.
+The GG haplotype can appear in the population only through mutations an both sites. For example, for SARS-CoV-2, there is roughly on average one new mutation per three transmissions (the average time between transmissions are 1/0.25=4 days in our model) per approximately 30000bp genome. So, the per-site mutation rate is 1/(3*4*30000)≈0.000003. We also set the substitution probabilities. It might be more convenient sometimes to use unnormalised weights instead. Here we assume that the A->G substitution is twice as likely than A->T or A->C (the A->A substitution is not allowed, so the first entry of the array will be dropped for the corresponding haplotypes). Let’s also assume that having allele G at the first site increases the mutation rate at the second site by three times.
 
 .. code-block:: python
 
@@ -84,7 +84,7 @@ Susceptibility type 2 will be a result of recovery from haplotype G* or vaccinat
 Population model
 ----------------
 
-We have already set the population sizes. Now let us add some more heterogeneity. First of all assume that population 1 has a three times higher sampling rate than population 0, while population 2 does not sequence at all.
+We have already set the population sizes. Now let us add some more heterogeneity. First of all assume that population 1 has a three times higher sampling rate than population 0, while population 2 does not sample at all.
 
 .. code-block:: python
 
@@ -133,7 +133,7 @@ Also, the rising awareness in the population reduces the contact density (e.g. b
 	simulator.set_contact_density(0.7, populations=1)
 
 
-And the amount of travels is reduced with population 2
+And the amount of travel is reduced with population 2
 
 .. code-block:: python
 
@@ -170,7 +170,7 @@ And finally let us look how the susceptible group sizes change.
 Extracting the genealogy
 ------------------------
 
-Finally, we extract the genealogy of the sampled cases. We write the genealogy and mutations on it into a file in MAT format. These files can be used as phastSim input to add neutral mutations.
+Finally, we extract the genealogy of the sampled cases. We write the genealogy and mutations on it into a file in MAT format. These files can be used as phastSim input to add neutral mutations if desired.
 
 .. code-block:: python
 
