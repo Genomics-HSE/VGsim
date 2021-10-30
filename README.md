@@ -2,12 +2,13 @@
 Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![linux tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/ubuntu.yml/)
-[![macOS tests](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/macos.yml/)
-[![Documentation Status](https://readthedocs.org/projects/vgsim-interface/badge/?version=latest)](https://vgsim-interface.readthedocs.io/en/latest/?badge=latest)
+[![pip](https://github.com/Genomics-HSE/VGsim/actions/workflows/pip.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/pip.yml)
+[![Documentation Status](https://readthedocs.org/projects/vg-sim/badge/?version=latest)](https://vg-sim.readthedocs.io/en/latest/?badge=latest)
 
-Preprint: https://doi.org/10.1101/2021.04.21.21255891
-When using our work, we ask you to indicate us in the bibliography.
+Documentation
+-------------
+
+We keep on updating the detailed documentation (https://vg-sim.readthedocs.io/). In particular, there is a Python API which allows to build complicated simulations, which are currently not supported from the command line.
 
 Building the package
 --------------------
@@ -135,3 +136,12 @@ Adding neutral mutations
 ------------------------
 
 We suggest to pipe the tree and non-neautral sites into phastSim (https://github.com/NicolaDM/phastSim) by Nicola de Maio to add neutral mutations and to obtain full sequences.
+
+Citation
+--------
+
+Please cite our preprint (https://www.medrxiv.org/content/10.1101/2021.04.21.21255891) when using VGsim in your research.
+```
+Shchur et al. VGsim: scalable viral genealogy simulator for global pandemic.
+medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891
+```

@@ -43,7 +43,6 @@ For example, this is the introductory paragraph
   print_immunity_model()
   print_all(basic_parameters=False, populations=False, immunity_model=False)
 
-
 Model simulation
 ================
 
@@ -81,9 +80,15 @@ genealogy
    * - Parameter
      - Type
      - Meaning
-   * - ``_seed``
-     - ``double`` 
-     - #TODO
+   * - ``step_num``
+     - ``int``
+     - A number of time intervals
+   * - ``population``
+     - ``int``
+     - Population
+   * - ``haplotype``
+     - ``int``
+     - Haplotype
 
 plot
 ----

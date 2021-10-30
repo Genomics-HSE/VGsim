@@ -256,7 +256,7 @@ cdef class BirthDeathModel:
             for hn in range(self.hapNum):
                 self.eventHapPopRate[pn, hn, 0] = self.BirthRate(pn, hn)
                 self.eventHapPopRate[pn, hn, 1] = self.dRate[hn]
-                self.eventHapPopRate[pn, hn, 2] = self.pm.samplingMultiplier[pn] * self.sRate[hn]
+                self.eventHapPopRate[pn, hn, 2] = self.sRate[hn]*self.pm.samplingMultiplier[pn]
                 self.eventHapPopRate[pn, hn, 3] = self.tmRate[hn]
                 self.tEventHapPopRate[pn, hn] = 0
                 for i in range(4):
@@ -312,7 +312,6 @@ cdef class BirthDeathModel:
 
         self.rn = self.rndm.uniform()
         if self.totalRate > self.rn * (self.totalRate + self.totalMigrationRate):
-
             self.rn = self.rn * (self.totalRate + self.totalMigrationRate) / self.totalRate
             pi, self.rn = fastChoose1( self.popRate, self.totalRate, self.rn)
             if self.immunePopRate[pi] > self.rn * self.popRate[pi]:
@@ -424,6 +423,7 @@ cdef class BirthDeathModel:
 
         self.hapPopRate[pi, hi] = self.tEventHapPopRate[pi, hi]*self.pm.liveBranches[pi, hi]
         self.hapPopRate[pi, nhi] = self.tEventHapPopRate[pi, nhi]*self.pm.liveBranches[pi, nhi]
+
         self.infectPopRate[pi] = 0
         for hn in range(self.hapNum):
             self.infectPopRate[pi] += self.hapPopRate[pi, hn]
