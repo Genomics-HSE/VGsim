@@ -125,13 +125,8 @@ cdef class BirthDeathModel:
         self.susNum = susceptibility_types
         self.popNum = len(population_sizes)
 
-        self.pm = PopulationModel(population_sizes, self.susNum)
-
-        self.liveBranches = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
-        self.events.AddEvent(0, 0, 0, 0, 0, 0)
-        self.liveBranches[0, 0] += 2
-        self.pm.NewInfection(0, 0)
-        self.pm.NewInfection(0, 0)
+        self.pm = PopulationModel(population_sizes, self.susNum, self.hapNum)
+        self.pm.NewInfection(0, 0, 0)
  
         self.susceptibility = np.zeros((self.hapNum, self.susNum), dtype=float)
         self.suscType = np.zeros(self.hapNum, dtype=np.int64)
@@ -191,7 +186,7 @@ cdef class BirthDeathModel:
                 self.eventHapPopRate[pn, hn, 3] = self.tmRate[hn]
                 for i in range(4):
                     self.tEventHapPopRate[pn, hn] += self.eventHapPopRate[pn, hn, i]
-                self.hapPopRate[pn, hn] = self.tEventHapPopRate[pn, hn]*self.liveBranches[pn, hn]
+                self.hapPopRate[pn, hn] = self.tEventHapPopRate[pn, hn]*self.pm.liveBranches[pn, hn]
                 self.infectPopRate[pn] += self.hapPopRate[pn, hn]
 
         for sn1 in range(self.susNum):
@@ -241,7 +236,7 @@ cdef class BirthDeathModel:
         cdef Py_ssize_t pi
         self.events.CreateEvents(iterations)
         #self.totalLen = 0.0
-        while (self.events.ptr<self.events.size and self.sCounter<sampleSize and (time==-1 or self.currentTime<time)):
+        while (self.events.ptr<=self.events.size and self.sCounter<=sampleSize and (time==-1 or self.currentTime<time)):
             self.SampleTime()
             pi = self.GenerateEvent()
             if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
@@ -261,12 +256,12 @@ cdef class BirthDeathModel:
             for hn in range(self.hapNum):
                 self.eventHapPopRate[pn, hn, 0] = self.BirthRate(pn, hn)
                 self.eventHapPopRate[pn, hn, 1] = self.dRate[hn]
-                self.eventHapPopRate[pn, hn, 2] = self.pm.samplingMultiplier[pn] * self.sRate[hn]
+                self.eventHapPopRate[pn, hn, 2] = self.sRate[hn]*self.pm.samplingMultiplier[pn]
                 self.eventHapPopRate[pn, hn, 3] = self.tmRate[hn]
                 self.tEventHapPopRate[pn, hn] = 0
                 for i in range(4):
                     self.tEventHapPopRate[pn, hn] += self.eventHapPopRate[pn, hn, i]
-                self.hapPopRate[pn, hn] = self.tEventHapPopRate[pn, hn]*self.liveBranches[pn, hn]
+                self.hapPopRate[pn, hn] = self.tEventHapPopRate[pn, hn]*self.pm.liveBranches[pn, hn]
                 self.infectPopRate[pn] += self.hapPopRate[pn, hn]
 
         for sn1 in range(self.susNum):
@@ -370,8 +365,7 @@ cdef class BirthDeathModel:
             ws += self.susceptHapPopRate[pi, hi, sn]
         si, self.rn = fastChoose1(self.susceptHapPopRate[pi, hi], ws, self.rn)
 
-        self.liveBranches[pi, hi] += 1
-        self.pm.NewInfection(pi, si)
+        self.pm.NewInfection(pi, si, hi)
 
         self.immuneSourcePopRate[pi, si] = self.pm.susceptible[pi, si]*self.suscepCumulTransition[si]
         self.immunePopRate[pi] = 0.0
@@ -387,9 +381,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Death(self, Py_ssize_t pi, Py_ssize_t hi, bint add_event = True):
-
-        self.liveBranches[pi, hi] -= 1
-        self.pm.NewRecovery(pi, self.suscType[hi])
+        self.pm.NewRecovery(pi, self.suscType[hi], hi)
 
         self.immuneSourcePopRate[pi, self.suscType[hi]] = self.pm.susceptible[pi, self.suscType[hi]]*self.suscepCumulTransition[self.suscType[hi]]
         self.immunePopRate[pi] = 0.0
@@ -426,11 +418,12 @@ cdef class BirthDeathModel:
             DS += 1
         nhi = hi + (DS-AS)*digit4
 
-        self.liveBranches[pi, nhi] += 1
-        self.liveBranches[pi, hi] -= 1
+        self.pm.liveBranches[pi, nhi] += 1
+        self.pm.liveBranches[pi, hi] -= 1
 
-        self.hapPopRate[pi, hi] = self.tEventHapPopRate[pi, hi]*self.liveBranches[pi, hi]
-        self.hapPopRate[pi, nhi] = self.tEventHapPopRate[pi, nhi]*self.liveBranches[pi, nhi]
+        self.hapPopRate[pi, hi] = self.tEventHapPopRate[pi, hi]*self.pm.liveBranches[pi, hi]
+        self.hapPopRate[pi, nhi] = self.tEventHapPopRate[pi, nhi]*self.pm.liveBranches[pi, nhi]
+
         self.infectPopRate[pi] = 0
         for hn in range(self.hapNum):
             self.infectPopRate[pi] += self.hapPopRate[pi, hn]
@@ -452,11 +445,10 @@ cdef class BirthDeathModel:
             Py_ssize_t tpi, spi, hi, si
         tpi, self.rn = fastChoose1( self.migPopRate, self.totalMigrationRate, self.rn)
         spi, self.rn = fastChoose2_skip( self.pm.totalInfectious, self.pm.globalInfectious-self.pm.totalInfectious[tpi], self.rn, skip = tpi)
-        hi, self.rn = fastChoose2( self.liveBranches[spi], self.pm.totalInfectious[spi], self.rn)
+        hi, self.rn = fastChoose2( self.pm.liveBranches[spi], self.pm.totalInfectious[spi], self.rn)
         si, self.rn = fastChoose2( self.pm.susceptible[tpi], self.pm.totalSusceptible[tpi], self.rn)
         if self.rn < self.pm.effectiveMigration[spi, tpi]*self.bRate[hi]*self.susceptibility[hi, si]/self.pm.maxEffectiveMigration[tpi]/self.maxEffectiveBirth:
-            self.liveBranches[tpi, hi] += 1
-            self.pm.NewInfection(tpi, si)
+            self.pm.NewInfection(tpi, si, hi)
 
             self.immuneSourcePopRate[tpi, si] = self.pm.susceptible[tpi, si]*self.suscepCumulTransition[si]
             self.immunePopRate[tpi] = 0.0
@@ -485,7 +477,7 @@ cdef class BirthDeathModel:
                    self.eventHapPopRate[pi, hn, 2] +
                    self.eventHapPopRate[pi, hn, 3] )
             self.tEventHapPopRate[pi, hn] = tmp
-            self.hapPopRate[pi, hn] = self.tEventHapPopRate[pi, hn]*self.liveBranches[pi, hn]
+            self.hapPopRate[pi, hn] = self.tEventHapPopRate[pi, hn]*self.pm.liveBranches[pi, hn]
 
         self.infectPopRate[pi] = 0.0
         for hn in range(self.hapNum):
@@ -498,11 +490,11 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void CheckLockdown(self, Py_ssize_t pi):
-        if self.pm.totalInfectious[pi] > self.pm.startLD[pi] and self.pm.lockdownON[pi] == 0:
+        if self.pm.totalInfectious[pi] > self.pm.startLD[pi]*self.pm.sizes[pi] and self.pm.lockdownON[pi] == 0:
             self.UpdateContactDensity(pi, self.pm.contactDensityAfterLockdown[pi])
             self.pm.swapLockdown += 1
             self.pm.lockdownON[pi] = 1
-        if self.pm.totalInfectious[pi] < self.pm.endLD[pi] and self.pm.lockdownON[pi] == 1:
+        if self.pm.totalInfectious[pi] < self.pm.endLD[pi]*self.pm.sizes[pi] and self.pm.lockdownON[pi] == 1:
             self.UpdateContactDensity(pi, self.pm.contactDensityBeforeLockdown[pi])
             self.pm.swapLockdown += 1
             self.pm.lockdownON[pi] = 0
@@ -542,205 +534,168 @@ cdef class BirthDeathModel:
         print(text)
         sys.exit(1)
 
+    def create_list_haplotypes(self, haplotype):
+        if haplotype.count("A") + haplotype.count("T") + haplotype.count("C") + haplotype.count("G") + haplotype.count("*") != self.sites:
+            self.Error("Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"*\" and lenght of haplotype should be equal number of mutations sites.")
+
+        haplotypes = [haplotype]
+        for s in range(self.sites):
+            for i in range(len(haplotypes)):
+                haplotype_old = haplotypes[i]
+                if haplotype_old[s] == "*":
+                    haplotype = haplotype_old.replace("*", "A", 1)
+                    haplotypes.append(haplotype)
+                    haplotype = haplotype_old.replace("*", "T", 1)
+                    haplotypes.append(haplotype)
+                    haplotype = haplotype_old.replace("*", "C", 1)
+                    haplotypes.append(haplotype)
+                    haplotype = haplotype_old.replace("*", "G", 1)
+                    haplotypes.append(haplotype)
+        for i in range(len(haplotypes)-1, -1, -1):
+            if haplotypes[i].count("*") != 0:
+                haplotypes.remove(haplotypes[i])
+        for i in range(len(haplotypes)):
+            haplotypes[i] = self.calculate_haplotype(haplotypes[i])
+
+        return haplotypes
+
     def set_infectious_rate(self, rate, haplotype):
+        if isinstance(rate, (int, float)) == False:
+            self.Error("Incorrect type of infection rate. Value should be int or float.")
         if rate<0:
-            self.Error("#TODO")
-        if isinstance(haplotype, str) and len(haplotype) == self.sites:
-            haplotype = self.calculate_haplotype(haplotype)
-        if isinstance(rate, (int, float)) and haplotype == None:
-            for hn in range(self.hapNum):
-                self.bRate[hn] = rate
-        elif isinstance(rate, (int, float)) and isinstance(haplotype, int):
+            self.Error("Incorrect value of infection rate. Value should be more or equal 0.")
+
+        if isinstance(haplotype, str):
+            haplotypes = self.create_list_haplotypes(haplotype)
+            for haplotype in haplotypes:
+                self.bRate[haplotype] = rate
+        elif isinstance(haplotype, int):
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
 
             self.bRate[haplotype] = rate
+        elif haplotype == None:
+            for hn in range(self.hapNum):
+                self.bRate[hn] = rate
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of haplotype. Value should be string or int or None.")
 
         self.SetRates()
 
-    def set_uninfectious_rate(self, rate, haplotype):
+    def set_recovery_rate(self, rate, haplotype):
+        if isinstance(rate, (int, float)) == False:
+            self.Error("Incorrect type of uninfection rate. Value should be int or float.")
         if rate<0:
-            self.Error("#TODO")
-        if isinstance(haplotype, str) and len(haplotype) == self.sites:
-            haplotype = self.calculate_haplotype(haplotype)
-        if isinstance(rate, (int, float)) and haplotype == None:
-            for hn in range(self.hapNum):
-                self.dRate[hn] = rate
-        elif isinstance(rate, (int, float)) and isinstance(haplotype, int):
+            self.Error("Incorrect value of uninfection rate. Value should be more or equal 0.")
+        
+        if isinstance(haplotype, str):
+            haplotypes = self.create_list_haplotypes(haplotype)
+            for haplotype in haplotypes:
+                self.dRate[haplotype] = rate
+        elif isinstance(haplotype, int):
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
 
             self.dRate[haplotype] = rate
+        elif haplotype == None:
+            for hn in range(self.hapNum):
+                self.dRate[hn] = rate
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of haplotype. Value should be string or int or None.")
 
         self.SetRates()
 
     def set_sampling_rate(self, rate, haplotype):
+        if isinstance(rate, (int, float)) == False:
+            self.Error("Incorrect type of sampling rate. Value should be int or float.")
         if rate<0:
-            self.Error("#TODO")
-        if isinstance(haplotype, str) and len(haplotype) == self.sites:
-            haplotype = self.calculate_haplotype(haplotype)
-        if isinstance(rate, (int, float)) and haplotype == None:
-            for hn in range(self.hapNum):
-                self.sRate[hn] = rate
-        elif isinstance(rate, (int, float)) and isinstance(haplotype, int):
+            self.Error("Incorrect value of sampling rate. Value should be more or equal 0.")
+        
+        if isinstance(haplotype, str):
+            haplotypes = self.create_list_haplotypes(haplotype)
+            for haplotype in haplotypes:
+                self.sRate[haplotype] = rate
+        elif isinstance(haplotype, int):
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
 
             self.sRate[haplotype] = rate
+        elif haplotype == None:
+            for hn in range(self.hapNum):
+                self.sRate[hn] = rate
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of haplotype. Value should be string or int or None.")
 
         self.SetRates()
 
+    #TODO
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
-        if isinstance(haplotype, str) and len(haplotype) == self.sites:
-            haplotype = self.calculate_haplotype(haplotype)
-        if isinstance(rate, (int, float)) and probabilities==None and haplotype==None and mutation==None:
+        if isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if rate<0:
                 self.Error("#TODO")
-
-            for hn in range(self.hapNum):
-                for s in range(self.sites):
-                    self.mRate[hn, s] = rate
-        elif rate==None and isinstance(probabilities, list) and haplotype==None and mutation==None:
-            for i in range(3):
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
                 if probabilities[i]<0:
                     self.Error("#TODO")
-            if len(probabilities)!=3:
-                self.Error("#TODO")
-
-            for hn in range(self.hapNum):
-                for s in range(self.sites):
-                    self.hapMutType[hn, s, 0] = probabilities[0]
-                    self.hapMutType[hn, s, 1] = probabilities[1]
-                    self.hapMutType[hn, s, 2] = probabilities[2]
-                    self.totalHapMutType[hn, s] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and haplotype==None and mutation==None:
-            if rate<0:
-                self.Error("#TODO")
-            for i in range(3):
-                if probabilities[i]<0:
-                    self.Error("#TODO")
-            if len(probabilities)!=3:
-                self.Error("#TODO")
-
-            for hn in range(self.hapNum):
-                for s in range(self.sites):
-                    self.mRate[hn, s] = rate
-                    self.hapMutType[hn, s, 0] = probabilities[0]
-                    self.hapMutType[hn, s, 1] = probabilities[1]
-                    self.hapMutType[hn, s, 2] = probabilities[2]
-                    self.totalHapMutType[hn, s] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and mutation==None:
-            if rate<0:
-                self.Error("#TODO")
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("There are no such haplotype!")
-
-            for s in range(self.sites):
-                self.mRate[haplotype, s] = rate
-        elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and mutation==None:
-            for i in range(3):
-                if probabilities[i]<0:
-                    self.Error("#TODO")
-            if len(probabilities)!=3:
-                self.Error("#TODO")
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("There are no such haplotype!")
-
-            for s in range(self.sites):
-                self.hapMutType[haplotype, s, 0] = probabilities[0]
-                self.hapMutType[haplotype, s, 1] = probabilities[1]
-                self.hapMutType[haplotype, s, 2] = probabilities[2]
-                self.totalHapMutType[haplotype, s] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, int) and mutation==None:
-            if rate<0:
-                self.Error("#TODO")
-            for i in range(3):
-                if probabilities[i]<0:
-                    self.Error("#TODO")
-            if len(probabilities)!=3:
-                self.Error("#TODO")
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("There are no such haplotype!")
-
-            for s in range(self.sites):
-                self.mRate[haplotype, s] = rate
-                self.hapMutType[haplotype, s, 0] = probabilities[0]
-                self.hapMutType[haplotype, s, 1] = probabilities[1]
-                self.hapMutType[haplotype, s, 2] = probabilities[2]
-                self.totalHapMutType[haplotype, s] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and probabilities==None and haplotype==None and isinstance(mutation,int):
-            if rate<0:
-                self.Error("#TODO")
+            haplotypes = self.create_list_haplotypes(haplotype)
             if mutation<0 or mutation>=self.sites:
                 self.Error("There are no such mutation!")
 
-            for hn in range(self.hapNum):
-                self.mRate[hn, mutation] = rate
-
-        elif rate==None and isinstance(probabilities, list) and haplotype==None and isinstance(mutation,int):
-            for i in range(3):
+            for haplotype in haplotypes:
+                probabilities_allele = probabilities
+                del probabilities_allele[self.calculate_allele(haplotype, mutation)]
+                if sum(probabilities_allele) == 0:
+                    self.Error("#TODO")
+                self.mRate[haplotype, mutation] = rate
+                self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
+                self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
+                self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
+                self.totalHapMutType[haplotype, mutation] = sum(probabilities_allele)
+        elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
                 if probabilities[i]<0:
                     self.Error("#TODO")
-            if len(probabilities)!=3:
-                self.Error("#TODO")
+            haplotypes = self.create_list_haplotypes(haplotype)
             if mutation<0 or mutation>=self.sites:
                 self.Error("There are no such mutation!")
 
-            for hn in range(self.hapNum):
-                self.hapMutType[hn, mutation, 0] = probabilities[0]
-                self.hapMutType[hn, mutation, 1] = probabilities[1]
-                self.hapMutType[hn, mutation, 2] = probabilities[2]
-                self.totalHapMutType[hn, mutation] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and haplotype==None and isinstance(mutation,int):
+            for haplotype in haplotypes:
+                probabilities_allele = probabilities
+                del probabilities_allele[self.calculate_allele(haplotype, mutation)]
+                if sum(probabilities_allele) == 0:
+                    self.Error("#TODO")
+                self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
+                self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
+                self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
+                self.totalHapMutType[haplotype, mutation] = sum(probabilities_allele)
+        elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if rate<0:
                 self.Error("#TODO")
-            for i in range(3):
+            haplotypes = self.create_list_haplotypes(haplotype)
+            if mutation<0 or mutation>=self.sites:
+                self.Error("There are no such mutation!")
+
+            for haplotype in haplotypes:
+                self.mRate[haplotype, mutation] = rate
+        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
                 if probabilities[i]<0:
                     self.Error("#TODO")
-            if len(probabilities)!=3:
-                self.Error("#TODO")
-            if mutation<0 or mutation>=self.sites:
-                self.Error("There are no such mutation!")
-
-            for hn in range(self.hapNum):
-                self.mRate[hn, mutation] = rate
-                self.hapMutType[hn, mutation, 0] = probabilities[0]
-                self.hapMutType[hn, mutation, 1] = probabilities[1]
-                self.hapMutType[hn, mutation, 2] = probabilities[2]
-                self.totalHapMutType[hn, mutation] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and isinstance(mutation,int):
-            if rate<0:
-                self.Error("#TODO")
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("There are no such haplotype!")
-            if mutation<0 or mutation>=self.sites:
-                self.Error("There are no such mutation!")
-
-            self.mRate[haplotype, mutation] = rate
-        elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):
-
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("There are no such haplotype!")
-            if mutation<0 or mutation>=self.sites:
-                self.Error("There are no such mutation!")
-
-            self.hapMutType[haplotype, mutation, 0] = probabilities[0]
-            self.hapMutType[haplotype, mutation, 1] = probabilities[1]
-            self.hapMutType[haplotype, mutation, 2] = probabilities[2]
-            self.totalHapMutType[haplotype, mutation] = sum(probabilities)
-        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):
-            if rate<0:
-                self.Error("#TODO")
-            for i in range(3):
-                if probabilities[i]<0:
-                    self.Error("#TODO")
-            if len(probabilities)!=3:
+            del probabilities[self.calculate_allele(haplotype, mutation)]
+            if sum(probabilities) == 0:
                 self.Error("#TODO")
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
@@ -752,205 +707,507 @@ cdef class BirthDeathModel:
             self.hapMutType[haplotype, mutation, 1] = probabilities[1]
             self.hapMutType[haplotype, mutation, 2] = probabilities[2]
             self.totalHapMutType[haplotype, mutation] = sum(probabilities)
+        elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            del probabilities[self.calculate_allele(haplotype, mutation)]
+            if sum(probabilities) == 0:
+                self.Error("#TODO")
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+            if mutation<0 or mutation>=self.sites:
+                self.Error("There are no such mutation!")
+
+            self.hapMutType[haplotype, mutation, 0] = probabilities[0]
+            self.hapMutType[haplotype, mutation, 1] = probabilities[1]
+            self.hapMutType[haplotype, mutation, 2] = probabilities[2]
+            self.totalHapMutType[haplotype, mutation] = sum(probabilities)
+        elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+            if mutation<0 or mutation>=self.sites:
+                self.Error("There are no such mutation!")
+
+            self.mRate[haplotype, mutation] = rate
+        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and haplotype==None and isinstance(mutation,int):#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            if mutation<0 or mutation>=self.sites:
+                self.Error("There are no such mutation!")
+
+            for haplotype in range(self.hapNum):
+                probabilities_allele = probabilities
+                del probabilities_allele[self.calculate_allele(haplotype, mutation)]
+                if sum(probabilities_allele) == 0:
+                    self.Error("#TODO")
+                self.mRate[haplotype, mutation] = rate
+                self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
+                self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
+                self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
+                self.totalHapMutType[haplotype, mutation] = sum(probabilities_allele)
+        elif rate==None and isinstance(probabilities, list) and haplotype==None and isinstance(mutation,int):#DONE
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            if mutation<0 or mutation>=self.sites:
+                self.Error("There are no such mutation!")
+
+            for haplotype in range(self.hapNum):
+                probabilities_allele = probabilities
+                del probabilities_allele[self.calculate_allele(haplotype, mutation)]
+                if sum(probabilities_allele) == 0:
+                    self.Error("#TODO")
+                self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
+                self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
+                self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
+                self.totalHapMutType[haplotype, mutation] = sum(probabilities_allele)
+        elif isinstance(rate, (int, float)) and probabilities==None and haplotype==None and isinstance(mutation,int):#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if mutation<0 or mutation>=self.sites:
+                self.Error("There are no such mutation!")
+
+            for haplotype in range(self.hapNum):
+                self.mRate[haplotype, mutation] = rate
+        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, str) and mutation==None:
+            if rate<0:
+                self.Error("#TODO")
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            haplotypes = self.create_list_haplotypes(haplotype)
+
+            for haplotype in haplotypes:
+                for s in range(self.sites):
+                    probabilities_allele = probabilities
+                    del probabilities_allele[self.calculate_allele(haplotype, mutation)]
+                    if sum(probabilities_allele) == 0:
+                        self.Error("#TODO")
+
+                    self.mRate[haplotype, s] = rate
+                    self.hapMutType[haplotype, s, 0] = probabilities_allele[0]
+                    self.hapMutType[haplotype, s, 1] = probabilities_allele[1]
+                    self.hapMutType[haplotype, s, 2] = probabilities_allele[2]
+                    self.totalHapMutType[haplotype, s] = sum(probabilities_allele)
+        elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, str) and mutation==None:#DONE
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            haplotypes = self.create_list_haplotypes(haplotype)
+
+            for haplotype in haplotypes:
+                for s in range(self.sites):
+                    probabilities_allele = probabilities
+                    del probabilities_allele[self.calculate_allele(haplotype, mutation)]
+                    if sum(probabilities_allele) == 0:
+                        self.Error("#TODO")
+                    self.hapMutType[haplotype, s, 0] = probabilities_allele[0]
+                    self.hapMutType[haplotype, s, 1] = probabilities_allele[1]
+                    self.hapMutType[haplotype, s, 2] = probabilities_allele[2]
+                    self.totalHapMutType[haplotype, s] = sum(probabilities_allele)
+        elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, str) and mutation==None:
+            if rate<0:
+                self.Error("#TODO")
+            haplotypes = self.create_list_haplotypes(haplotype)
+
+            for haplotype in haplotypes:
+                for s in range(self.sites):
+                    self.mRate[haplotype, s] = rate
+        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, int) and mutation==None:#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            del probabilities[self.calculate_allele(haplotype, mutation)]
+            if sum(probabilities) == 0:
+                self.Error("#TODO")
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+
+            for s in range(self.sites):
+                self.mRate[haplotype, s] = rate
+                self.hapMutType[haplotype, s, 0] = probabilities[0]
+                self.hapMutType[haplotype, s, 1] = probabilities[1]
+                self.hapMutType[haplotype, s, 2] = probabilities[2]
+                self.totalHapMutType[haplotype, s] = sum(probabilities)
+        elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and mutation==None:#DONE
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            del probabilities[self.calculate_allele(haplotype, mutation)]
+            if sum(probabilities) == 0:
+                self.Error("#TODO")
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+
+            for s in range(self.sites):
+                self.hapMutType[haplotype, s, 0] = probabilities[0]
+                self.hapMutType[haplotype, s, 1] = probabilities[1]
+                self.hapMutType[haplotype, s, 2] = probabilities[2]
+                self.totalHapMutType[haplotype, s] = sum(probabilities)
+        elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and mutation==None:#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+
+            for s in range(self.sites):
+                self.mRate[haplotype, s] = rate
+        elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and haplotype==None and mutation==None:#DONE
+            if rate<0:
+                self.Error("#TODO")
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+            del probabilities[self.calculate_allele(haplotype, mutation)]
+            if sum(probabilities) == 0:
+                self.Error("#TODO")
+
+            for hn in range(self.hapNum):
+                for s in range(self.sites):
+                    probabilities_allele = probabilities
+                    del probabilities_allele[self.calculate_allele(hn, s)]
+                    if sum(probabilities_allele) == 0:
+                        self.Error("#TODO")
+                    self.mRate[hn, s] = rate
+                    self.hapMutType[hn, s, 0] = probabilities_allele[0]
+                    self.hapMutType[hn, s, 1] = probabilities_allele[1]
+                    self.hapMutType[hn, s, 2] = probabilities_allele[2]
+                    self.totalHapMutType[hn, s] = sum(probabilities_allele)
+        elif rate==None and isinstance(probabilities, list) and haplotype==None and mutation==None:#DONE
+            if len(probabilities)!=4:
+                self.Error("#TODO")
+            for i in range(4):
+                if isinstance(probabilities[i], (int, float)) == False:
+                    self.Error("#TODO")
+                if probabilities[i]<0:
+                    self.Error("#TODO")
+
+            for hn in range(self.hapNum):
+                for s in range(self.sites):
+                    probabilities_allele = probabilities
+                    del probabilities_allele[self.calculate_allele(hn, s)]
+                    if sum(probabilities_allele) == 0:
+                        self.Error("#TODO")
+                    self.hapMutType[hn, s, 0] = probabilities_allele[0]
+                    self.hapMutType[hn, s, 1] = probabilities_allele[1]
+                    self.hapMutType[hn, s, 2] = probabilities_allele[2]
+                    self.totalHapMutType[hn, s] = sum(probabilities_allele)
+        elif isinstance(rate, (int, float)) and probabilities==None and haplotype==None and mutation==None:#DONE
+            if rate<0:
+                self.Error("#TODO")
+
+            for hn in range(self.hapNum):
+                for s in range(self.sites):
+                    self.mRate[hn, s] = rate
         else:
             self.Error("#TODO")
 
         self.SetRates()
 
     def set_contact_density(self, value, population):
+        if isinstance(value, (int, float)) == False:
+            self.Error("Incorrect type of contact density. Value should be int or float.")
         if value<0:
-            self.Error("#TODO")
-        if isinstance(value, (int, float)) and population == None:
-            for pn in range(self.popNum):
-                self.pm.contactDensity[pn] = value
-                self.pm.contactDensityBeforeLockdown[pn] = value
-        elif isinstance(value, (int, float)) and isinstance(population, int):
+            self.Error("Incorrect value of contact density. Value should be more or equal 0.")
+
+        if isinstance(population, int):
             if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.contactDensity[population] = value
             self.pm.contactDensityBeforeLockdown[population] = value
+        elif population == None:
+            for pn in range(self.popNum):
+                self.pm.contactDensity[pn] = value
+                self.pm.contactDensityBeforeLockdown[pn] = value
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of population. Value should be int or None.")
 
         self.SetRates()
 
     def set_lockdown(self, parameters, population):
+        if isinstance(parameters, list) == False:
+            self.Error("#TODO")
+        if len(parameters) != 3:
+            self.Error("#TODO")
         if parameters[0]<0:
             self.Error("#TODO")
-        if parameters[1]<0 or parameters[1]>1:
+        if parameters[1]<0:
             self.Error("#TODO")
-        if parameters[2]<0 or parameters[2]>1:
+        if parameters[2]<0:
             self.Error("#TODO")
-        if isinstance(parameters, list) and population == None:
-            for pn in range(self.popNum):
-                self.pm.contactDensityAfterLockdown[pn] = parameters[0]
-                self.pm.startLD[pn] = parameters[1]*self.pm.sizes[pn]
-                self.pm.endLD[pn] = parameters[2]*self.pm.sizes[pn]
-        elif isinstance(parameters, list) and isinstance(population, int):
+
+        if isinstance(population, int):
             if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.contactDensityAfterLockdown[population] = parameters[0]
-            self.pm.startLD[population] = parameters[1]*self.pm.sizes[population]
-            self.pm.endLD[population] = parameters[2]*self.pm.sizes[population]
+            self.pm.startLD[population] = parameters[1]
+            self.pm.endLD[population] = parameters[2]
+        elif population == None:
+            for pn in range(self.popNum):
+                self.pm.contactDensityAfterLockdown[pn] = parameters[0]
+                self.pm.startLD[pn] = parameters[1]
+                self.pm.endLD[pn] = parameters[2]
         else:
             self.Error("#TODO")
 
     def set_sampling_multiplier(self, multiplier, population):
+        if isinstance(multiplier, (int, float)) == False:
+            self.Error("Incorrect type of multiplier. Value should be int or float.")
         if multiplier<0:
-            self.Error("#TODO")
-        if isinstance(multiplier, (int, float)) and population == None:
-            for pn in range(self.popNum):
-                self.pm.samplingMultiplier[pn] = multiplier
-        elif isinstance(multiplier, (int, float)) and isinstance(population, int):
+            self.Error("Incorrect value of multiplier. Value should be more or equal 0.")
+
+        if isinstance(population, int):
             if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
 
             self.pm.samplingMultiplier[population] = multiplier
+        elif population == None:
+            for pn in range(self.popNum):
+                self.pm.samplingMultiplier[pn] = multiplier
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of population. Value should be int or None.")
 
         self.SetRates()
 
-    def set_migration_rate(self, rate, from_population, to_population):
-        if rate<0:
-            self.Error("#TODO")
-        if from_population==None and to_population==None:
+    def set_migration_probability(self, rate, source, target):
+        if isinstance(rate, (int, float)) == False:
+            self.Error("Incorrect type of rate. Value should be int or float!")
+        if rate<0 and rate>1:
+            self.Error("Incorrect type of rate. Value should be between 0 and 1!")
+
+        if isinstance(source, int) and isinstance(target, int):
+            if source<0 or source>=self.popNum:
+                self.Error("There are no such population!")
+            if target<0 or target>=self.popNum:
+                self.Error("There are no such population!")
+            if source==target:
+                self.Error("Source and target population type shouldn't be equal!")
+
+            self.pm.migrationRates[source, target] = rate
+            summa = 0
+            for pn in range(self.popNum):
+                summa += self.pm.migrationRates[source, pn]
+            if summa > 1:
+                self.Error("#TODO")
+        elif source==None and isinstance(target, int):
+            if target<0 or target>=self.popNum:
+                self.Error("There are no such population!")
+
+            for pn1 in range(self.popNum):
+                if pn1 != target:
+                    self.pm.migrationRates[pn1, target] = rate
+                summa = 0
+                for pn2 in range(self.popNum):
+                    summa += self.pm.migrationRates[pn1, pn2]
+                if summa > 1:
+                    self.Error("#TODO")
+        elif isinstance(source, int) and target==None:
+            if source<0 or source>=self.popNum:
+                self.Error("There are no such population!")
+
+            for pn2 in range(self.popNum):
+                if source != pn2:
+                    self.pm.migrationRates[source, pn2] = rate
+            summa = 0
+            for pn in range(self.popNum):
+                summa += self.pm.migrationRates[source, pn]
+            if summa > 1:
+                self.Error("#TODO")
+        elif source==None and target==None:
             for pn1 in range(self.popNum):
                 for pn2 in range(self.popNum):
                     if pn1 != pn2:
                         self.pm.migrationRates[pn1, pn2] = rate
-        elif isinstance(from_population, int) and to_population==None:
-            if from_population<0 or from_population>=self.popNum:
-                self.Error("#TODO")
-
-            for pn2 in range(self.popNum):
-                if from_population != pn2:
-                    self.pm.migrationRates[from_population, pn2] = rate
-        elif from_population==None and isinstance(to_population, int):
-            if to_population<0 or to_population>-self.popNum:
-                self.Error("#TODO")
-
-            for pn1 in range(self.popNum):
-                if pn1 != to_population:
-                        self.pm.migrationRates[pn1, to_population] = rate
-        elif isinstance(from_population, int) and isinstance(to_population, int):
-            if from_population<0 or from_population>=self.popNum:
-                self.Error("#TODO")
-            if to_population<0 or to_population>-self.popNum:
-                self.Error("#TODO")
-            if from_population==to_population:
-                self.Error("#TODO")
-
-            self.pm.migrationRates[from_population, to_population] = rate
+                summa = 0
+                for pn2 in range(self.popNum):
+                    summa += self.pm.migrationRates[pn1, pn2]
+                if summa > 1:
+                    self.Error("#TODO")
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of population. Value should be int or None.")
 
         self.pm.SetEffectiveMigration()
         self.MigrationRates()
 
     def set_susceptible(self, amount, source_type, target_type, population):
-        if source_type<0 and source_type>=self.susNum:
-            self.Error("#TODO")
-        if target_type<0 and target_type>=self.susNum:
-            self.Error("#TODO")
+        if isinstance(amount, int) == False:
+            self.Error("Incorrect value of amount. Value should be int.")
+        if isinstance(source_type, int) == False:
+            self.Error("Incorrect value of source susceptibility type. Value should be int.")
+        if isinstance(target_type, int) == False:
+            self.Error("Incorrect value of target susceptibility type. Value should be int.")
+        if source_type<0 or source_type>=self.susNum:
+            self.Error("There are no such susceptibility type!")
+        if target_type<0 or target_type>=self.susNum:
+            self.Error("There are no such susceptibility type!")
         if source_type==target_type:
-            self.Error("#TODO")
-        if population==None:
+            self.Error("Source and target susceptibility type shouldn't be equal!")
+
+        if isinstance(population, int):
+            if population<0 or population>=self.popNum:
+                self.Error("There are no such population!")
+            if amount<0 or amount>self.pm.susceptible[population, source_type]:
+                self.Error("#TODO")
+
+            self.pm.susceptible[population, source_type] -= amount
+            self.pm.susceptible[population, target_type] += amount
+        elif population==None:
             for pn in range(self.popNum):
                 if amount<0 or amount>self.pm.susceptible[pn, source_type]:
                     self.Error("#TODO")
                 self.pm.susceptible[pn, source_type] -= amount
                 self.pm.susceptible[pn, target_type] += amount
-        elif isinstance(population, int):
-            if amount<0 or amount>self.pm.susceptible[population, source_type]:
-                self.Error("#TODO")
-            self.pm.susceptible[population, source_type] -= amount
-            self.pm.susceptible[population, target_type] += amount
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of population. Value should be int or None.")
 
         self.SetRates()
-        
+       
     def set_immunity_type(self, susceptibility_type, haplotype):
-        if susceptibility_type<0 and susceptibility_type>=self.susNum:
-            self.Error("#TODO")
-        if isinstance(susceptibility_type, int) and haplotype == None:
-            for hn in range(self.hapNum):
-                self.suscType[hn] = susceptibility_type
-        elif isinstance(susceptibility_type, int) and isinstance(haplotype, int):
+        if isinstance(susceptibility_type, int) == False:
+            self.Error("Incorrect value of susceptibility type. Value should be int.")
+        if susceptibility_type<0 or susceptibility_type>=self.susNum:
+            self.Error("There are no such susceptibility type!")
+
+        if isinstance(haplotype, str):
+            haplotypes = self.create_list_haplotypes(haplotype)
+            for haplotype in haplotypes:
+                self.suscType[haplotype] = susceptibility_type
+        elif isinstance(haplotype, int):
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
 
             self.suscType[haplotype] = susceptibility_type
+        elif haplotype == None:
+            for hn in range(self.hapNum):
+                self.suscType[hn] = susceptibility_type
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of haplotype. Value should be int or str or None.")
 
     def set_susceptibility(self, rate, haplotype, susceptibility_type):
+        if isinstance(rate, (int, float)) == False:
+            self.Error("Incorrect value of susceptibility rate. Value should be int or float.")
         if rate<0:
-            self.Error("#TODO")
-        if haplotype==None and susceptibility_type==None:
-            for hn in range(self.hapNum):
-                for sn in range(self.susNum):
-                    self.susceptibility[hn, sn] = rate
-        elif isinstance(haplotype, int) and susceptibility_type==None:
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("#TODO")
+            self.Error("Incorrect value of susceptibility rate. Value should be more or equal 0.")
 
-            for sn in range(self.susNum):
-                self.susceptibility[haplotype, sn] = rate
+        if isinstance(haplotype, str) and isinstance(susceptibility_type, int):
+            haplotypes = self.create_list_haplotypes(haplotype)
+            if susceptibility_type<0 or susceptibility_type>=self.susNum:
+                self.Error("There are no such susceptibility type!")
+
+            for haplotype in haplotypes:
+                self.susceptibility[haplotype, susceptibility_type] = rate
+        elif isinstance(haplotype, int) and isinstance(susceptibility_type, int):
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+            if susceptibility_type<0 or susceptibility_type>=self.susNum:
+                self.Error("There are no such susceptibility type!")
+
+            self.susceptibility[haplotype, susceptibility_type] = rate
         elif haplotype==None and isinstance(susceptibility_type, int):
             if susceptibility_type<0 or susceptibility_type>=self.susNum:
-                self.Error("#TODO")
+                self.Error("There are no such susceptibility type!")
 
             for hn in range(self.hapNum):
                 self.susceptibility[hn, susceptibility_type] = rate
-        elif isinstance(haplotype, int) and isinstance(susceptibility_type, int):
-            if haplotype<0 or haplotype>=self.hapNum:
-                self.Error("#TODO")
-            if susceptibility_type<0 or susceptibility_type>=self.susNum:
-                self.Error("#TODO")
+        elif isinstance(haplotype, str) and susceptibility_type==None:
+            haplotypes = self.create_list_haplotypes(haplotype)
 
-            self.susceptibility[haplotype, susceptibility_type] = rate
+            for haplotype in haplotypes:
+                for sn in range(self.susNum):
+                    self.susceptibility[haplotype, sn] = rate
+        elif isinstance(haplotype, int) and susceptibility_type==None:
+            if haplotype<0 or haplotype>=self.hapNum:
+                self.Error("There are no such haplotype!")
+
+            for sn in range(self.susNum):
+                self.susceptibility[haplotype, sn] = rate
+        elif haplotype==None and susceptibility_type==None:
+            for hn in range(self.hapNum):
+                for sn in range(self.susNum):
+                    self.susceptibility[hn, sn] = rate
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of haplotype or susceptibility rate. Value should be int or None.")
 
         self.SetRates()
 
-    def set_immunity_transition(self, rate, from_population, to_population):
+    def set_immunity_transition(self, rate, source, target):
+        if isinstance(rate, (int, float)) == False:
+            self.Error("Incorrect value of rate. Value should be int or float.")
         if rate<0:
-            self.Error("#TODO")
-        if isinstance(rate, (int, float)) and from_population==None and to_population==None:
+            self.Error("Incorrect value of rate. Value should be more or equal 0.")
+
+        if isinstance(source, int) and isinstance(target, int):
+            if source<0 or source>=self.susNum:
+                self.Error("There are no such source susceptibility type!")
+            if target<0 or target>=self.susNum:
+                self.Error("There are no such target susceptibility type!")
+            if source==target:
+                self.Error("Source and target susceptibility type shouldn't be equal!")
+
+            self.suscepTransition[source, target] = rate
+        elif source==None and isinstance(target, int):
+            if target<0 or target>=self.susNum:
+                self.Error("There are no such target susceptibility type!")
+
+            for sn1 in range(self.susNum):
+                if sn1 != target:
+                        self.suscepTransition[sn1, target] = rate
+        elif isinstance(source, int) and target==None:
+            if source<0 or source>=self.susNum:
+                self.Error("There are no such source susceptibility type!")
+
+            for sn2 in range(self.susNum):
+                if source != sn2:
+                    self.suscepTransition[source, sn2] = rate
+        elif source==None and target==None:
             for sn1 in range(self.susNum):
                 for sn2 in range(self.susNum):
                     if sn1 != sn2:
                         self.suscepTransition[sn1, sn2] = rate
-        elif isinstance(rate, (int, float)) and isinstance(from_population, int) and to_population==None:
-            if from_population<0 or from_population>=self.susNum:
-                self.Error("#TODO")
-
-            for sn2 in range(self.susNum):
-                if from_population != sn2:
-                    self.suscepTransition[from_population, sn2] = rate
-        elif isinstance(rate, (int, float)) and from_population==None and isinstance(to_population, int):
-            if to_population<0 or to_population>-self.susNum:
-                self.Error("#TODO")
-
-            for sn1 in range(self.susNum):
-                if sn1 != to_population:
-                        self.suscepTransition[sn1, to_population] = rate
-        elif isinstance(rate, (int, float)) and isinstance(from_population, int) and isinstance(to_population, int):
-            if from_population<0 or from_population>=self.susNum:
-                self.Error("#TODO")
-            if to_population<0 or to_population>-self.susNum:
-                self.Error("#TODO")
-            if from_population==to_population:
-                self.Error("#TODO")
-
-            self.suscepTransition[from_population, to_population] = rate
         else:
-            self.Error("#TODO")
+            self.Error("Incorrect value of source or target susceptibility type. Value should be int or None.")
 
         self.SetRates()
 
@@ -958,34 +1215,72 @@ cdef class BirthDeathModel:
         print("Basic rates")
         table = PrettyTable()
 
-        field = ["H", "IR", "UR", "SR"]
-        for i in range(self.sites):
-            field.append("M-" + str(i))
-            field.append("MP" + str(i))
+        field = ["H", "IR", "RR", "SR", "ST"]
+        for s in range(self.sites):
+            field.append("M" + str(s))
+            field.append("MP" + str(s))
         table.field_names = field
         for hn in range(self.hapNum):
-            list = [self.calculate_string(hn), self.bRate[hn], self.dRate[hn], self.sRate[hn]]
+            list = [self.calculate_string(hn), self.bRate[hn], self.dRate[hn], self.sRate[hn], self.suscType[hn]]
             for s in range(self.sites):
                 list.append(self.mRate[hn, s])
                 list.append([self.hapMutType[hn, s, 0], self.hapMutType[hn, s, 1], self.hapMutType[hn, s, 2]])
             table.add_row(list)
 
         print(table)
+        print("Legend:")
+        print("H - haplotype")
+        print("IR - infection rate")
+        print("RR - recovery rate")
+        print("SR - sampling rate")
+        print("ST - susceptibility type")
+        for s in range(self.sites):
+            print("M" + str(s) + " - " + str(s) + " mutation rate")
+            print("MP" + str(s) + " - " + str(s) + " mutation probabilities")
+        print()
 
     def print_populations(self):
         print("Populations")
         table_populations = PrettyTable()
 
-        table_populations.field_names = ["Id", "Size", "CD", "CDALD", "SLD", "ELD", "SM"]
+        table_populations.field_names = ["ID", "Size", "CD", "CDALD", "SLD", "ELD", "SM"]
         for pn in range(self.popNum):
             table_populations.add_row([pn, self.pm.sizes[pn], self.pm.contactDensity[pn], self.pm.contactDensityAfterLockdown[pn], self.pm.startLD[pn], self.pm.endLD[pn], self.pm.samplingMultiplier[pn]])
         
         print(table_populations)
+        print("Legend:")
+        print("ID - number of population")
+        print("Size - size of population")
+        print("CD - contact density")
+        print("CDALD - contact density at lockdown")
+        print("SLD - start of lockdown")
+        print("ELD - end of lockdown")
+        print("SM - sampling multiplier")
+        print()
+
+        print("Susceptible")
+        table_susceptible = PrettyTable()
+
+        field = ["ST\\ID"]
+        for pn in range(self.popNum):
+            field.append(pn)
+        for sn in range(self.susNum):
+            row = [sn]
+            for pn in range(self.popNum):
+                row.append(self.pm.susceptible[pn, sn])
+            table_susceptible.add_row(row)
+        table_susceptible.field_names = field
+
+        print(table_susceptible)
+        print("Legend:")
+        print("ID - ID population")
+        print("ST - susceptibility type")
+        print()
 
         print("Migration matrix")
         table_migration = PrettyTable()
 
-        field = [""]
+        field = ["S\\T"]
         for pn1 in range(self.popNum):
             field.append(pn1)
             row = [pn1]
@@ -995,27 +1290,34 @@ cdef class BirthDeathModel:
         table_migration.field_names = field
 
         print(table_migration)
+        print("Legend:")
+        print("S - ID source population")
+        print("T - ID target population")
+        print()
 
     def print_immunity_model(self):
         print("Immunity model")
         table_immunity = PrettyTable()
 
-        field = ["ST"]
+        field = ["H\\ST"]
         for sn in range(self.susNum):
             field.append("S" + str(sn))
         table_immunity.field_names = field
         for hn in range(self.hapNum):
-            row = [self.suscType[hn]]
+            row = [self.calculate_string(hn)]
             for sn in range(self.susNum):
                 row.append(self.susceptibility[hn, sn])
             table_immunity.add_row(row)
 
         print(table_immunity)
+        print("Legend:")
+        print("H - haplotype")
+        print("ST - susceptibility type")
 
         print("Immunity transition rates")
         table_immunity_transition = PrettyTable()
 
-        field = [""]
+        field = ["ID"]
         for sn1 in range(self.susNum):
             field.append(sn1)
             row = [sn1]
@@ -1025,6 +1327,9 @@ cdef class BirthDeathModel:
         table_immunity_transition.field_names = field
 
         print(table_immunity_transition)
+        print("Legend:")
+        print("ID - ID susceptibility type")
+        print()
 
     def calculate_string(self, hapNum):
         letters = ["A", "T", "C", "G"]
@@ -1045,6 +1350,13 @@ cdef class BirthDeathModel:
             elif string[s]=="G":
                 haplotype += 3*(4**s)
         return haplotype
+
+    def calculate_allele(self, haplotype, site):
+        allele = 0
+        for s in range(site):
+            allele = haplotype % 4
+            haplotype = haplotype // 4
+        return allele
 
     def get_sites(self):
         return self.sites
@@ -1107,7 +1419,7 @@ cdef class BirthDeathModel:
                 print(e_newPopulation)
                 for pn in range(self.popNum):
                     for hn in range(self.hapNum):
-                        print(self.liveBranches[pn, hn], end=" ")
+                        print(self.pm.liveBranches[pn, hn], end=" ")
                     print()
 
                 print()
@@ -1119,7 +1431,7 @@ cdef class BirthDeathModel:
 
             if e_type_ == BIRTH:
                 lbs = liveBranchesS[e_population][e_haplotype].size()
-                lbs_e = self.liveBranches[e_population, e_haplotype]
+                lbs_e = self.pm.liveBranches[e_population, e_haplotype]
                 p = float(lbs)*(float(lbs)-1.0)/ float(lbs_e) / (float(lbs_e) - 1.0)
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
@@ -1137,18 +1449,18 @@ cdef class BirthDeathModel:
                     self.tree[ptrTreeAndTime] = -1
                     self.times[ptrTreeAndTime] = e_time
                     ptrTreeAndTime += 1
-                self.liveBranches[e_population, e_haplotype] -= 1
+                self.pm.liveBranches[e_population, e_haplotype] -= 1
             elif e_type_ == DEATH:
-                self.liveBranches[e_population, e_haplotype] += 1
+                self.pm.liveBranches[e_population, e_haplotype] += 1
             elif e_type_ == SAMPLING:
-                self.liveBranches[e_population, e_haplotype] += 1
+                self.pm.liveBranches[e_population, e_haplotype] += 1
                 liveBranchesS[e_population][e_haplotype].push_back( ptrTreeAndTime )
                 self.tree[ptrTreeAndTime] = -1
                 self.times[ptrTreeAndTime] = e_time
                 ptrTreeAndTime += 1
             elif e_type_ == MUTATION:
                 lbs = liveBranchesS[e_population][e_newHaplotype].size()
-                p = float(lbs)/self.liveBranches[e_population, e_newHaplotype]
+                p = float(lbs)/self.pm.liveBranches[e_population, e_newHaplotype]
                 if self.rndm.uniform() < p:
                     n1 = int(floor( lbs*self.rndm.uniform() ))
                     id1 = liveBranchesS[e_population][e_newHaplotype][n1]
@@ -1156,17 +1468,17 @@ cdef class BirthDeathModel:
                     liveBranchesS[e_population][e_newHaplotype].pop_back()
                     liveBranchesS[e_population][e_haplotype].push_back(id1)
                     self.mut.AddMutation(id1, e_haplotype, e_newHaplotype, e_time)
-                self.liveBranches[e_population, e_newHaplotype] -= 1
-                self.liveBranches[e_population, e_haplotype] += 1
+                self.pm.liveBranches[e_population, e_newHaplotype] -= 1
+                self.pm.liveBranches[e_population, e_haplotype] += 1
             elif e_type_ == SUSCCHANGE:
                 pass
             elif e_type_ == MIGRATION:
                 lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
-                p = float(lbs)/self.liveBranches[e_newPopulation][e_haplotype]
+                p = float(lbs)/self.pm.liveBranches[e_newPopulation][e_haplotype]
                 if self.rndm.uniform() < p:
                     nt = int(floor( lbs*self.rndm.uniform() ))
                     lbss = liveBranchesS[e_population][e_haplotype].size()
-                    p1 = float(lbss)/self.liveBranches[e_population, e_haplotype]
+                    p1 = float(lbss)/self.pm.liveBranches[e_population, e_haplotype]
                     if self.rndm.uniform() < p1:
                         ns = int(floor( lbss*self.rndm.uniform() ))
                         idt = liveBranchesS[e_newPopulation][e_haplotype][nt]
@@ -1185,7 +1497,7 @@ cdef class BirthDeathModel:
                         liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
                         liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                         liveBranchesS[e_newPopulation][e_haplotype].pop_back()
-                self.liveBranches[e_newPopulation, e_haplotype] -= 1
+                self.pm.liveBranches[e_newPopulation, e_haplotype] -= 1
             else:
                 print("Unknown event type: ", e_type_)
                 print("_________________________________")
@@ -1358,7 +1670,7 @@ cdef class BirthDeathModel:
     def Stats(self):
         print("Number of samples:", self.sCounter)
         print("Total number of iterations: ", self.events.ptr-1)
-        print("Size events: ", self.events.size-1)
+        print("Size events: ", self.events.size)
         print("Current time: ", self.currentTime)
 
     def Debug(self):
@@ -1540,50 +1852,24 @@ cdef class BirthDeathModel:
         return tree, times, mut, populations
 
     def writeMigrations(self, name_file):
+        #with open(name_file + '.mig', 'w') as file:
         file = open(name_file + '.mig', 'w')
         file.write("Node Time Old_population New_population\n")
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
         file.close()
 
-    def check_ratio(self):
-        time_points = [i * self.currentTime / 1000 for i in range(1000)]
-        number_migration = [0 for _ in range(1000)]
-        total_len = [0.0 for _ in range(1000)]
-        pointer = 999
-        for i in range(2 * self.sCounter - 1):
-            if self.times[self.tree[i]] < time_points[pointer]:
-                total_len[pointer] += time_points[pointer] - self.times[i]
-                total_len[pointer-1] += self.times[self.tree[i]] - time_points[pointer]
-                pointer -= 1
-
-            else:
-                total_len[pointer] += self.times[i] - self.times[self.tree[i]]
-        pointer = 999
-        for i in range(self.mig.time.size()-1, -1, -1):
-            if self.mig.time[i] > time_points[pointer]:
-                number_migration[pointer] += 1
-                pointer -= 1
-            if self.mig.time[i] < time_points[pointer]:
-                number_migration[pointer] += 1
-
-        print(number_migration)
-        print(total_len)
-
-        for i in range(1000):
-            print(number_migration[i] / total_len[i])
-
-    def save_data(self):
-        # events, event_times, times, tree = [], [], [], []
-        events, event_times = [], []
+    # def save_data(self):
+    #     events, event_times, times, tree = [], [], [], []
+    #     events, event_times = [], []
         
-        for i in range(self.events.ptr):
-            events.append(self.events.types[i])
-            event_times.append(self.events.times[i])
+    #     for i in range(self.events.ptr):
+    #         events.append(self.events.types[i])
+    #         event_times.append(self.events.times[i])
 
     #     for i in range(2 * self.sCounter - 1):
     #         times.append(self.times[i])
     #         tree.append(self.tree[i])
 
-        return events, event_times
+    #     return events, event_times
     #     return events, event_times, times, tree

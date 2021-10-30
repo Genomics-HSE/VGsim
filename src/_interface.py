@@ -31,8 +31,8 @@ class Simulator:
 	def set_infectious_rate(self, rate, haplotype=None):
 		self.simulation.set_infectious_rate(rate, haplotype)
 
-	def set_uninfectious_rate(self, rate, haplotype=None):
-		self.simulation.set_uninfectious_rate(rate, haplotype)
+	def set_recovery_rate(self, rate, haplotype=None):
+		self.simulation.set_recovery_rate(rate, haplotype)
 
 	def set_sampling_rate(self, rate, haplotype=None):
 		self.simulation.set_sampling_rate(rate, haplotype)
@@ -50,9 +50,9 @@ class Simulator:
 		self.simulation.set_sampling_multiplier(multiplier, population)
 
 	def set_migration_probability(self, probability, source=None, target=None):
-		self.simulation.set_migration_rate(probability, source, target)
+		self.simulation.set_migration_probability(probability, source, target)
 
-	def set_susceptible(self, amount, source_type, target_type, population):
+	def set_susceptible(self, amount, source_type, target_type, population=None):
 		self.simulation.set_susceptible(amount, source_type, target_type, population)
 
 	def set_immunity_type(self, susceptibility_type, haplotype=None):
@@ -64,16 +64,13 @@ class Simulator:
 	def set_immunity_transition(self, rate, source=None, target=None):
 		self.simulation.set_immunity_transition(rate, source, target)
 
-
-	def print_all(self, basic_rates=False, populations=False, immunity_model=False):
-		if basic_rates:
-			self.simulation.print_basic_rates()
+	def print_all(self, basic_parameters=False, populations=False, immunity_model=False):
+		if basic_parameters:
+			self.simulation.print_basic_parameters()
 		if populations:
 			self.simulation.print_populations()
 		if immunity_model:
 			self.simulation.print_immunity_model()
-
-	#OR
 
 	def print_basic_parameters(self):
 		self.simulation.print_basic_parameters()
@@ -83,7 +80,6 @@ class Simulator:
 
 	def print_immunity_model(self):
 		self.simulation.print_immunity_model()
-
 
 	def citation(self):
 		print("VGsim: scalable viral genealogy simulator for global pandemic")
@@ -102,84 +98,41 @@ class Simulator:
 		else:
 			return self.simulation.LogDynamics(step, output_file)
 
-	def calculate_haplotype(self, string):
-		string = string[::-1]
-		haplotype = 0
-		for s in range(self.simulation.get_sites()):
-			if string[s]=="T":
-				haplotype += (4**s)
-			elif string[s]=="C":
-				haplotype += 2*(4**s)
-			elif string[s]=="G":
-				haplotype += 3*(4**s)
-		return haplotype
+	def add_plot_infectious(self, population, haplotype, step_num):
+		if fig == None:
+			fig, ax = plt.subplots(figsize=(8, 6))
+			ax.set_ylabel('Number of people')
+			ax.set_xlabel('Time')
+			ax_2 = ax.twinx()
+			ax_2.set_ylabel('Sampling')
 
-	def plot_infectious(self, population=None, haplotype=None, step_num=100):
-		if isinstance(haplotype, str) and len(haplotype) == self.simulation.get_sites():
-			haplotype = self.calculate_haplotype(haplotype)
-		if population == None and haplotype == None:
-			for i in range(0, self.simulation.get_popNum()):
-				for j in range(0, self.simulation.get_hapNum()):
-					infections, sample, time_points = self.simulation.get_data_infectious(i, j, step_num)
-					self.paint_infections(i, j, time_points, infections, sample)
-		elif population == None:
-			for i in range(0, self.simulation.get_popNum()):
-				infections, sample, time_points = self.simulation.get_data_infectious(i, haplotype, step_num)
-				self.paint_infections(i, haplotype, time_points, infections, sample)
-		elif haplotype == None:
-			for i in range(0, self.simulation.get_hapNum()):
-				infections, sample, time_points = self.simulation.get_data_infectious(population, i, step_num)
-				self.paint_infections(population, i, time_points, infections, sample)
-		else:
-			infections, sample, time_points = self.simulation.get_data_infectious(population, haplotype, step_num)
-			self.paint_infections(population, haplotype, time_points, infections, sample)
-		
-	def paint_infections(self, pop, hap, time_points, infections, sample):
-		figure, axis_1 = plt.subplots(figsize=(8, 6))
-		axis_1.plot(time_points, infections, color='blue', label='Infections')
-		axis_1.set_ylabel('Infections')
-		axis_1.set_xlabel('Time')
-		axis_1.set_title('Population ' + str(pop) + ' and hapotype ' + str(hap))
-		axis_2 = axis_1.twinx()
-		axis_2.plot(time_points, sample, color='orange', label='Sampling')
-		axis_2.set_ylabel('Sampling')
-		lines_1, labels_1 = axis_1.get_legend_handles_labels()
-		lines_2, labels_2 = axis_2.get_legend_handles_labels()
+		infections, sample, time_points = self.simulation.get_data_infectious(population, haplotype, step_num)
+		ax.plot(time_points, infections, label='Infections')
+		ax_2.plot(time_points, sample, label='Sampling')
+
+	def add_plot_susceptible(self, population, susceptibility_type, step_num):
+		if fig == None:
+			fig, ax = plt.subplots(figsize=(8, 6))
+			ax.set_ylabel('Number of people')
+			ax.set_xlabel('Time')
+			ax_2 = ax.twinx()
+			ax_2.set_ylabel('Sampling')
+
+		susceptible, time_points = self.simulation.get_data_susceptible(population, susceptibility_type, step_num)
+		ax.plot(time_points, susceptible, label='Susceptible')
+
+	def plot(self):
+		plt.show()
+
+	def add_title(self, name="Plot"):
+		ax.set_title(name)
+
+	def add_legend_infectious(self):
+		lines_1, labels_1 = ax.get_legend_handles_labels()
+		lines_2, labels_2 = ax_2.get_legend_handles_labels()
 		lines = lines_1 + lines_2
 		labels = labels_1 + labels_2
-		axis_1.legend(lines, labels, loc=0)
-
-		plt.show()
-		pass
-
-	def plot_susceptible(self, population=None, susceptibility_type=None, step_num=100):
-		if population == None and susceptibility_type == None:
-			for i in range(0, self.simulation.get_popNum()):
-				for j in range(0, self.simulation.get_susNum()):
-					susceptible, time_points = self.simulation.get_data_susceptible(i, j, step_num)
-					self.paint_susceptible(i, j, susceptible, time_points)
-		elif population == None:
-			for i in range(0, self.simulation.get_popNum()):
-				susceptible, time_points = self.simulation.get_data_susceptible(i, susceptibility_type, step_num)
-				self.paint_susceptible(i, susceptibility_type, susceptible, time_points)	
-		elif susceptibility_type == None:
-			for i in range(0, self.simulation.get_susNum()):
-				susceptible, time_points = self.simulation.get_data_susceptible(population, i, step_num)
-				self.paint_susceptible(population, i, susceptible, time_points)
-		else:
-			susceptible, time_points = self.simulation.get_data_susceptible(population, susceptibility_type, step_num)
-			self.paint_susceptible(population, susceptibility_type, susceptible, time_points)
-		
-	def paint_susceptible(self, population, susceptibility_type, susceptible, time_points): 
-		figure, axis_1 = plt.subplots(figsize=(8, 6))
-		axis_1.plot(time_points, susceptible, color='blue', label='Susceptible')
-		axis_1.set_ylabel('Susceptible')
-		axis_1.set_xlabel('Time')
-		axis_1.set_title('Population ' + str(population) + ' and susceptibility type ' + str(susceptibility_type))
-		axis_1.legend()
-
-		plt.show()
-		pass
+		ax.legend(lines, labels, loc=0)
 
 	def output_newick(self, name_file="newick_output"):
 		pruferSeq, times, mut, populations = self.simulation.Output_tree_mutations()

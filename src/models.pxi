@@ -64,18 +64,19 @@ cdef class PopulationModel:
         Migrations mig
 
         long[::1] sizes, totalSusceptible, totalInfectious, lockdownON
-        long[:,::1] susceptible
+        long[:,::1] susceptible, liveBranches
 
         double[::1] maxEffectiveMigration, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier
         double[:,::1] migrationRates, effectiveMigration
 
-    def __init__(self, population_sizes, susNum):
+    def __init__(self, population_sizes, susNum, hapNum):
         self.popNum = len(population_sizes)
         self.sizes = np.asarray(population_sizes)
         self.susceptible = np.zeros((self.popNum, susNum), dtype=np.int64)
         self.totalSusceptible = np.zeros(self.popNum, dtype=np.int64)
         self.totalInfectious = np.zeros(self.popNum, dtype=np.int64)
         self.globalInfectious = 0
+        self.liveBranches = np.zeros((self.popNum, hapNum), dtype=np.int64)
 
         self.contactDensity = np.ones(self.popNum, dtype=float)
         self.contactDensityBeforeLockdown = np.ones(self.popNum, dtype=float)
@@ -89,8 +90,8 @@ cdef class PopulationModel:
         for pn in range(self.popNum):
             self.susceptible[pn, 0] = self.sizes[pn]
             self.totalSusceptible[pn] = self.sizes[pn]
-            self.startLD[pn] = 1.01*self.sizes[pn]
-            self.endLD[pn] = 1.0*self.sizes[pn]
+            self.startLD[pn] = 1.01
+            self.endLD[pn] = 1.0
 
         self.mig = Migrations()
         self.migrationRates = np.zeros((self.popNum, self.popNum), dtype=float)
@@ -116,16 +117,18 @@ cdef class PopulationModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si):
+    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
         self.susceptible[pi, si] -= 1
         self.totalSusceptible[pi] -= 1
         self.totalInfectious[pi] += 1
         self.globalInfectious += 1
+        self.liveBranches[pi, hi] += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si):
+    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
         self.susceptible[pi, si] += 1
         self.totalSusceptible[pi] += 1
         self.totalInfectious[pi] -= 1
         self.globalInfectious -= 1
+        self.liveBranches[pi, hi] -= 1

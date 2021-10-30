@@ -38,11 +38,10 @@ For example, this is the introductory paragraph
 
 .. code-block:: python
 
-  print_basic_rates()
+  print_basic_parameters()
   print_populations()
-  print_migration_matrix()
   print_immunity_model()
-
+  print_all(basic_parameters=False, populations=False, immunity_model=False)
 
 Model simulation
 ================
@@ -81,22 +80,6 @@ genealogy
    * - Parameter
      - Type
      - Meaning
-   * - ``_seed``
-     - ``double`` 
-     - #TODO
-
-plot_infectious
----------------
-
-**Graph for particular population and particular haplotype**
-
-.. list-table::
-   :widths: 15 15 70
-   :header-rows: 1
-
-   * - Parameter
-     - Type
-     - Meaning
    * - ``step_num``
      - ``int``
      - A number of time intervals
@@ -107,29 +90,29 @@ plot_infectious
      - ``int``
      - Haplotype
 
-plot_susceptible
-----------------
-
-**Graph for particular population and particular susceptibility type**
-
+plot
+----
 .. list-table::
-   :widths: 15 15 70
-   :header-rows: 1
+   :widths: 15 25 70
 
-   * - Parameter
-     - Type
-     - Meaning
-   * - ``step_num``
-     - ``int``
-     - A number of time intervals
-   * - ``population``
-     - ``int``
-     - Population
-   * - ``susceptibility_type``
-     - ``int``
-     - Haplotype
+   * - ``add_plot_infectious``
+     - ``population, haplotype, step_num=1000``
+     - #TODO
+   * - ``add_plot_susceptible``
+     - ``population, susceptibility_type, step_num=None``
+     - #TODO
+   * - ``plot``
+     - ``None``
+     - #TODO
+   * - ``add_title``
+     - ``name="Plot"``
+     - #TODO
+   * - ``add_legend_infectious``
+     - ``None``
+     - #TODO
 
 System methods
+--------------
 
 .. code-block:: python
 
@@ -143,36 +126,45 @@ Change values
 -------------
 
 .. list-table::
-   :widths: 15 25 70
+   :widths: 15 35 70
    :header-rows: 1
 
    * - Function
      - Parameters
      - Meaning
    * - ``set_infectious_rate``
-     - ``haplotype, rate``
+     - ``rate, haplotype=None``
      - #TODO
-   * - ``set_uninfectious_rate``
-     - ``haplotype, rate``
+   * - ``set_recovery_rate``
+     - ``rate, haplotype=None``
      - #TODO
    * - ``set_sampling_rate``
-     - ``haplotype, rate``
+     - ``rate, haplotype=None``
      - #TODO
    * - ``set_mutation_rate``
-     - ``haplotype, site, rate=None, probabilities=None``
-     - Frequency of transition between sets of mutations
-   * - ``set_migration_probability``
-     - ``source_population, target_population, probability``
-     - Displays shift from one migration to another one
-   * - ``set_lockdown``
-     - ``population, infectious_fraction=None, contact_density=None``
+     - ``rate=None, probabilities=None, haplotype=None, mutation=None``
      - #TODO
-   * - ``set_susceptibility_type``
-     - ``haplotype, immunity``
-     - Susceptibility type for a particular haplotype
+   * - ``set_contact_density``
+     - ``value, population=None``
+     - #TODO
+   * - ``set_lockdown``
+     - ``parameters, population=None``
+     - #TODO
+   * - ``set_sampling_multiplier``
+     - ``multiplier, population=None``
+     - #TODO
+   * - ``set_migration_probability``
+     - ``rate, source=None, target=None``
+     - #TODO
+   * - ``set_susceptible``
+     - ``amount, source_type, target_type, population=None``
+     - #TODO
+   * - ``set_immunity_type``
+     - ``susceptibility_type, haplotype=None``
+     - #TODO
    * - ``set_susceptibility``
-     - ``haplotype, immunity, susceptibility``
+     - ``rate, haplotype=None, susceptibility_type=None``
      - #TODO
    * - ``set_immunity_transition``
-     - ``source_immunity, target_immunity, probability``
+     - ``rate, source=None, target=None``
      - #TODO
