@@ -59,68 +59,76 @@ class Lockdown:
 
 cdef class PopulationModel:
     cdef:
-        Py_ssize_t globalInfectious
+        Py_ssize_t globalInfectious, migPlus, migNonPlus, swapLockdown, migCounter, popNum
+
+        Migrations mig
 
         long[::1] sizes, totalSusceptible, totalInfectious, lockdownON
-        long[:,::1] susceptible
+        long[:,::1] susceptible, liveBranches
 
-        double[::1] contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier
+        double[::1] maxEffectiveMigration, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier
+        double[:,::1] migrationRates, effectiveMigration
 
-    def __init__(self, populations, susceptible_num, lockdownModel=None, samplingMultiplier=None):
-        sizePop = len(populations)
-
-        self.sizes = np.zeros(sizePop, dtype=np.int64)
-        for i in range(sizePop):
-            self.sizes[i] = populations[i].size
-
-        self.totalSusceptible = np.zeros(sizePop, dtype=np.int64)
-        self.totalInfectious = np.zeros(sizePop, dtype=np.int64)
+    def __init__(self, population_sizes, susNum, hapNum):
+        self.popNum = len(population_sizes)
+        self.sizes = np.asarray(population_sizes)
+        self.susceptible = np.zeros((self.popNum, susNum), dtype=np.int64)
+        self.totalSusceptible = np.zeros(self.popNum, dtype=np.int64)
+        self.totalInfectious = np.zeros(self.popNum, dtype=np.int64)
         self.globalInfectious = 0
+        self.liveBranches = np.zeros((self.popNum, hapNum), dtype=np.int64)
 
-        self.susceptible = np.zeros((sizePop, susceptible_num), dtype=np.int64)
-        for i in range(sizePop):
-            self.susceptible[i, 0] = populations[i].size
-            self.totalSusceptible[i] = populations[i].size
+        self.contactDensity = np.ones(self.popNum, dtype=float)
+        self.contactDensityBeforeLockdown = np.ones(self.popNum, dtype=float)
+        self.contactDensityAfterLockdown = np.zeros(self.popNum, dtype=float)
+        self.startLD = np.zeros(self.popNum, dtype=float)
+        self.endLD = np.zeros(self.popNum, dtype=float)
+        self.lockdownON = np.zeros(self.popNum, dtype=np.int64)
+        self.swapLockdown = 0
 
-        self.contactDensity = np.zeros(sizePop, dtype=float)
-        for i in range(sizePop):
-            self.contactDensity[i] = populations[i].contactDensity
+        self.samplingMultiplier = np.ones(self.popNum)
+        for pn in range(self.popNum):
+            self.susceptible[pn, 0] = self.sizes[pn]
+            self.totalSusceptible[pn] = self.sizes[pn]
+            self.startLD[pn] = 1.01
+            self.endLD[pn] = 1.0
 
-        self.contactDensityBeforeLockdown = np.zeros(sizePop, dtype=float)
-        self.contactDensityAfterLockdown = np.zeros(sizePop, dtype=float)
-        self.startLD = np.zeros(sizePop, dtype=float)
-        self.endLD = np.zeros(sizePop, dtype=float)
-        if lockdownModel != None:
-            for i in range(sizePop):
-                self.contactDensityBeforeLockdown[i] = populations[i].contactDensity
-                self.contactDensityAfterLockdown[i] = lockdownModel[i].conDenAfterLD
-                self.startLD[i] = lockdownModel[i].startLD*self.sizes[i]/100.0
-                self.endLD[i] = lockdownModel[i].endLD*self.sizes[i]/100.0
-        else:
-            for i in range(sizePop):
-                self.contactDensityBeforeLockdown[i] = 0
-                self.contactDensityAfterLockdown[i] = 0
-                self.startLD[i] = 1.01*self.sizes[i]
-                self.endLD[i] = 1.0*self.sizes[i]
-        self.lockdownON = np.zeros(sizePop, dtype=np.int64)
-        if samplingMultiplier != None:
-            self.samplingMultiplier = np.asarray(samplingMultiplier)
-        else:
-            self.samplingMultiplier = np.ones(sizePop)
+        self.mig = Migrations()
+        self.migrationRates = np.zeros((self.popNum, self.popNum), dtype=float)
+        self.effectiveMigration = np.zeros((self.popNum, self.popNum), dtype=float)
+        self.maxEffectiveMigration = np.zeros(self.popNum, dtype=float)
+        self.migPlus = 0
+        self.migNonPlus = 0
+        self.migCounter = 0
 
+        self.SetEffectiveMigration()
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si):
+    @cython.cdivision(True)
+    cdef void SetEffectiveMigration(self):
+        for pn in range(self.popNum):
+            self.maxEffectiveMigration[pn] = 0.0
+        for pn1 in range(self.popNum):
+            for pn2 in range(self.popNum):
+                self.effectiveMigration[pn1, pn2] = self.migrationRates[pn1, pn2]*self.contactDensity[pn2]/self.sizes[pn2]+self.migrationRates[pn2, pn1]*self.contactDensity[pn1]/self.sizes[pn1]
+                if self.effectiveMigration[pn1, pn2] > self.maxEffectiveMigration[pn2]:
+                    self.maxEffectiveMigration[pn2] = self.effectiveMigration[pn1, pn2]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
         self.susceptible[pi, si] -= 1
         self.totalSusceptible[pi] -= 1
         self.totalInfectious[pi] += 1
         self.globalInfectious += 1
+        self.liveBranches[pi, hi] += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si):
+    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
         self.susceptible[pi, si] += 1
         self.totalSusceptible[pi] += 1
         self.totalInfectious[pi] -= 1
         self.globalInfectious -= 1
+        self.liveBranches[pi, hi] -= 1
