@@ -1179,10 +1179,10 @@ cdef class BirthDeathModel:
         print("Basic rates")
         table = PrettyTable()
 
-        field = ["H", "IR", "RR", "SR", "ST"]
+        field = ["H", "TR", "RR", "SR", "ST"]
         for s in range(self.sites):
             field.append("M" + str(s))
-            field.append("MP" + str(s))
+            field.append("MW" + str(s))
         table.field_names = field
         for hn in range(self.hapNum):
             list = ["\n" + self.calculate_string(hn), "\n" + str(self.bRate[hn]), "\n" + str(self.dRate[hn]), "\n" + str(self.sRate[hn]), "\n" + str(self.suscType[hn])]
@@ -1194,13 +1194,13 @@ cdef class BirthDeathModel:
         print(table)
         print("Legend:")
         print("H - haplotype")
-        print("IR - infection rate")
+        print("TR - transmission rate")
         print("RR - recovery rate")
         print("SR - sampling rate")
         print("ST - susceptibility type")
         for s in range(self.sites):
             print("M" + str(s) + " - " + str(s) + " mutation rate")
-            print("MP" + str(s) + " - " + str(s) + " mutation probabilities")
+            print("MP" + str(s) + " - " + str(s) + " mutation weights")
         print()
 
     def print_populations(self):
