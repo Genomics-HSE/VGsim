@@ -1,3 +1,6 @@
+def print_err(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
