@@ -116,7 +116,7 @@
 #     simulation.writeMigrations()
 
 import VGsim
-simulator = VGsim.Simulator(2,[300000, 300000, 300000], 3, 1234)
+simulator = VGsim.Simulator(2, 3, 3, 1234)
 simulator.set_infectious_rate(40)
 simulator.set_recovery_rate(15)
 simulator.set_sampling_rate(4)
