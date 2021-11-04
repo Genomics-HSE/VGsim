@@ -1295,6 +1295,7 @@ cdef class BirthDeathModel:
         print("ID - ID susceptibility type")
         print()
 
+
     def create_mutations(self, haplotype, site):
         hap = self.calculate_string(haplotype)
         haplotypes = [hap[:site] + "A" + hap[site+1:], hap[:site] + "T" + hap[site+1:], hap[:site] + "C" + hap[site+1:], hap[:site] + "G" + hap[site+1:]]
@@ -1594,9 +1595,9 @@ cdef class BirthDeathModel:
         Date = np.zeros(step_num+1)
         Sample = np.zeros(step_num+1)
 
-        point = 0
+        point = 1
         for j in range(self.events.ptr):
-            if time_points[point] < self.events.times[j]:
+            if point != step_num and time_points[point] < self.events.times[j]:
                 Date[point+1] = Date[point]
                 Sample[point+1] = Sample[point]
                 point += 1
@@ -1614,6 +1615,7 @@ cdef class BirthDeathModel:
                 Date[point] += 1
             elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.haplotypes[j] == hap:
                 Date[point] += 1
+
         return Date, Sample, time_points
 
     def get_data_susceptible(self, pop, sus, step_num):
@@ -1621,10 +1623,11 @@ cdef class BirthDeathModel:
         Date = np.zeros(step_num+1)
         if sus == 0:
             Date[0] = self.pm.sizes[pop]
+            Date[1] = self.pm.sizes[pop]
 
-        point = 0
+        point = 1
         for j in range(self.events.ptr):
-            if time_points[point] < self.events.times[j]:
+            if point != step_num and time_points[point] < self.events.times[j]:
                 Date[point+1] = Date[point]
                 point += 1
             if self.events.populations[j] == pop and self.events.newHaplotypes[j] == sus:
@@ -1749,9 +1752,9 @@ cdef class BirthDeathModel:
         print()
 
         print("Susceptibility(const)----")
-        for sn1 in range(self.susNum):
-            for sn2 in range(self.susNum):
-                print(self.susceptibility[sn1, sn2], end=" ")
+        for hn in range(self.hapNum):
+            for sn in range(self.susNum):
+                print(self.susceptibility[hn, sn], end=" ")
             print()
         print()
         print("suscepTransition(const)----")

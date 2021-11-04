@@ -7,6 +7,7 @@ import numpy as np
 
 class Simulator:
 	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=2, seed=None, sampling_probability=False):
+		self.fig = None
 		if seed == None:
 			seed = randrange(sys.maxsize)
 
@@ -110,41 +111,41 @@ class Simulator:
 			return self.simulation.LogDynamics(step, output_file)
 
 
-	def add_plot_infectious(self, population, haplotype, step_num):
-		if fig == None:
-			fig, ax = plt.subplots(figsize=(8, 6))
-			ax.set_ylabel('Number of people')
-			ax.set_xlabel('Time')
-			ax_2 = ax.twinx()
-			ax_2.set_ylabel('Sampling')
+	def add_plot_infectious(self, population, haplotype, step_num=100):
+		if self.fig == None:
+			self.fig, self.ax = plt.subplots(figsize=(8, 6))
+			self.ax.set_ylabel('Number of people')
+			self.ax.set_xlabel('Time')
+			self.ax_2 = self.ax.twinx()
+			self.ax_2.set_ylabel('Sampling')
 
 		infections, sample, time_points = self.simulation.get_data_infectious(population, haplotype, step_num)
-		ax.plot(time_points, infections, label='Infections')
-		ax_2.plot(time_points, sample, label='Sampling')
+		self.ax.plot(time_points, infections, label='Infections-' + str(population) + '-' + str(haplotype))
+		self.ax_2.plot(time_points, sample, "--", label='Sampling-' + str(population) + '-' + str(haplotype))
 
-	def add_plot_susceptible(self, population, susceptibility_type, step_num):
-		if fig == None:
-			fig, ax = plt.subplots(figsize=(8, 6))
-			ax.set_ylabel('Number of people')
-			ax.set_xlabel('Time')
-			ax_2 = ax.twinx()
-			ax_2.set_ylabel('Sampling')
+	def add_plot_susceptible(self, population, susceptibility_type, step_num=100):
+		if self.fig == None:
+			self.fig, self.ax = plt.subplots(figsize=(8, 6))
+			self.ax.set_ylabel('Number of people')
+			self.ax.set_xlabel('Time')
+			self.ax_2 = self.ax.twinx()
+			self.ax_2.set_ylabel('Sampling')
 
 		susceptible, time_points = self.simulation.get_data_susceptible(population, susceptibility_type, step_num)
-		ax.plot(time_points, susceptible, label='Susceptible')
+		self.ax.plot(time_points, susceptible, label='Susceptible-' + str(population) + '-' + str(susceptibility_type))
 
 	def plot(self):
 		plt.show()
 
 	def add_title(self, name="Plot"):
-		ax.set_title(name)
+		self.ax.set_title(name)
 
 	def add_legend_infectious(self):
-		lines_1, labels_1 = ax.get_legend_handles_labels()
-		lines_2, labels_2 = ax_2.get_legend_handles_labels()
+		lines_1, labels_1 = self.ax.get_legend_handles_labels()
+		lines_2, labels_2 = self.ax_2.get_legend_handles_labels()
 		lines = lines_1 + lines_2
 		labels = labels_1 + labels_2
-		ax.legend(lines, labels, loc=0)
+		self.ax.legend(lines, labels, loc=0)
 
 
 	def citation(self):
