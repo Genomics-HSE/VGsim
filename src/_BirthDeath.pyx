@@ -1828,6 +1828,6 @@ cdef class BirthDeathModel:
         #with open(name_file + '.mig', 'w') as file:
         file = open(name_file + '.mig', 'w')
         file.write("Node Time Old_population New_population\n")
-        for i in range(self.mig.nodeId.size()):
-            file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
+        for i in range(self.pm.mig.nodeId.size()):
+            file.write(str(self.pm.mig.nodeId[i]) + " " + str(self.pm.mig.time[i]) + " " + str(self.pm.mig.oldPop[i]) + " " + str(self.pm.mig.newPop[i]) + "\n")
         file.close()
