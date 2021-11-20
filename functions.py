@@ -2,8 +2,8 @@ class Simulator():
 	"""
 	#TODO
 
-	:param: sites_number=0, populations_number=1, susceptibility_types=2, seed=None, sampling_probability=False
-	:type: sites_number = int, populations_number = int, susceptibility_types = int, seed = float or None, sampling_probability = True or False
+	:param: sites_number=0, populations_number=1, susceptibility_types=2, seed=None, sampling_probability=False, strong_migration=False
+	:type: sites_number = int, populations_number = int, susceptibility_types = int, seed = float or None, sampling_probability = True or False, strong_migration = True or False
 	"""
 	def __init__(self):
 		pass
@@ -23,11 +23,11 @@ def print_immunity_model():
 	#TODO
 	"""
 
-def print_all(basic_parameters=False, populations=False, immunity_model=False):
+def print_all(basic_parameters=True, populations=True, immunity_model=True):
 	"""
 	#TODO
 
-	:param: basic_parameters=False, populations=False, immunity_model=False
+	:param: basic_parameters=True, populations=True, immunity_model=True
 	:type: basic_parameters = True or False, populations = True or False, immunity_model = True or False
 	"""
 
@@ -67,7 +67,7 @@ def set_mutation_rate(rate=None, substitution_weights=None, haplotype=None, site
     :type: rate = float, substitution_weights = list of 4 elements, haplotype = int or str or None, site_id = int or None
 	"""
 
-def set_immunity_type(susceptibility_type, haplotype=None):
+def set_susceptibility_type(susceptibility_type, haplotype=None):
 	"""
 	The type of immunity (or the susceptibility group) which an individual gets after being infected with a pathogen of a haplotype.
 
@@ -179,6 +179,14 @@ def output_migrations(name_file="migrations"):
 	:type: name_file = str
 	"""
 
+def output_parameters(name_file="parameters"):
+	"""
+	Make the directory with files for launching via console
+
+	:param: name_file="parameters"
+	:type: name_file = str
+	"""
+
 def sample_data():
 	"""
 	Show all information about sampling, time, place, etc.
@@ -187,19 +195,6 @@ def sample_data():
 def epidemiology_timelines(step=1000, output_file=False):
 	"""
 	Records simulation state changes over some period of time. step - a number of parts epidemiology_timelines is split on.
-	"""
-
-def parameters_to_file(name_file="parameters"):
-	"""
-	#TODO
-
-	:param: name_file="parameters"
-	:type: name_file = str
-	"""
-
-def citation(self):
-	"""
-	#TODO
 	"""
 
 def add_plot_infectious(population, haplotype, step_num=100, label=None):

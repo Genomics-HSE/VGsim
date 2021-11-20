@@ -116,7 +116,7 @@ Let us simulate the first 90 days. The first argument is the maximal number of i
 
 .. code-block:: python
 	
-	simulator.simulate(10000000, time=90)
+	simulator.simulate(10000000, time=120)
 
 After these 90 days, the vaccine was developed, and the susceptible individuals of types 0 and 1 can move to type 2 with the rate 0.05 (average waiting time of 20 days to get vaccinated).
 
@@ -151,23 +151,36 @@ Visualizing epidemiological trajectories
 
 .. code-block:: python
 
-	simulator.add_plot_infectious(population, haplotype, step_num=100, label=None)
+	population = 0
+	haplotype = 0
+	simulator.add_plot_infectious(population, haplotype, step_num=100)
+
+.. image:: first_plot.png
 
 .. code-block:: python
 	
-	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100, label=None)
+	susceptibility_type = 0
+	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
+
+.. image:: second_plot.png
 
 .. code-block:: python	
 	
 	simulator.add_title(name="Plot")
 
+.. image:: third_plot.png
+
 .. code-block:: python
 	
 	simulator.add_legend()
 
+.. image:: fourth_plot.png
+
 .. code-block:: python
 	
 	simulator.plot()
+
+.. image:: fourth_plot.png
 
 Extracting the genealogy
 ------------------------
@@ -177,6 +190,7 @@ Finally, we extract the genealogy of the sampled cases. We write the genealogy a
 .. code-block:: python
 
 	simulator.genealogy()
+	file_name = "example"
 	simulator.output_newick(file_name)
 	simulator.output_mutations(file_name)
 
@@ -206,14 +220,8 @@ Finally, let’s print population information (size, contact density, sampling m
 	
 	simulator.print_populations()
 
-#TODO
-
-.. code-block:: python
-
-	simulato.print_all(basic_parameters=True, populations=True, immunity_model=True)
-
-The whole tutotial
-------------------
+Resulting code
+--------------
 
 .. code-block:: python
 
@@ -226,45 +234,50 @@ The whole tutotial
 	simulator.set_transmission_rate(0.25)
 	simulator.set_recovery_rate(0.099)
 	simulator.set_sampling_rate(0.001)
-	simulator.set_transmission_rate(0.5, haplotype=”GG”)
+	simulator.set_transmission_rate(0.5, haplotype="GG")
 	mutation_rate=0.000003
 	substitution_weights=[1,1,1,2]#ATCG
 	simulator.set_mutation_rate(mutation_rate, substitution_weights)
 	simulator.set_mutation_rate(3*mutation_rate, haplotype="G*", mutation=1)
 	simulator.set_susceptibility_type(1)
-	simulator.set_susceptibility_type(2, haplotype=”G*”)
+	simulator.set_susceptibility_type(2, haplotype="G*")
 	simulator.set_susceptibility(0.1, susceptibility_type=1)
-	simulator.set_susceptibility(0.5, susceptibility_type=1, haplotype=”G*”)
-	simulator.set_immunity_transition(1/90, from_population=1, to_population=0)
+	simulator.set_susceptibility(0.5, susceptibility_type=1, haplotype="G*")
+	simulator.set_immunity_transition(1/90, source=1, target=0)
 	simulator.set_susceptibility(0.0, susceptibility_type=2)
-	simulator.set_immunity_transition(1/180, from_population=2, to_population=0)
+	simulator.set_immunity_transition(1/180, source=2, target=0)
 	simulator.set_population_size(10000000, population=0)
 	simulator.set_population_size(5000000, population=1)
 	simulator.set_population_size(1000000, population=2)
 	simulator.set_sampling_multiplier(3, population=1)
 	simulator.set_sampling_multiplier(0, population=2)
 	simulator.set_lockdown([0.1, 0.01, 0.002])
-	simulator.set_migration_rate(10/365/2)
+	simulator.set_migration_probability(10/365/2)
 
-	simulator.simulate(10000000, time=90)
+	simulator.simulate(1000000, time=120)
 
 	simulator.set_immunity_transition(0.05, source=0, target=1)
 	simulator.set_immunity_transition(0.05, source=0, target=2)
 
-	simulator.set_contact_density(0.7, populations=0)
-	simulator.set_contact_density(0.7, populations=1)
-	simulator.set_migration_rate(2/365/2, source=0, target=2)
-	simulator.set_migration_rate(2/365/2, source=1, target=2)
+	simulator.set_contact_density(0.7, population=0)
+	simulator.set_contact_density(0.7, population=1)
+	simulator.set_migration_probability(2/365/2, source=0, target=2)
+	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-	simulator.simulate(10000000)
+	simulator.simulate(1000000)
 
-	simulator.add_plot_infectious(population, haplotype, step_num=100, label=None)
-	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100, label=None)
+	population = 0
+	haplotype = 0
+	simulator.add_plot_infectious(population, haplotype, step_num=100)
+
+	susceptibility_type = 0
+	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
 	simulator.add_title(name="Plot")
 	simulator.add_legend()
 	simulator.plot()
 
 	simulator.genealogy()
+	file_name = "example"
 	simulator.output_newick(file_name)
 	simulator.output_mutations(file_name)
 	simulator.output_migrations(file_name)
@@ -272,5 +285,3 @@ The whole tutotial
 	simulator.print_basic_parameters()
 	simulator.print_immunity_model()
 	simulator.print_populations()
-
-

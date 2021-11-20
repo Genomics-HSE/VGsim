@@ -21,3 +21,4 @@ Documentation
    :maxdepth: 1
 
    Documentation
+   Command line

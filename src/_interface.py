@@ -6,12 +6,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Simulator:
-	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=2, seed=None, sampling_probability=False):
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=2, seed=None, sampling_probability=False, strong_migration=False):
 		self.fig = None
+		self.first_sim = False
 		if seed == None:
 			seed = randrange(sys.maxsize)
 
-		self.simulation = BirthDeathModel(number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability)
+		self.simulation = BirthDeathModel(number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, strong_migration)
 
 
 	def print_basic_parameters(self):
@@ -23,7 +24,7 @@ class Simulator:
 	def print_immunity_model(self):
 		self.simulation.print_immunity_model()
 
-	def print_all(self, basic_parameters=False, populations=False, immunity_model=False):
+	def print_all(self, basic_parameters=True, populations=True, immunity_model=True):
 		if basic_parameters:
 			self.simulation.print_basic_parameters()
 		if populations:
@@ -45,8 +46,8 @@ class Simulator:
 		self.simulation.set_mutation_rate(rate, probabilities, haplotype, mutation)
 
 
-	def set_immunity_type(self, susceptibility_type, haplotype=None):
-		self.simulation.set_immunity_type(susceptibility_type, haplotype)
+	def set_susceptibility_type(self, susceptibility_type, haplotype=None):
+		self.simulation.set_susceptibility_type(susceptibility_type, haplotype)
 
 	def set_susceptibility(self, rate, haplotype=None, susceptibility_type=None):
 		self.simulation.set_susceptibility(rate, haplotype, susceptibility_type)
@@ -56,7 +57,10 @@ class Simulator:
 
 
 	def set_population_size(self, size, population=None):
-		self.simulation.set_population_size(size, population)
+		if self.first_sim == False:
+			self.simulation.set_population_size(size, population)
+		else:
+			print("#TODO")
 
 	def set_contact_density(self, value, population=None):
 		self.simulation.set_contact_density(value, population)
@@ -75,6 +79,7 @@ class Simulator:
 
 
 	def simulate(self, iterations=1000, sample_size=None, time=-1):
+		self.first_sim = True
 		if sample_size==None:
 			sample_size = iterations
 		self.simulation.SimulatePopulation(iterations, sample_size, time)
@@ -94,6 +99,12 @@ class Simulator:
 
 	def output_migrations(self, name_file="migrations"):
 		self.simulation.writeMigrations(name_file)
+
+	def output_parameters(self, name_file="parameters"):
+		self.simulation.output_parameters(name_file)
+
+	def get_chain_events(self, name_file=None):
+		self.simulation.get_chain_events(name_file)
 
 	def sample_data(self, output_print=False):
 		time, pop, hap = self.simulation.sample_data()
@@ -140,7 +151,7 @@ class Simulator:
 	def add_title(self, name="Plot"):
 		self.ax.set_title(name)
 
-	def add_legend_infectious(self):
+	def add_legend(self):
 		lines_1, labels_1 = self.ax.get_legend_handles_labels()
 		lines_2, labels_2 = self.ax_2.get_legend_handles_labels()
 		lines = lines_1 + lines_2

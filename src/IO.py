@@ -1,5 +1,5 @@
 import sys
-from ._BirthDeath import Population, Lockdown
+# from ._BirthDeath import Population, Lockdown
 
 def ReadRates(fn):
     with open(fn) as f:
@@ -73,7 +73,7 @@ def ReadSusceptibility(fn):
             line = [float(el) for el in line[shift:]]
             susceptibility.append( line[1:] )
             sType.append( int( line[0] ) )
-        return([susceptibility, sType])
+        return ([susceptibility, sType])
 
 def ReadPopulations(fn):
     with open(fn) as f:
@@ -82,35 +82,51 @@ def ReadPopulations(fn):
 
         line = next(f).rstrip()
         line = line.split(" ")
-        populations = []
-        lockdown = []
+        # populations = []
+        sizes = []
+        contactDensity = []
+        # lockdown = []
+        contactAfter = []
+        startLD = []
+        endLD = []
         samplingMultiplier = []
         for line in f:
             if line[0] == "#":
                 next
             line = line.rstrip()
             line = line.split(" ")
-            populations.append( Population(int(line[1]), float(line[2])) )
+            # populations.append( Population(int(line[1]), float(line[2])) )
+            sizes.append(int(line[1]))
+            contactDensity.append(float(line[2]))
             if len(line) == 4:
                 part_line = line[3].split(",")
                 if len(part_line) == 1:
+                    contactAfter.append(0)
+                    startLD.append(1.0)
+                    endLD.append(1.0)
                     samplingMultiplier.append(float(part_line[0]))
                 elif len(part_line) == 3:
-                    lockdown.append( Lockdown(float(part_line[0]), float(part_line[1]), float(part_line[2])) )
+                    # lockdown.append( Lockdown(float(part_line[0]), float(part_line[1]), float(part_line[2])) )
+                    contactAfter.append(float(part_line[0]))
+                    startLD.append(float(part_line[1]))
+                    endLD.append(float(part_line[2]))
+                    samplingMultiplier.append(1)
             elif len(line) == 5:
                 part_line1 = line[3].split(",")
                 part_line2 = line[4].split(",")
                 if len(part_line1) == 1:
                     samplingMultiplier.append(float(part_line1[0]))
-                    lockdown.append( Lockdown(float(part_line2[0]), float(part_line2[1]), float(part_line2[2])) )
+                    # lockdown.append( Lockdown(float(part_line2[0]), float(part_line2[1]), float(part_line2[2])) )
+                    contactAfter.append(float(part_line2[0]))
+                    startLD.append(float(part_line2[1]))
+                    endLD.append(float(part_line2[2]))
                 elif len(part_line1) == 3:
                     samplingMultiplier.append(float(part_line2[0]))
-                    lockdown.append( Lockdown(float(part_line1[0]), float(part_line1[1]), float(part_line1[2])) )
-        if len(lockdown) == 0:
-            lockdown = None
-        if len(samplingMultiplier) == 0:
-            samplingMultiplier = None
-        return(populations, lockdown, samplingMultiplier)
+                    # lockdown.append( Lockdown(float(part_line1[0]), float(part_line1[1]), float(part_line1[2])) )
+                    contactAfter.append(float(part_line1[0]))
+                    startLD.append(float(part_line1[1]))
+                    endLD.append(float(part_line1[2]))
+        return ([sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier])
 
 def ReadMigrationRates(fn):
     with open(fn) as f:
@@ -125,7 +141,7 @@ def ReadMigrationRates(fn):
             migrationRates.append( [float(v) for v in line] )
         for i in range(len(migrationRates)):
             migrationRates[i][i] = 0.0
-        return(migrationRates)
+        return migrationRates
 
 def ReadSusceptibilityTransition(fn):
     with open(fn) as f:
@@ -140,7 +156,7 @@ def ReadSusceptibilityTransition(fn):
             suscepTransition.append( [float(v) for v in line] )
         for i in range(len(suscepTransition)):
             suscepTransition[i][i] = 0.0
-        return(suscepTransition)
+        return (suscepTransition)
 
 def writeMutations(mut, len_prufer, name_file):
     #digits replacement
