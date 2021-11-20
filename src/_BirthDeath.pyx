@@ -92,7 +92,7 @@ cdef class BirthDeathModel:
     cdef:
         RndmWrapper rndm
 
-        bint sampling_probability, strong_migration
+        bint first_simulation, sampling_probability, strong_migration
         Py_ssize_t sites, hapNum, popNum, susNum, bCounter, dCounter, sCounter, mCounter, iCounter
         double currentTime, seed, maxEffectiveBirth, totalRate, totalMigrationRate, totalLen, rn
 
@@ -109,6 +109,7 @@ cdef class BirthDeathModel:
     def __init__(self, sites_number, populations_number, susceptibility_types, seed, sampling_probability, strong_migration):
         self.rndm = RndmWrapper(seed=(seed, 0))
 
+        self.first_simulation = False
         self.sampling_probability = sampling_probability
         self.strong_migration = strong_migration 
 
@@ -240,16 +241,18 @@ cdef class BirthDeathModel:
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time):
         cdef Py_ssize_t pi
         self.events.CreateEvents(iterations)
-        self.pm.FirstInfection()
+        if self.first_simulation == False:
+            self.pm.FirstInfection()
+            self.first_simulation = True
         self.UpdateAllRates()
         #self.totalLen = 0.0
-
-        while (self.events.ptr<self.events.size and self.sCounter<=sample_size and (time==-1 or self.currentTime<time)):
-            self.SampleTime()
-            pi = self.GenerateEvent()
-            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                break
-            self.CheckLockdown(pi)
+        if self.totalRate != 0.0 and self.pm.globalInfectious != 0:
+            while (self.events.ptr<self.events.size and self.sCounter<=sample_size and (time==-1 or self.currentTime<time)):
+                self.SampleTime()
+                pi = self.GenerateEvent()
+                if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                    break
+                self.CheckLockdown(pi)
 
         if self.events.ptr>=self.events.size:
             print("Iterations")
