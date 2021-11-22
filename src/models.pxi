@@ -150,12 +150,30 @@ cdef class PopulationModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef inline void NewInfections(self, Py_ssize_t num, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
+        self.susceptible[pi, si] -= num
+        self.totalSusceptible[pi] -= num
+        self.liveBranches[pi, hi] += num
+        self.totalInfectious[pi] += num
+        self.globalInfectious += num
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
         self.susceptible[pi, si] += 1
         self.totalSusceptible[pi] += 1
         self.liveBranches[pi, hi] -= 1
         self.totalInfectious[pi] -= 1
         self.globalInfectious -= 1
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef inline void NewRecoveries(self, Py_ssize_t num, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
+        self.susceptible[pi, si] += num
+        self.totalSusceptible[pi] += num
+        self.liveBranches[pi, hi] -= num
+        self.totalInfectious[pi] -= num
+        self.globalInfectious -= num
 
     def debug(self):
         print("Population model")
