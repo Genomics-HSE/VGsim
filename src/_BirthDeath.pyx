@@ -85,19 +85,19 @@ cdef class Events:
         self.newPopulations = np.resize(self.newPopulations, self.size)
 
 
-        cdef class multiEvent:
-            cdef:
-                Py_ssize_t num, type_, haplotype, population, newHaplotype, newPopulation
-                double time
+cdef class multiEvent:
+    cdef:
+        Py_ssize_t num, type_, haplotype, population, newHaplotype, newPopulation
+        double time
 
-            def __init__(self, Py_ssize_t num, double time, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
-                self.num = num
-                self.time = time
-                self.type_ = type_
-                self.haplotype = haplotype
-                self.population = population
-                self.newHaplotype = newHaplotype
-                self.newPopulation = newPopulation
+    def __init__(self, Py_ssize_t num, double time, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
+        self.num = num
+        self.time = time
+        self.type_ = type_
+        self.haplotype = haplotype
+        self.population = population
+        self.newHaplotype = newHaplotype
+        self.newPopulation = newPopulation
 
 
 cdef class multiEvents:
@@ -1968,10 +1968,10 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef double MigrationPropensity(self, Py_ssize_t s, Py_ssize_t r, Py_ssize_t i, Py_ssize_t h):
-        double prop
+        cdef double prop
         prop = self.pm.migrationRates[r, s]*self.pm.contactDensity[s]/self.pm.EffectivePopSize[s]
         prop += self.pm.migrationRates[s, r]*self.pm.contactDensity[r]/self.pm.EffectivePopSize[r]
-        prop *= self.pm.susceptible[r, i]*self.liveBranches[s, h]*self.bRate[h]*self.susceptibility[h, i]*self.pm.migrationRates[s, s]
+        prop *= self.pm.susceptible[r, i]*self.pm.liveBranches[s, h]*self.bRate[h]*self.susceptibility[h, i]*self.pm.migrationRates[s, s]
         return prop
 
 
@@ -1979,7 +1979,7 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     @cython.cdivision(True)
     cdef void Propensities(self):
-        double prop
+        cdef double prop
 
         #Migrations
         for s in range(self.popNum):
@@ -1988,7 +1988,7 @@ cdef class BirthDeathModel:
                     continue
                 for i in range(self.susNum):
                     for h in range(self.hapNum):
-                        PropensitiesMigr[s, r, i, h] = self.MigrationPropensity(s, r, i, h)
+                        self.PropensitiesMigr[s, r, i, h] = self.MigrationPropensity(s, r, i, h)
 
 
         for s in range(self.popNum):
@@ -2002,10 +2002,10 @@ cdef class BirthDeathModel:
             #Infectious-realted event
             for h in range(self.hapNum):
                 #Recovery
-                self.PropensitiesRecovery[s, h] = self.dRate[h]*self.liveBranches[s, h]
+                self.PropensitiesRecovery[s, h] = self.dRate[h]*self.pm.liveBranches[s, h]
 
                 #Sampling
-                self.PropensitiesSampling[s, h] = self.sRate[h]*self.liveBranches[s, h]
+                self.PropensitiesSampling[s, h] = self.sRate[h]*self.pm.liveBranches[s, h]
 
                 #Mutation
                 for site in range(self.sites):
@@ -2016,108 +2016,108 @@ cdef class BirthDeathModel:
                 for i in range(self.susNum):
                     prop = self.bRate[h]*self.pm.susceptible[s, i]*self.pm.contactDensity[s]
                     prop *= self.pm.migrationRates[s, s]*self.pm.migrationRates[s, s]
-                    prop *= self.pm.susceptible[s, i]*self.liveBranches[s, h]/self.pm.EffectivePopSize[s]
+                    prop *= self.pm.susceptible[s, i]*self.pm.liveBranches[s, h]/self.pm.EffectivePopSize[s]
                     self.PropensitiesTransmission[s, h, i] = prop
 
-      @cython.boundscheck(False)
-      @cython.wraparound(False)
-      @cython.cdivision(True)
-      cdef void GenerateEvents_tau(self, float tau):
-          Py_ssize_t event_num
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef void GenerateEvents_tau(self, float tau):
+        cdef Py_ssize_t event_num
 
-          #Migrations
-          for s in range(self.popNum):
-              for r in range(self.popNum):
-                  if s == r:
-                      continue
-                  for i in range(self.susNum):
-                      for h in range(self.hapNum):
-                          while True:#TODO golakteko opasnoste
-                              event_num = self.DrawEventsNum(PropensitiesMigr[s, r, i, h], tau)
-                              if event_num <= self.pm.susceptible[r, i]:
-                                  break
-                          self.pm.NewInfections(event_num, r, i, h)
-                          self.events.AddEvents(event_num, self.currentTime, MIGRATION, h, s, i, r)
+        #Migrations
+        for s in range(self.popNum):
+            for r in range(self.popNum):
+                if s == r:
+                    continue
+                for i in range(self.susNum):
+                    for h in range(self.hapNum):
+                        while True:#TODO golakteko opasnoste
+                            event_num = self.DrawEventsNum(self.PropensitiesMigr[s, r, i, h], tau)
+                            if event_num <= self.pm.susceptible[r, i]:
+                                break
+                        self.pm.NewInfections(event_num, r, i, h)
+                        self.events.AddEvents(event_num, self.currentTime, MIGRATION, h, s, i, r)
 
 
-          for s in range(self.popNum):
-              #Susceptibility transition
-              for i in range(self.susNum):
-                  for j in range(self.susNum):
-                      if i == j:
-                          continue
-                      while True:#TODO golakteko opasnoste
-                          event_num = self.DrawEventsNum(self.PropensitiesSuscep[s, i, j], tau)
-                          if event_num <= self.pm.susceptible[s, i]:
-                              break
-                      self.pm.susceptible[s, i] -= event_num
-                      self.pm.susceptible[s, j] += event_num
-                      self.events.AddEvents(event_num, self.currentTime, SUSCCHANGE, i, s, j, 0)
+        for s in range(self.popNum):
+            #Susceptibility transition
+            for i in range(self.susNum):
+                for j in range(self.susNum):
+                    if i == j:
+                        continue
+                    while True:#TODO golakteko opasnoste
+                        event_num = self.DrawEventsNum(self.PropensitiesSuscep[s, i, j], tau)
+                        if event_num <= self.pm.susceptible[s, i]:
+                            break
+                    self.pm.susceptible[s, i] -= event_num
+                    self.pm.susceptible[s, j] += event_num
+                    self.events.AddEvents(event_num, self.currentTime, SUSCCHANGE, i, s, j, 0)
 
-              #Infectious-realted event
-              for h in range(self.hapNum):
-                  #Recovery
-                  while True:#TODO golakteko opasnoste
-                      event_num = self.DrawEventsNum(self.PropensitiesRecovery[s, h], tau)
-                      if event_num <= self.pm.liveBranches[s, h]:
-                          break
-                  self.pm.NewRecoveries(s, self.suscType[h], h)
-                  self.events.AddEvents(event_num, self.currentTime, DEATH, h, s, self.suscType[h], 0)
+            #Infectious-realted event
+            for h in range(self.hapNum):
+                #Recovery
+                while True:#TODO golakteko opasnoste
+                    event_num = self.DrawEventsNum(self.PropensitiesRecovery[s, h], tau)
+                    if event_num <= self.pm.liveBranches[s, h]:
+                        break
+                self.pm.NewRecoveries(event_num, s, self.suscType[h], h)
+                self.events.AddEvents(event_num, self.currentTime, DEATH, h, s, self.suscType[h], 0)
 
-                  #Sampling
-                  while True:#TODO golakteko opasnoste
-                      event_num = self.DrawEventsNum(self.PropensitiesSampling[s, h], tau)
-                      if event_num <= self.pm.liveBranches[s, h]:
-                          break
-                  self.pm.NewRecoveries(s, self.suscType[h], h)
-                  self.events.AddEvents(event_num, self.currentTime, SAMPLING, h, s, self.suscType[h], 0)
+                #Sampling
+                while True:#TODO golakteko opasnoste
+                    event_num = self.DrawEventsNum(self.PropensitiesSampling[s, h], tau)
+                    if event_num <= self.pm.liveBranches[s, h]:
+                        break
+                self.pm.NewRecoveries(event_num, s, self.suscType[h], h)
+                self.events.AddEvents(event_num, self.currentTime, SAMPLING, h, s, self.suscType[h], 0)
 
-                  #Mutation
-                  for site in range(self.sites):
-                      for i in range(3):
-                          ht = self.Mutate(h, site, i)
-                          while True:#TODO golakteko opasnoste
-                              event_num = self.DrawEventsNum(self.PropensitiesMutatations[s, h, site, i], tau)
-                              if event_num <= self.pm.liveBranches[s, h]:
-                                  break
-                          self.events.AddEvents(event_num, self.currentTime, MUTATION, h, s, ht, 0)
-                  #Transmission
-                  for i in range(self.susNum):
-                      while True:#TODO golakteko opasnoste
-                          event_num = self.DrawEventsNum( self.PropensitiesTransmission[s, h, i], tau)
-                          if event_num <= self.pm.susceptible[s, i]:
-                              break
-                      self.pm.NewInfections(event_num, s, i, h)
-                      self.events.AddEvents(event_num, self.currentTime, BIRTH, h, s, i, 0)
+                #Mutation
+                for site in range(self.sites):
+                    for i in range(3):
+                        ht = self.Mutate(h, site, i)
+                        while True:#TODO golakteko opasnoste
+                            event_num = self.DrawEventsNum(self.PropensitiesMutatations[s, h, site, i], tau)
+                            if event_num <= self.pm.liveBranches[s, h]:
+                                break
+                        self.events.AddEvents(event_num, self.currentTime, MUTATION, h, s, ht, 0)
+                #Transmission
+                for i in range(self.susNum):
+                    while True:#TODO golakteko opasnoste
+                        event_num = self.DrawEventsNum( self.PropensitiesTransmission[s, h, i], tau)
+                        if event_num <= self.pm.susceptible[s, i]:
+                            break
+                    self.pm.NewInfections(event_num, s, i, h)
+                    self.events.AddEvents(event_num, self.currentTime, BIRTH, h, s, i, 0)
 
-      @cython.boundscheck(False)
-      @cython.wraparound(False)
-      cdef Py_ssize_t DrawEventsNum(self, prop, tau):
-          return self.rndm.py_gen.{poisson}(prop*tau)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef Py_ssize_t DrawEventsNum(self, prop, tau):
+        return np.random.poisson(prop*tau)
 
-      @cython.boundscheck(False)
-      @cython.wraparound(False)
-      @cython.cdivision(True)
-      cdef Py_ssize_t self.Mutate(h, site, DS):
-          def:
-              Py_ssize_t mi, digit4, AS, DS
-          digit4 = 4**site
-          AS = int(floor(h/digit4) % 4)
-          if DS >= AS:
-              DS += 1
-          return h + (DS-AS)*digit4
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef Py_ssize_t Mutate(self, Py_ssize_t h, Py_ssize_t site, Py_ssize_t DS):
+        cdef:
+            Py_ssize_t mi, digit4, AS
+        digit4 = 4**site
+        AS = int(floor(h/digit4) % 4)
+        if DS >= AS:
+            DS += 1
+        return h + (DS-AS)*digit4
 
-      @cython.boundscheck(False)
-      @cython.wraparound(False)
-      cpdef void SimulatePopulation_tau(self, Py_ssize_t iterations, Py_ssize_t sampleSize=-1, float time=-1):
-          cdef Py_ssize_t pi
-          self.multievents.CreateEvents(iterations)
-          #self.totalLen = 0.0
-          while (self.events.ptr<self.events.size and (sampleSize==-1 or self.sCounter<sampleSize) and (time==-1 or self.currentTime<time)):
-              self.Propensities()
-              self.currentTime += self.tau
-              self.GenerateEvents_tau(self.tau)
-              if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
-                  break
-              for s in range(self.popNum)
-                  self.CheckLockdown(s)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cpdef void SimulatePopulation_tau(self, Py_ssize_t iterations, Py_ssize_t sampleSize=-1, float time=-1):
+        cdef Py_ssize_t pi
+        self.multievents.CreateEvents(iterations)
+        #self.totalLen = 0.0
+        while (self.events.ptr<self.events.size and (sampleSize==-1 or self.sCounter<sampleSize) and (time==-1 or self.currentTime<time)):
+            self.Propensities()
+            self.currentTime += self.tau
+            self.GenerateEvents_tau(self.tau)
+            if self.totalRate == 0.0 or self.pm.globalInfectious == 0:
+                break
+            for s in range(self.popNum):
+                self.CheckLockdown(s)
