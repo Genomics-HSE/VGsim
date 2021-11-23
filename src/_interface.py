@@ -15,6 +15,9 @@ class Simulator:
 		self.simulation = BirthDeathModel(number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, strong_migration)
 
 
+	def set_tau(self, tau):
+		self.simulation.set_tau(tau)
+
 	def print_basic_parameters(self):
 		self.simulation.print_basic_parameters()
 
@@ -78,12 +81,20 @@ class Simulator:
 		self.simulation.set_migration_probability(probability, total_probability, source, target)
 
 
-	def simulate(self, iterations=1000, sample_size=None, time=-1):
+	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct'):
 		self.first_sim = True
 		if sample_size==None:
 			sample_size = iterations
-		self.simulation.SimulatePopulation(iterations, sample_size, time)
-		self.simulation.Stats()
+		if method == 'direct':
+			self.simulation.SimulatePopulation(iterations, sample_size, time)
+			self.simulation.Stats()
+		elif method == 'tau':
+			self.simulation.SimulatePopulation_tau(iterations)
+		else:
+			print("Unknown method. Choose between 'direct' and 'tau'.")
+
+	def get_multi_events(self, id=None):
+		self.simulation.Get_MultiEvents(id)
 
 	def genealogy(self, seed=None):
 		self.simulation.GetGenealogy(seed)

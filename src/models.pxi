@@ -126,7 +126,9 @@ cdef class PopulationModel:
 
         for pn1 in range(self.popNum):
             for pn2 in range(self.popNum):
-                self.effectiveMigration[pn1, pn2] = self.migrationRates[pn1, pn2]*self.contactDensity[pn2]/self.effectiveSizes[pn2]+self.migrationRates[pn2, pn1]*self.contactDensity[pn1]/self.effectiveSizes[pn1]
+                if pn1==pn2:
+                    continue
+                self.effectiveMigration[pn1, pn2] = self.migrationRates[pn2, pn2]*(self.migrationRates[pn1, pn2]*self.contactDensity[pn2]/self.effectiveSizes[pn2]+self.migrationRates[pn2, pn1]*self.contactDensity[pn1]/self.effectiveSizes[pn1])
                 if self.effectiveMigration[pn1, pn2] > self.maxEffectiveMigration[pn2]:
                     self.maxEffectiveMigration[pn2] = self.effectiveMigration[pn1, pn2]
 
