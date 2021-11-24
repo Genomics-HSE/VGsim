@@ -19,7 +19,7 @@ to build them yourself. For this, you need a working toolchain for building C++
 code (gcc and clang are known to work). Since you are going to build Python extensions,
 you will need python development headers (e.g. on ubuntu linux the package name is `python-dev`).
 
-**For MacOS users: please make sure to use Python with Homebrew or Conda. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try install pkg-config with brew install**
+**For MacOS users: please make sure to use Python with Homebrew or Conda. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install**
 
 To build the C extensions, run
 
