@@ -1881,3 +1881,6 @@ cdef class BirthDeathModel:
         for i in range(self.pm.mig.nodeId.size()):
             file.write(str(self.pm.mig.nodeId[i]) + " " + str(self.pm.mig.time[i]) + " " + str(self.pm.mig.oldPop[i]) + " " + str(self.pm.mig.newPop[i]) + "\n")
         file.close()
+        
+    def get_proportion(self):
+        return self.pm.migNonPlus / (self.events.ptr-1)
