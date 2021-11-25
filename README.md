@@ -48,6 +48,18 @@ Adding neutral mutations
 
 We suggest to pipe the tree and non-neautral sites into phastSim (https://github.com/NicolaDM/phastSim) by Nicola de Maio to add neutral mutations and to obtain full sequences.
 
+Planned features
+----------------
+Here we list the features which we are adding or consider for the VGsim package.
+- Tau-leaping: in work (working prototype).
+- Population-level susceptibility transitions (e.g. to simulate different uneven efforts across the world): in work.
+- Memory usage optimisation to enable larger number of mutable sites: high priority.
+- Advanced sampling schemes: medium priority.
+- Super-spreading events: medium priority.
+- Life-cycle: low priority.
+- Recombinations: low priority.
+
+
 Citation
 --------
 
