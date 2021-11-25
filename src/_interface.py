@@ -167,3 +167,6 @@ class Simulator:
 
 	def debug(self):
 		self.simulation.Debug()
+		
+	def get_proportion(self):
+		return self.simulation.get_proportion()
