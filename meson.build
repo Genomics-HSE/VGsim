@@ -4,7 +4,7 @@
 project(
   'VGsim',
   ['cpp', 'cython'],
-  default_options : ['warning_level=3'],
+  default_options : ['warning_level=3', 'buildtype=release'],
   version: '0.3',
   license: 'GPL-3.0 License',
   meson_version: '>= 0.54',
