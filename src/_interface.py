@@ -89,7 +89,7 @@ class Simulator:
 			self.simulation.SimulatePopulation(iterations, sample_size, time)
 			self.simulation.Stats()
 		elif method == 'tau':
-			self.simulation.SimulatePopulation_tau(iterations)
+			self.simulation.SimulatePopulation_tau(iterations, sample_size, time)
 		else:
 			print("Unknown method. Choose between 'direct' and 'tau'.")
 
@@ -178,3 +178,6 @@ class Simulator:
 
 	def debug(self):
 		self.simulation.Debug()
+
+	def print_counters(self):
+		self.simulation.PrintCounters()
