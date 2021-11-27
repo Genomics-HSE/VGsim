@@ -21,7 +21,7 @@ def get_data(num_pop, total_migration_rate):
     simulator.set_immunity_transition(0.01, target=0)
     simulator.set_lockdown([0.1, 0.02, 0.01])
     time_1 = time.time()
-    simulator.simulate(iterations=10000000)
+    simulator.simulate(iterations=100000000)
     time_2 = time.time()
     
     return [str(round(time_2 - time_1, 1)), str(round(simulator.get_proportion()*100, 2))]
