@@ -155,32 +155,24 @@ Visualizing epidemiological trajectories
 	haplotype = 0
 	simulator.add_plot_infectious(population, haplotype, step_num=100)
 
-.. image:: first_plot.png
-
 .. code-block:: python
 	
 	susceptibility_type = 0
 	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
 
-.. image:: second_plot.png
-
 .. code-block:: python	
 	
 	simulator.add_title(name="Plot")
-
-.. image:: third_plot.png
 
 .. code-block:: python
 	
 	simulator.add_legend()
 
-.. image:: fourth_plot.png
-
 .. code-block:: python
 	
 	simulator.plot()
 
-.. image:: fourth_plot.png
+.. image:: plot.png
 
 Extracting the genealogy
 ------------------------

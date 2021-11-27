@@ -27,10 +27,11 @@ Population model
 
 .. autofunction:: functions.set_population_size
 .. autofunction:: functions.set_contact_density
-.. autofunction:: functions.set_susceptible_individuals
 .. autofunction:: functions.set_lockdown
 .. autofunction:: functions.set_sampling_multiplier
 .. autofunction:: functions.set_migration_probability
+
+.. autofunction:: functions.set_susceptible_individuals
 
 Simulate
 --------
@@ -52,9 +53,9 @@ Visualization
 
 .. autofunction:: functions.add_plot_infectious
 .. autofunction:: functions.add_plot_susceptible
-.. autofunction:: functions.plot
-.. autofunction:: functions.add_title
 .. autofunction:: functions.add_legend
+.. autofunction:: functions.add_title
+.. autofunction:: functions.plot
 
 Parameters
 ----------
