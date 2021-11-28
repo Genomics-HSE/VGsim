@@ -47,4 +47,4 @@ with open('table.txt', 'w') as table:
         table.write('\t\t\t\\hline\n')
     table.write('\t\t\\end{tabular}\n')
     table.write('\t}\n')
-    table.write('\\end{rable}\n')
+    table.write('\\end{table}\n')
