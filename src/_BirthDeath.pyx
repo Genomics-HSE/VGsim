@@ -1858,7 +1858,7 @@ cdef class BirthDeathModel:
         with open(file_template + ".pp", "w") as file:
             file.write("#Population_format_version 0.0.1\nid size contactDensity conDenAfterLD startLD endLD samplingMulriplier\n")
             for pn in range(self.popNum):
-                file.write(str(pn) + " " + str(self.sizes[pn]) + " " + str(self.contactDensity[pn]) + " " + str(self.contactDensityAfterLockdown[pn]) + " " + str(self.startLD[pn]) + " " + str(self.endLD[pn]) + " " + str(self.samplingMultiplier[pn]) + "\n")
+                file.write(str(pn) + " " + str(self.sizes[pn]) + " " + str(self.contactDensity[pn]) + " " + str(self.contactDensityAfterLockdown[pn]) + "," + str(self.startLD[pn]) + "," + str(self.endLD[pn]) + " " + str(self.samplingMultiplier[pn]) + "\n")
             comand += ('-pm ' + file_template + '/' + file_template + '.pp ')
 
         with open(file_template + ".mg", "w") as file:
