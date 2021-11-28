@@ -77,13 +77,22 @@ cdef class Events:
         return( ev )
 
     cdef void CreateEvents(self, Py_ssize_t iterations):
-        self.times = np.concatenate((self.times, np.zeros(iterations + self.ptr - self.size, dtype=float)))
-        self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-        self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-        self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-        self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-        self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-        self.size = iterations + self.ptr
+        if self.ptr == 0:
+            self.size += iterations
+            self.times = np.zeros(self.size, dtype=float)
+            self.types = np.zeros(self.size, dtype=int)
+            self.haplotypes = np.zeros(self.size, dtype=int)
+            self.populations = np.zeros(self.size, dtype=int)
+            self.newHaplotypes = np.zeros(self.size, dtype=int)
+            self.newPopulations = np.zeros(self.size, dtype=int)
+        else:
+            self.times = np.concatenate((self.times, np.zeros(iterations + self.ptr - self.size, dtype=float)))
+            self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.size = iterations + self.ptr
 
 
 #pi - population ID, pn - popoulation number, spi - source population ID, tpi - target population ID
