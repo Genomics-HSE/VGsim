@@ -1,6 +1,9 @@
 class Simulator():
 	"""
-	#TODO
+	This is the class which creates the simulation.
+		sites_number: the number of mutable sites with strong phenotypic effect
+		populations_number: the number of populations (demes)
+		susceptibility_types: the number of susceptible groups (groups with different immunity response)
 
 	:param: sites_number=0, populations_number=1, susceptibility_types=2, seed=None, sampling_probability=False, strong_migration=False
 	:type: sites_number = int, populations_number = int, susceptibility_types = int, seed = float or None, sampling_probability = True or False, strong_migration = True or False
@@ -10,22 +13,22 @@ class Simulator():
 
 def print_basic_parameters():
 	"""
-	#TODO
+	This methods prints the basic parameters of the epidemiological model.
 	"""
 
 def print_populations():
 	"""
-	#TODO
+	This methods prints parameters of the population model.
 	"""
 
 def print_immunity_model():
 	"""
-	#TODO
+	This methods prints the basic parameters of the immunity model.
 	"""
 
 def print_all(basic_parameters=True, populations=True, immunity_model=True):
 	"""
-	#TODO
+	This methods prints all the parameters of the simulation.
 
 	:param: basic_parameters=True, populations=True, immunity_model=True
 	:type: basic_parameters = True or False, populations = True or False, immunity_model = True or False
@@ -141,15 +144,16 @@ def set_migration_probability(probability=None, total_probability=None, source=N
 
 def simulate(iterations, sample_size, time):
 	"""
-	#TODO
-
+	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
+	It can be called multiple times, changes of most parameters are allowed between simulation runs.
+	
 	:param: iterations, sample_size, time
 	:type: iterations = int, sample_size = int, time = float
 	"""
 
 def genealogy(seed=None):
 	"""
-	#TODO
+	Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
 
 	:param: seed=None
 	:type: seed = float or None
