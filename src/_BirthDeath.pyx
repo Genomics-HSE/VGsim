@@ -123,7 +123,7 @@ cdef class BirthDeathModel:
 
         self.first_simulation = False
         self.sampling_probability = sampling_probability
-        self.strong_migration = strong_migration 
+        self.strong_migration = strong_migration
 
         self.sites = sites_number
         self.hapNum = 4**self.sites
@@ -180,7 +180,7 @@ cdef class BirthDeathModel:
         self.endLD = np.ones(self.popNum, dtype=float)
         self.samplingMultiplier = np.ones(self.popNum, dtype=float)
         self.maxEffectiveMigration = np.zeros(self.popNum, dtype=float)
- 
+
         self.mRate = np.zeros((self.hapNum, self.sites), dtype=float)
         self.totalHapMutType = np.zeros((self.hapNum, self.sites), dtype=float)
         self.tEventHapPopRate = np.zeros((self.popNum, self.hapNum), dtype=float)
@@ -207,8 +207,6 @@ cdef class BirthDeathModel:
             self.sizes[pn] = 1000000
             self.totalSusceptible[pn] = 1000000
             self.susceptible[pn, 0] = 1000000
-
-        self.UpdateAllRates()
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -247,21 +245,25 @@ cdef class BirthDeathModel:
 
         if self.strong_migration == True:
             for pn1 in range(self.popNum):
+                self.migrationRates[pn1, pn1] = 1.0
+                self.effectiveSizes[pn1] = 0.0
                 for pn2 in range(self.popNum):
                     if pn1 == pn2:
-                        summa = 1
-                        for pn3 in range(self.popNum):
-                            summa -= self.migrationRates[pn3, pn1]
-                        self.effectiveSizes[pn1] = summa*self.sizes[pn1]
-                    else:
-                        self.effectiveSizes[pn1] = self.migrationRates[pn1, pn2]*self.sizes[pn1]
+                        continue
+                    self.migrationRates[pn1, pn1] -= self.migrationRates[pn1, pn2]
+                    self.effectiveSizes[pn1] -= self.migrationRates[pn2, pn1]*self.sizes[pn2]
+                self.effectiveSizes[pn1] += self.migrationRates[pn1, pn1]*self.sizes[pn1]
         else:
             for pn in range(self.popNum):
                 self.effectiveSizes[pn] = self.sizes[pn]
 
         for pn1 in range(self.popNum):
             for pn2 in range(self.popNum):
+                if pn1==pn2:
+                    continue
                 self.effectiveMigration[pn1, pn2] = self.migrationRates[pn1, pn2]*self.contactDensity[pn2]/self.effectiveSizes[pn2]+self.migrationRates[pn2, pn1]*self.contactDensity[pn1]/self.effectiveSizes[pn1]
+                if self.strong_migration:
+                    self.effectiveMigration[pn1, pn2] *= self.migrationRates[pn2, pn2]
                 if self.effectiveMigration[pn1, pn2] > self.maxEffectiveMigration[pn2]:
                     self.maxEffectiveMigration[pn2] = self.effectiveMigration[pn1, pn2]
 
@@ -305,7 +307,7 @@ cdef class BirthDeathModel:
                     self.maxSusceptibility[hn] = self.susceptibility[hn, sn]
             if self.maxEffectiveBirth < self.bRate[hn]*self.maxSusceptibility[hn]:
                 self.maxEffectiveBirth = self.bRate[hn]*self.maxSusceptibility[hn]
-        
+
         self.totalMigrationRate = 0.0
         for pn in range(self.popNum):
             self.maxEffectiveBirthMigration[pn] = self.maxEffectiveMigration[pn]*self.maxEffectiveBirth
@@ -320,8 +322,10 @@ cdef class BirthDeathModel:
         for sn in range(self.susNum):
             self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn]*self.susceptibility[hi, sn]
             ws += self.susceptHapPopRate[pi, hi, sn]
-
-        return self.bRate[hi]*ws/self.effectiveSizes[pi]*self.contactDensity[pi]
+        if self.strong_migration:
+            return self.bRate[hi]*ws/self.effectiveSizes[pi]*self.contactDensity[pi]
+        else:
+            return self.bRate[hi]*ws*self.migrationRates[pi, pi]*self.migrationRates[pi, pi]/self.effectiveSizes[pi]*self.contactDensity[pi]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -711,7 +715,7 @@ cdef class BirthDeathModel:
         table_populations.field_names = ["ID", "Size", "CD",'CDBLC', "CDALD", "SLD", "ELD", "SM"]
         for pn in range(self.popNum):
             table_populations.add_row([pn, self.sizes[pn], self.contactDensity[pn], self.contactDensityBeforeLockdown[pn], self.contactDensityAfterLockdown[pn], self.startLD[pn], self.endLD[pn], self.samplingMultiplier[pn]])
-        
+
         print(table_populations)
         print("Legend:")
         print("ID - number of population")
@@ -942,7 +946,7 @@ cdef class BirthDeathModel:
             self.Error("Incorrect type of uninfection rate. Value should be int or float.")
         if rate<0:
             self.Error("Incorrect value of uninfection rate. Value should be more or equal 0.")
-        
+
         if isinstance(haplotype, str):
             haplotypes = self.create_list_haplotypes(haplotype)
             for haplotype in haplotypes:
@@ -964,7 +968,7 @@ cdef class BirthDeathModel:
                 self.Error("Incorrect type of sampling probability. Value should be int or float.")
             if rate<0 or rate>1:
                 self.Error("Incorrect value of sampling probability. Value should be more or equal 0 and less or equal 1.")
-            
+
             if isinstance(haplotype, str):
                 haplotypes = self.create_list_haplotypes(haplotype)
                 for haplotype in haplotypes:
@@ -991,7 +995,7 @@ cdef class BirthDeathModel:
                 self.Error("Incorrect type of sampling rate. Value should be int or float.")
             if rate<0:
                 self.Error("Incorrect value of sampling rate. Value should be more or equal 0.")
-            
+
             if isinstance(haplotype, str):
                 haplotypes = self.create_list_haplotypes(haplotype)
                 for haplotype in haplotypes:
@@ -1012,14 +1016,14 @@ cdef class BirthDeathModel:
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
         if isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if rate<0:
-                self.Error("#TODO")
+                self.Error("#TODO_mr1")
             if len(probabilities)!=4:
-                self.Error("#TODO")
+                self.Error("#TODO_mr2")
             for i in range(4):
                 if isinstance(probabilities[i], (int, float)) == False:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr3")
                 if probabilities[i]<0:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr4")
             haplotypes = self.create_list_haplotypes(haplotype)
             if mutation<0 or mutation>=self.sites:
                 self.Error("There are no such mutation!")
@@ -1028,7 +1032,7 @@ cdef class BirthDeathModel:
                 probabilities_allele = list(probabilities)
                 del probabilities_allele[self.calculate_allele(haplotype, mutation)]
                 if sum(probabilities_allele) == 0:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr5")
                 self.mRate[haplotype, mutation] = rate
                 self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
                 self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
@@ -1036,12 +1040,12 @@ cdef class BirthDeathModel:
                 self.totalHapMutType[haplotype, mutation] = sum(probabilities_allele)
         elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if len(probabilities)!=4:
-                self.Error("#TODO")
+                self.Error("#TODO_mr6")
             for i in range(4):
                 if isinstance(probabilities[i], (int, float)) == False:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr7")
                 if probabilities[i]<0:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr8")
             haplotypes = self.create_list_haplotypes(haplotype)
             if mutation<0 or mutation>=self.sites:
                 self.Error("There are no such mutation!")
@@ -1050,14 +1054,14 @@ cdef class BirthDeathModel:
                 probabilities_allele = list(probabilities)
                 del probabilities_allele[self.calculate_allele(haplotype, mutation)]
                 if sum(probabilities_allele) == 0:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr9")
                 self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
                 self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
                 self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
                 self.totalHapMutType[haplotype, mutation] = sum(probabilities_allele)
         elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if rate<0:
-                self.Error("#TODO")
+                self.Error("#TODO_mr10")
             haplotypes = self.create_list_haplotypes(haplotype)
             if mutation<0 or mutation>=self.sites:
                 self.Error("There are no such mutation!")
@@ -1066,17 +1070,17 @@ cdef class BirthDeathModel:
                 self.mRate[haplotype, mutation] = rate
         elif isinstance(rate, (int, float)) and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
             if rate<0:
-                self.Error("#TODO")
+                self.Error("#TODO_mr11")
             if len(probabilities)!=4:
-                self.Error("#TODO")
+                self.Error("#TODO_mr12")
             for i in range(4):
                 if isinstance(probabilities[i], (int, float)) == False:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr13")
                 if probabilities[i]<0:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr14")
             del probabilities[self.calculate_allele(haplotype, mutation)]
             if sum(probabilities) == 0:
-                self.Error("#TODO")
+                self.Error("#TODO_mr15")
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
             if mutation<0 or mutation>=self.sites:
@@ -1089,15 +1093,15 @@ cdef class BirthDeathModel:
             self.totalHapMutType[haplotype, mutation] = sum(probabilities)
         elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
             if len(probabilities)!=4:
-                self.Error("#TODO")
+                self.Error("#TODO_mr16")
             for i in range(4):
                 if isinstance(probabilities[i], (int, float)) == False:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr17")
                 if probabilities[i]<0:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mr18")
             del probabilities[self.calculate_allele(haplotype, mutation)]
             if sum(probabilities) == 0:
-                self.Error("#TODO")
+                self.Error("#TODO_mr19")
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
             if mutation<0 or mutation>=self.sites:
@@ -1109,7 +1113,7 @@ cdef class BirthDeathModel:
             self.totalHapMutType[haplotype, mutation] = sum(probabilities)
         elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
             if rate<0:
-                self.Error("#TODO")
+                self.Error("#TODO_mr20")
             if haplotype<0 or haplotype>=self.hapNum:
                 self.Error("There are no such haplotype!")
             if mutation<0 or mutation>=self.sites:
@@ -1530,7 +1534,7 @@ cdef class BirthDeathModel:
                 for pn in range(self.popNum):
                     summa += self.migrationRates[source, pn]
                 if summa > 1:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mp1")
             elif source==None and isinstance(target, int):
                 if target<0 or target>=self.popNum:
                     self.Error("There are no such population!")
@@ -1542,7 +1546,7 @@ cdef class BirthDeathModel:
                     for pn2 in range(self.popNum):
                         summa += self.migrationRates[pn1, pn2]
                     if summa > 1:
-                        self.Error("#TODO")
+                        self.Error("#TODO_mp2")
             elif isinstance(source, int) and target==None:
                 if source<0 or source>=self.popNum:
                     self.Error("There are no such population!")
@@ -1554,7 +1558,7 @@ cdef class BirthDeathModel:
                 for pn in range(self.popNum):
                     summa += self.migrationRates[source, pn]
                 if summa > 1:
-                    self.Error("#TODO")
+                    self.Error("#TODO_mp3")
             elif source==None and target==None:
                 for pn1 in range(self.popNum):
                     for pn2 in range(self.popNum):
@@ -1564,7 +1568,7 @@ cdef class BirthDeathModel:
                     for pn2 in range(self.popNum):
                         summa += self.migrationRates[pn1, pn2]
                     if summa > 1:
-                        self.Error("#TODO")
+                        self.Error("#TODO_mp4")
             else:
                 self.Error("Incorrect value of population. Value should be int or None.")
         elif isinstance(total_probability, float) == True:
@@ -1576,7 +1580,7 @@ cdef class BirthDeathModel:
                     if pn1 != pn2:
                         self.migrationRates[pn1, pn2] = total_probability/(self.popNum-1)
         else:
-            self.Error("#TODO")
+            self.Error("#TODO_mp5")
 
 
     def set_susceptible_individuals(self, amount, source_type, target_type, population):
@@ -1618,7 +1622,7 @@ cdef class BirthDeathModel:
                 self.susceptible[pn, target_type] += amount
         else:
             self.Error("Incorrect value of population. Value should be int or None.")
-       
+
     def set_infected_individuals(self, amount, source_haplotype, target_haplotype, population):
         if self.first_simulation:
             self.Error('#TODO')
@@ -1826,7 +1830,7 @@ cdef class BirthDeathModel:
                         for k in range(self.hapNum):
                             logDynamics[i].write(str(hapDate[i, k]) + " ")
                         logDynamics[i].write("\n")
-                    point += 1 
+                    point += 1
                 else:
                     log["time"].append(time_points[point])
                     for i in range(self.popNum):
@@ -1834,12 +1838,12 @@ cdef class BirthDeathModel:
                             log["P" + str(i)]["S" + str(j)].append(suscepDate[i, j])
                         for j  in range(self.hapNum):
                             log["P" + str(i)]["H" + str(j)].append(hapDate[i, j])
-                    point += 1 
+                    point += 1
 
         if output_file == True:
             for i in range(self.popNum-1, -1, -1):
                 logDynamics[i].close()
-        else: 
+        else:
             return log
 
     def output_chain_events(self, name_file):
