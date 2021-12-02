@@ -24,6 +24,7 @@ DEF SAMPLING = 2
 DEF MUTATION = 3
 DEF SUSCCHANGE = 4
 DEF MIGRATION = 5
+DEF MULTITYPE = 6
 
 
 cdef class Event:
@@ -198,6 +199,7 @@ cdef class BirthDeathModel:
         long[:,:,::1] eventsSuscep, eventsTransmission
         long[:,::1] eventsRecovery, eventsSampling
         double[:,:,::1] infectiousAuxTau, susceptibleAuxTau
+        long[:,::1] self.infectiousDelta, self.susceptibleDelta
 
     def __init__(self, sites_number, populations_number, susceptibility_types, seed, sampling_probability, strong_migration):
         self.rndm = RndmWrapper(seed=(seed, 0))
@@ -287,6 +289,9 @@ cdef class BirthDeathModel:
 
         self.infectiousAuxTau = np.zeros((self.popNum, self.hapNum, 2), dtype=float)
         self.susceptibleAuxTau = np.zeros((self.popNum, self.susNum, 2), dtype=float)
+
+        self.infectiousDelta = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        self.susceptibleDelta = np.zeros((self.popNum, self.susNum), dtype=np.int64)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -1645,6 +1650,8 @@ cdef class BirthDeathModel:
                         liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                         liveBranchesS[e_newPopulation][e_haplotype].pop_back()
                 self.pm.liveBranches[e_newPopulation, e_haplotype] -= 1
+            elif e_type_ == MULTITYPE:
+                pass
             else:
                 print("Unknown event type: ", e_type_)
                 print("_________________________________")
@@ -2077,9 +2084,10 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void GenerateEvents_tau(self, float tau, Py_ssize_t debug=0):
+    cdef Py_ssize_t GenerateEvents_tau(self, float tau, Py_ssize_t debug=0):
         cdef Py_ssize_t event_num
-
+        self.infectiousDelta = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        self.susceptibleDelta = np.zeros((self.popNum, self.susNum), dtype=np.int64)
         #Migrations
         for s in range(self.popNum):
             for r in range(self.popNum):
@@ -2087,12 +2095,9 @@ cdef class BirthDeathModel:
                     continue
                 for i in range(self.susNum):
                     for h in range(self.hapNum):
-                        while True:#TODO golakteko opasnoste
-                            event_num = self.DrawEventsNum(self.PropensitiesMigr[s, r, i, h], tau)
-                            if event_num <= self.pm.susceptible[r, i]:
-                                break
+                        event_num = self.DrawEventsNum(self.PropensitiesMigr[s, r, i, h], tau)
                         self.eventsMigr[s, r, i, h] = event_num
-                        self.pm.migPlus += event_num
+                        self.susceptibleDelta[r, i] -= event_num
 
 
         for s in range(self.popNum):
@@ -2101,22 +2106,16 @@ cdef class BirthDeathModel:
                 for j in range(self.susNum):
                     if i == j:
                         continue
-                    while True:#TODO golakteko opasnoste
-                        event_num = self.DrawEventsNum(self.PropensitiesSuscep[s, i, j], tau)
-                        if event_num <= self.pm.susceptible[s, i]:
-                            break
+                    event_num = self.DrawEventsNum(self.PropensitiesSuscep[s, i, j], tau)
                     self.eventsSuscep[s, i, j] = event_num
-                    self.iCounter += event_num
+                    self.susceptibleDelta[s, i] -= event_num
 
             #Infectious-realted event
             for h in range(self.hapNum):
                 #Recovery
-                while True:#TODO golakteko opasnoste
-                    event_num = self.DrawEventsNum(self.PropensitiesRecovery[s, h], tau)
-                    if event_num <= self.pm.liveBranches[s, h]:
-                        break
+                event_num = self.DrawEventsNum(self.PropensitiesRecovery[s, h], tau)
                 self.eventsRecovery[s, h] = event_num
-                self.dCounter += event_num
+                self.infectiousDelta[s, h] -= event_num
 
                 #Sampling
                 while True:#TODO golakteko opasnoste
@@ -2124,17 +2123,14 @@ cdef class BirthDeathModel:
                     if event_num <= self.pm.liveBranches[s, h]:
                         break
                 self.eventsSampling[s, h] = event_num
-                self.sCounter += event_num
+                self.infectiousDelta[s, h] -= event_num
 
                 #Mutation
                 for site in range(self.sites):
                     for i in range(3):
-                        while True:#TODO golakteko opasnoste
-                            event_num = self.DrawEventsNum(self.PropensitiesMutatations[s, h, site, i], tau)
-                            if event_num <= self.pm.liveBranches[s, h]:
-                                break
+                        self.DrawEventsNum(self.PropensitiesMutatations[s, h, site, i], tau)
                         self.eventsMutatations[s, h, site, i] = event_num
-                        self.mCounter += event_num
+                        self.infectiousDelta[s, h] -= event_num
                 #Transmission
                 for i in range(self.susNum):
                     while True:#TODO golakteko opasnoste
@@ -2142,7 +2138,15 @@ cdef class BirthDeathModel:
                         if event_num <= self.pm.susceptible[s, i]:
                             break
                     self.eventsTransmission[s, h, i] = event_num
-                    self.bCounter += event_num
+                    self.susceptibleDelta[s, i] -= event_num
+        for s in range(self.popNum):
+            for i in range(self.susNum):
+                if self.susceptibleDelta[s, i] + self.pm.susceptible[s, i] < 0:
+                    return 0
+            for h in range(self.susNum):
+                if self.infectiousDelta[s, h] + self.pm.liveBranches[s, h] < 0:
+                    return 0
+        return 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -2160,7 +2164,7 @@ cdef class BirthDeathModel:
                         event_num = self.eventsMigr[s, r, i, h]
                         self.pm.NewInfections(event_num, r, i, h)
                         self.multievents.AddEvents(event_num, self.currentTime, MIGRATION, h, s, i, r)
-
+                        self.pm.migPlus += event_num
 
         for s in range(self.popNum):
             #Susceptibility transition
@@ -2172,6 +2176,7 @@ cdef class BirthDeathModel:
                     self.pm.susceptible[s, i] -= event_num
                     self.pm.susceptible[s, j] += event_num
                     self.multievents.AddEvents(event_num, self.currentTime, SUSCCHANGE, i, s, j, 0)
+                    self.iCounter += event_num
 
             #Infectious-realted event
             for h in range(self.hapNum):
@@ -2179,11 +2184,13 @@ cdef class BirthDeathModel:
                 event_num = self.eventsRecovery[s, h]
                 self.pm.NewRecoveries(event_num, s, self.suscType[h], h)
                 self.multievents.AddEvents(event_num, self.currentTime, DEATH, h, s, self.suscType[h], 0)
+                self.dCounter += event_num
 
                 #Sampling
                 event_num = self.eventsSampling[s, h]
                 self.pm.NewRecoveries(event_num, s, self.suscType[h], h)
                 self.multievents.AddEvents(event_num, self.currentTime, SAMPLING, h, s, self.suscType[h], 0)
+                self.sCounter += event_num
 
                 #Mutation
                 for site in range(self.sites):
@@ -2193,11 +2200,13 @@ cdef class BirthDeathModel:
                         self.pm.liveBranches[s, ht] += event_num
                         self.pm.liveBranches[s, h] -= event_num
                         self.multievents.AddEvents(event_num, self.currentTime, MUTATION, h, s, ht, 0)
+                        self.mCounter += event_num
                 #Transmission
                 for i in range(self.susNum):
                     event_num = self.eventsTransmission[s, h, i]
                     self.pm.NewInfections(event_num, s, i, h)
                     self.multievents.AddEvents(event_num, self.currentTime, BIRTH, h, s, i, 0)
+                    self.bCounter += event_num
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -2282,7 +2291,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef void SimulatePopulation_tau(self, Py_ssize_t iterations, Py_ssize_t sampleSize=-1, float time=-1):
-        cdef Py_ssize_t pi, propNum
+        cdef Py_ssize_t pi, propNum, success
         propNum = self.PropensitiesNumber()
         if self.first_simulation == False:
             self.pm.FirstInfection()
@@ -2299,9 +2308,16 @@ cdef class BirthDeathModel:
             self.Propensities()
             self.ChooseTau()
             #print(self.tau_l)
+
+            success = 0
+            while success == 0:
+                success = self.GenerateEvents_tau(self.tau_l)
+                self.tau_l /= 2
+            self.tau_l *= 2
             self.currentTime += self.tau_l
-            self.GenerateEvents_tau(self.tau_l)
+
             self.UpdateCompartmentCounts_tau()
+            self.events.AddEvent(self.currentTime, MULTITYPE, self.multievents.ptr-propNum, self.multievents.ptr, 0, 0)
             if self.pm.globalInfectious == 0:
                 break
             for s in range(self.popNum):
