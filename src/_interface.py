@@ -225,7 +225,7 @@ class Simulator:
 	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct'):
 		self.first_sim = True
 		if sample_size==None:
-			sample_size = iterations
+			sample_size = -1
 		if method == 'direct':
 			self.simulation.SimulatePopulation(iterations, sample_size, time)
 			self.simulation.Stats()
