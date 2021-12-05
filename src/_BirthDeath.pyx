@@ -324,11 +324,11 @@ cdef class BirthDeathModel:
                 self.CheckLockdown(pi)
 
         if self.events.ptr>=self.events.size:
-            print("Iterations")
-        if self.sCounter>sample_size:
-            print("Sample size")
+            print("Achieved maximal number of iterations.")
+        if self.sCounter>sample_size and sample_size!=-1:
+            print("Achieved sample size.")
         if self.currentTime>time and time != -1:
-            print("Time")
+            print("Achieved internal time limit.")
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -637,8 +637,6 @@ cdef class BirthDeathModel:
                         liveBranchesS[e_newPopulation][e_haplotype].pop_back()
                 self.liveBranches[e_newPopulation, e_haplotype] -= 1
             elif e_type_ == MULTITYPE:
-                print(e_haplotype, e_population, sep="  ")
-                print(self.multievents.ptr-self.PropensitiesNumber(), self.multievents.ptr, sep="  ")
                 for me_id in range(e_haplotype, e_population):
                     me_num = self.multievents.num[me_id]
                     me_time = self.multievents.times[me_id]
@@ -733,7 +731,7 @@ cdef class BirthDeathModel:
                                 idt = liveBranchesS[me_newPopulation][me_haplotype][nt]
                                 ids = liveBranchesS[me_population][me_haplotype][ns]
                                 id3 = ptrTreeAndTime
-                                liveBranchesS[me_population][me_haplotype][ns] = liveBranchesS[me_population][me_haplotype][  liveBranchesS[me_population][me_haplotype][ns].size()-1 ]
+                                liveBranchesS[me_population][me_haplotype][ns] = liveBranchesS[me_population][me_haplotype][  liveBranchesS[me_population][me_haplotype].size()-1 ]
                                 liveBranchesS[me_population][me_haplotype].pop_back()
                                 liveBranchesS[me_newPopulation][me_haplotype][nt] = liveBranchesS[me_newPopulation][me_haplotype][lbs-1]
                                 liveBranchesS[me_newPopulation][me_haplotype].pop_back()
@@ -2486,8 +2484,8 @@ cdef class BirthDeathModel:
                         event_num = self.DrawEventsNum(self.PropensitiesMutatations[s, h, site, i], tau)
                         self.eventsMutatations[s, h, site, i] = event_num
                         self.infectiousDelta[s, h] -= event_num
-                        if event_num != 0:
-                            print(self.PropensitiesMutatations[s, h, site, i]*tau, "  |  ", event_num)
+                        #if event_num != 0:
+                        #    print(self.PropensitiesMutatations[s, h, site, i]*tau, "  |  ", event_num)
                         #self.infectiousDelta[s, self.Mutate(h, site, i)] += event_num
                 #Transmission
                 for i in range(self.susNum):
@@ -2658,7 +2656,6 @@ cdef class BirthDeathModel:
     cpdef void SimulatePopulation_tau(self, Py_ssize_t iterations, Py_ssize_t sampleSize=-1, float time=-1):
         cdef Py_ssize_t pi, propNum, success
         propNum = self.PropensitiesNumber()
-        print("Total number of reactions ", propNum)
         if self.globalInfectious == 0:
             self.FirstInfection()
         self.multievents.CreateEvents(iterations*propNum)
@@ -2677,15 +2674,10 @@ cdef class BirthDeathModel:
             self.UpdateCompartmentCounts_tau()
             self.events.AddEvent(self.currentTime, MULTITYPE, self.multievents.ptr-propNum, self.multievents.ptr, 0, 0)
             if self.globalInfectious == 0:
-                print(">>>globalInfectious=0")
                 break
             for s in range(self.popNum):
                 self.CheckLockdown(s)
-        print(">>>ptr and size: ", self.multievents.ptr, "   ", self.multievents.size)
-        print(">>>sCounter and sampleSize: ", self.sCounter, "   ", sampleSize)
-        print(">>>currentTime and time: ", self.currentTime, "   ", time)
         print("Number of iterations: ", int(self.multievents.ptr/propNum))
-        print("multiev ptr=", self.multievents.ptr, "  propNum=", propNum, "  ")
         print("Simulation model time: ", self.currentTime)
 
 
