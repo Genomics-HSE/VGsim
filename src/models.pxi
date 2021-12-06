@@ -40,7 +40,6 @@ cdef class Migrations:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    @cython.cdivision(True)
     cdef void AddMigration(self, Py_ssize_t nodeId, double time, Py_ssize_t oldPop, Py_ssize_t newPop):
         self.nodeId.push_back(nodeId)
         self.time.push_back(time)
@@ -50,7 +49,7 @@ cdef class Migrations:
 cdef class Lockdowns:
     cdef:
         vector[bint] states
-        vector[Py_ssize_t] populationsId,
+        vector[Py_ssize_t] populationsId
         vector[double] times
 
     def __init__(self):

@@ -178,6 +178,7 @@ cdef class BirthDeathModel:
                     self.NewInfection(0, sn, 0)
                     return
 
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
@@ -311,8 +312,9 @@ cdef class BirthDeathModel:
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time):
         cdef Py_ssize_t pi
         self.events.CreateEvents(iterations)
-        if self.globalInfectious == 0:
+        if self.first_simulation == False:
             self.FirstInfection()
+            self.first_simulation = True
         for pn in range(self.popNum):
             self.CheckLockdown(pn)
         self.UpdateAllRates()
@@ -537,6 +539,7 @@ cdef class BirthDeathModel:
             Py_ssize_t me_num, me_type_, me_population, me_haplotype, me_newHaplotype, me_newPopulation
             Py_ssize_t mt_ev_num, mt_ev_num2
         propNum = self.PropensitiesNumber()
+
         if self.sCounter < 2: #TODO if number of sampled leaves is 0 (probably 1 as well), then GetGenealogy seems to go to an infinite cycle
             print("Less than two cases were sampled...")
             print("_________________________________")
@@ -553,6 +556,7 @@ cdef class BirthDeathModel:
             liveBranchesS.push_back(vecint2)
             for _ in range( self.hapNum ):
                 liveBranchesS[i].push_back(vecint1)
+
         for i in range( self.popNum ):
             newLineages.push_back(vecint2)
             for _ in range( self.hapNum ):
@@ -802,7 +806,7 @@ cdef class BirthDeathModel:
                 print("_________________________________")
                 sys.exit(0)
 
-
+                
     def print_basic_parameters(self):
         print("*****************")
         print("***Basic rates***")
@@ -1562,7 +1566,6 @@ cdef class BirthDeathModel:
             self.Error("Incorrect value of amount. Value should be int.")
         if amount<0:
             self.Error("#TODO")
-
         if isinstance(population, int):
             if population<0 or population>=self.popNum:
                 self.Error("There are no such population!")
@@ -1853,8 +1856,6 @@ cdef class BirthDeathModel:
     def set_settings(self, file_template):
         pass
 
-    def set_tau(self, tau_l):
-        self.tau_l = tau_l
 
     def output_tree_mutations(self):
         tree = []
@@ -1869,7 +1870,6 @@ cdef class BirthDeathModel:
             mut[2].append(self.mut.site[i])
             mut[3].append(self.mut.DS[i])
             mut[4].append(self.mut.time[i])
-
         times_dict = {self.events.times[i]: i for i in range(len(self.events.times))}
         populations = {}
         for time in self.times:
@@ -2358,6 +2358,7 @@ cdef class BirthDeathModel:
             print()
         print()
 
+
     def get_proportion(self):
         return self.migNonPlus / (self.events.ptr-1)
 
@@ -2707,7 +2708,7 @@ cdef class BirthDeathModel:
         print("Migration counter(mutable):", self.migPlus)
 
     def PrintPropensities(self):
-        self.FirstInfection()
+        #self.FirstInfection()
         self.UpdateAllRates()
         self.Propensities()
         print("Migrations")
@@ -2742,5 +2743,3 @@ cdef class BirthDeathModel:
                     print("Transmission", s, h, i, self.PropensitiesTransmission[s, h, i])
                     #print("migr=", self.migrationRates[s, s], "  prop", prop)
 
-
-#include "_TauLeap.pxi"

@@ -1,5 +1,4 @@
 import sys
-# from ._BirthDeath import Population, Lockdown
 
 def ReadRates(fn):
     with open(fn) as f:
@@ -95,7 +94,6 @@ def ReadPopulations(fn):
                 next
             line = line.rstrip()
             line = line.split(" ")
-            # populations.append( Population(int(line[1]), float(line[2])) )
             sizes.append(int(line[1]))
             contactDensity.append(float(line[2]))
             if len(line) == 4:
@@ -106,7 +104,6 @@ def ReadPopulations(fn):
                     endLD.append(1.0)
                     samplingMultiplier.append(float(part_line[0]))
                 elif len(part_line) == 3:
-                    # lockdown.append( Lockdown(float(part_line[0]), float(part_line[1]), float(part_line[2])) )
                     contactAfter.append(float(part_line[0]))
                     startLD.append(float(part_line[1]))
                     endLD.append(float(part_line[2]))
@@ -116,13 +113,11 @@ def ReadPopulations(fn):
                 part_line2 = line[4].split(",")
                 if len(part_line1) == 1:
                     samplingMultiplier.append(float(part_line1[0]))
-                    # lockdown.append( Lockdown(float(part_line2[0]), float(part_line2[1]), float(part_line2[2])) )
                     contactAfter.append(float(part_line2[0]))
                     startLD.append(float(part_line2[1]))
                     endLD.append(float(part_line2[2]))
                 elif len(part_line1) == 3:
                     samplingMultiplier.append(float(part_line2[0]))
-                    # lockdown.append( Lockdown(float(part_line1[0]), float(part_line1[1]), float(part_line1[2])) )
                     contactAfter.append(float(part_line1[0]))
                     startLD.append(float(part_line1[1]))
                     endLD.append(float(part_line1[2]))

@@ -132,7 +132,7 @@ class Simulator:
 		self.output_chain_events()
 		self.output_settings()
 
-
+    
 	def add_plot_infectious(self, population, haplotype, step_num=100, label_infectious=None, label_samples=None):
 		if self.fig == None:
 			self.fig, self.ax = plt.subplots(figsize=(8, 6))
