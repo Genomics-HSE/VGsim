@@ -43,4 +43,3 @@ incdir_numpy = run_command(py3,
 inc_np = include_directories(incdir_numpy)
 
 subdir('src')
-

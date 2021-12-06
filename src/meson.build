@@ -8,11 +8,16 @@ _birth_death = custom_target('_BirthDeath',
   command : [cython, '--cplus', '-3', '--fast-fail', '@INPUT@', '-o', '@OUTPUT@']
 )
 
+npymath_path = incdir_numpy / '..' / 'lib'
+npymath_lib = meson.get_compiler('c').find_library('npymath', dirs: npymath_path)
+npyrandom_path = incdir_numpy / '..' / '..' / 'random' / 'lib'
+npyrandom_lib = meson.get_compiler('c').find_library('npyrandom', dirs: npyrandom_path)
+
 # generate .so for rndm
 py3.extension_module(
   '_BirthDeath', _birth_death,
-  include_directories: inc_np,
-  dependencies : py3_dep,
+  include_directories: [inc_np, npymath_path, npyrandom_path],
+  dependencies : [py3_dep, npymath_lib, npyrandom_lib],
   install: true,
   subdir: 'VGsim'
 )
@@ -33,4 +38,3 @@ py3.install_sources(
     pure: false,
     subdir: 'VGsim'
 )
-

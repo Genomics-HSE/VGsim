@@ -10,9 +10,12 @@ from mc_lib.rndm cimport RndmWrapper
 
 from prettytable import PrettyTable
 import numpy as np
+cimport numpy as np
 import sys
 import os
 import time
+
+from numpy.random.c_distributions cimport random_poisson, random_hypergeometric
 
 include "fast_choose.pxi"
 include "models.pxi"
@@ -517,7 +520,7 @@ cdef class BirthDeathModel:
             self.UpdateAllRates()
             self.loc.AddLockdown(False, pi, self.currentTime)
 
-    @cython.boundscheck(True)
+    @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
     cpdef GetGenealogy(self, seed):
@@ -652,7 +655,7 @@ cdef class BirthDeathModel:
                         if me_num == 0 or lbs == 0:
                             mt_ev_num = 0
                         else:
-                            mt_ev_num = np.random.hypergeometric(lbs*(lbs-1.0)/2.0, lbs_e*(lbs_e-1)/2-lbs*(lbs-1)/2, me_num)
+                            mt_ev_num = random_hypergeometric(self.rndm.rng, int(lbs*(lbs-1.0)/2.0), int(lbs_e*(lbs_e-1)/2-lbs*(lbs-1)/2), me_num)
                         #print("me_num=", me_num, "  mt_ev_num", mt_ev_num)
                         for i in range(mt_ev_num):
                             n1 = int(floor( lbs*self.rndm.uniform() ))
@@ -698,7 +701,7 @@ cdef class BirthDeathModel:
                         if me_num == 0 or lbs == 0:
                             mt_ev_num = 0
                         else:
-                            mt_ev_num = np.random.hypergeometric(lbs, self.liveBranches[me_population, me_newHaplotype]-lbs, me_num)
+                            mt_ev_num = random_hypergeometric(self.rndm.rng, lbs, self.liveBranches[me_population, me_newHaplotype]-lbs, me_num)
                         for i in range(mt_ev_num):
                             n1 = int(floor( lbs*self.rndm.uniform() ))
                             id1 = liveBranchesS[me_population][me_newHaplotype][n1]
@@ -717,13 +720,13 @@ cdef class BirthDeathModel:
                         if me_num == 0 or lbs == 0:
                             mt_ev_num = 0
                         else:
-                            mt_ev_num = np.random.hypergeometric(lbs, self.liveBranches[me_newPopulation, me_haplotype]-lbs, me_num)
+                            mt_ev_num = random_hypergeometric(self.rndm.rng, lbs, self.liveBranches[me_newPopulation, me_haplotype]-lbs, me_num)
                         #for i in range(mt_ev_num):
                             lbss = liveBranchesS[me_population][me_haplotype].size()
                             if mt_ev_num == 0 or lbss == 0:
                                 mt_ev_num2 = 0
                             else:
-                                mt_ev_num2 = np.random.hypergeometric(lbss, self.liveBranches[me_population, me_haplotype]-lbss, mt_ev_num)
+                                mt_ev_num2 = random_hypergeometric(self.rndm.rng, lbss, self.liveBranches[me_population, me_haplotype]-lbss, mt_ev_num)
                             #print("me_num: ", me_num, "mt_ev_num: ", mt_ev_num, "mt_ev_num2: ", mt_ev_num2)
                             for i in range(mt_ev_num2):
                                 nt = int(floor( lbs*self.rndm.uniform() ))
@@ -769,16 +772,16 @@ cdef class BirthDeathModel:
                 print("Unknown event type: ", e_type_)
                 print("_________________________________")
                 sys.exit(0)
-        for i in range(self.sCounter * 2 - 1):
-            print(self.tree[i], end=" ")
-        print("")
-        deg = [0 for i in range(self.sCounter * 2 - 1)]
-        for i in range(self.sCounter * 2 - 1):
-            deg[self.tree[i]] += 1
-        for i in range(self.sCounter * 2 - 1):
-            print(deg[i], end=" ")
+        #for i in range(self.sCounter * 2 - 1):
+        #    print(self.tree[i], end=" ")
+        #print("")
+        #deg = [0 for i in range(self.sCounter * 2 - 1)]
+        #for i in range(self.sCounter * 2 - 1):
+        #    deg[self.tree[i]] += 1
+        #for i in range(self.sCounter * 2 - 1):
+        #    print(deg[i], end=" ")
 
-        self.CheckTree()
+        #self.CheckTree()
 
     cdef void CheckTree(self):
         cdef Py_ssize_t counter
@@ -2567,16 +2570,17 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline Py_ssize_t DrawEventsNum(self, prop, tau):
+    cdef inline Py_ssize_t DrawEventsNum(self, double prop, double tau):
         cdef Py_ssize_t n
-        n = np.random.poisson(prop*tau)
+        #n = np.random.poisson(prop*tau)
+        n = random_poisson(self.rndm.rng, lam=prop*tau)
         #if not n ==0:
         #    print(n)
         return n
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void ChooseTau(self, float epsilon=0.03):
+    cdef void ChooseTau(self, double epsilon=0.03):
         cdef float tmp
         #self.infectiousAuxTau = np.zeros((self.popNum, self.hapNum, 2), dtype=float)
         #self.susceptibleAuxTau = np.zeros((self.popNum, self.susNum, 2), dtype=float)
