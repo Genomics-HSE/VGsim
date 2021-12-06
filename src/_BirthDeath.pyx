@@ -223,19 +223,15 @@ cdef class BirthDeathModel:
         for pn in range(self.popNum):
             self.maxEffectiveMigration[pn] = 0.0
 
-        if self.strong_migration == True:
-            for pn1 in range(self.popNum):
-                self.migrationRates[pn1, pn1] = 1.0
-                self.effectiveSizes[pn1] = 0.0
-                for pn2 in range(self.popNum):
-                    if pn1 == pn2:
-                        continue
-                    self.migrationRates[pn1, pn1] -= self.migrationRates[pn1, pn2]
-                    self.effectiveSizes[pn1] += self.migrationRates[pn2, pn1]*self.sizes[pn2]
-                self.effectiveSizes[pn1] += self.migrationRates[pn1, pn1]*self.sizes[pn1]
-        else:
-            for pn in range(self.popNum):
-                self.effectiveSizes[pn] = self.sizes[pn]
+        for pn1 in range(self.popNum):
+            self.migrationRates[pn1, pn1] = 1.0
+            self.effectiveSizes[pn1] = 0.0
+            for pn2 in range(self.popNum):
+                if pn1 == pn2:
+                    continue
+                self.migrationRates[pn1, pn1] -= self.migrationRates[pn1, pn2]
+                self.effectiveSizes[pn1] += self.migrationRates[pn2, pn1]*self.sizes[pn2]
+            self.effectiveSizes[pn1] += self.migrationRates[pn1, pn1]*self.sizes[pn1]
 
         for pn1 in range(self.popNum):
             for pn2 in range(self.popNum):
@@ -303,9 +299,9 @@ cdef class BirthDeathModel:
             self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn]*self.susceptibility[hi, sn]
             ws += self.susceptHapPopRate[pi, hi, sn]
         if self.strong_migration:
-            return self.bRate[hi]*ws/self.effectiveSizes[pi]*self.contactDensity[pi]
-        else:
             return self.bRate[hi]*ws*self.migrationRates[pi, pi]*self.migrationRates[pi, pi]/self.effectiveSizes[pi]*self.contactDensity[pi]
+        else:
+            return self.bRate[hi]*ws/self.effectiveSizes[pi]*self.contactDensity[pi]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
