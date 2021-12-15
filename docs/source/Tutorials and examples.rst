@@ -58,7 +58,7 @@ The GG haplotype can appear in the population only through mutations an both sit
 	
 .. note::
 	set_mutation_rate(2.5, [2, 2, 3, 1], haplotype=”A*A”, site_id=1)
-		In this example we change the parameters for the mutation arising at the second site of four haplotypes AAA, ATA, ACA, AGA. The mutation rate is set to 2.5 for all cases. The substitution weights will be the following:
+		Let us consider a handy way to set mutation rates. In this example we change the parameters for the mutation arising at the second site of four haplotypes AAA, ATA, ACA, AGA. The mutation rate is set to 2.5 for all cases. The substitution weights will be the following:
 		
 	Haplotype AAA: A **A** A->A **T** A: 2, A **A** A->A **C** A: 3, A **A** A->A **G** A:1
 	
