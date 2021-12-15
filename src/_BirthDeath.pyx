@@ -323,9 +323,9 @@ cdef class BirthDeathModel:
             self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn]*self.susceptibility[hi, sn]
             ws += self.susceptHapPopRate[pi, hi, sn]
         if self.strong_migration:
-            return self.bRate[hi]*ws/self.effectiveSizes[pi]*self.contactDensity[pi]
-        else:
             return self.bRate[hi]*ws*self.migrationRates[pi, pi]*self.migrationRates[pi, pi]/self.effectiveSizes[pi]*self.contactDensity[pi]
+        else:
+            return self.bRate[hi]*ws/self.effectiveSizes[pi]*self.contactDensity[pi]
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
