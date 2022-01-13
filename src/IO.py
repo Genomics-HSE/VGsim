@@ -1,34 +1,32 @@
 import sys
+import math
 
-def ReadRates(fn):
+def read_rates(fn):
+    hapFilled = False
+    flag = False
+    bRate = []
+    dRate = []
+    sRate = []
+    mRate = []
     with open(fn) as f:
-        line = next(f).rstrip()#header with version etc
-        line = line.split(" ")
-        flag = 0
-
-        line = next(f).rstrip()
-        line = line.split(" ")
-        hapFilled = False
+        line = next(f).rstrip().split(" ")#header with version etc
+        line = next(f).rstrip().split(" ")
         if line[0] == "H":
             hapFilled = True
-        if line[3] == "SP":
-            flag = 1
         shift = int(hapFilled)
+        if line[2+shift] == "SP":
+            flag = True
+        samProbability = int(flag)
         dim = len(line) - shift
         hapNum = int( 4**(dim - 3) )
-        bRate = []
-        dRate = []
-        sRate = []
-        mRate = []
         if dim < 3:
             print("At least three rates (B, D, S) are expected")
             sys.exit(1)
+
         for line in f:
             if line[0] == "#":
                 next
-            line = line.rstrip()
-            line = line.split(" ")
-            line = [el for el in line[shift:]]
+            line = line.rstrip().split(" ")[shift:]
             bRate.append(float(line[0]))
             if flag == 0:
                 dRate.append(float(line[1]))
@@ -36,64 +34,71 @@ def ReadRates(fn):
             else:
                 dRate.append(float(line[1]) * (1 - float(line[2])))
                 sRate.append(float(line[1]) * float(line[2]))
+
             mRate.append( [] )
             mutations = line[3:]
             for mut in mutations:
                 a = mut.split(',')
                 if len(a) == 1:
-                    mRate[len(bRate)-1].append( [float(a[0]), 1.0/3.0, 1.0/3.0, 1.0/3.0] )
+                    mRate[-1].append( [float(a[0]), 1.0/3.0, 1.0/3.0, 1.0/3.0] )
                 elif len(a) == 4:
-                    mRate[len(bRate)-1].append( [float(a[0]), float(a[1]), float(a[2]), float(a[3])] )
+                    mRate[-1].append( [float(a[0]), float(a[1]), float(a[2]), float(a[3])] )
                 else:
                     print("Error in mutations!!!")
                     sys.exit(1)
-        return([bRate, dRate, sRate, mRate])
+    mRate = update_mRate(mRate)
+    return bRate, dRate, sRate, mRate
 
-def ReadSusceptibility(fn):
+def update_mRate(mRate):
+    if math.log(len(mRate), 4) != int(math.log(len(mRate), 4)):
+        print("Error!")
+        sys.exit(1)
+
+    for i in range(len(mRate)):
+        for j in range(len(mRate[0])):
+            mRate[i][j].insert(calculate_allele(i, j, len(mRate[0]))+1, 0)
+    return mRate
+
+def calculate_allele(haplotype, site, sites):
+    for _ in range(sites-site):
+        allele = haplotype % 4
+        haplotype = haplotype // 4
+    return allele
+
+def read_susceptibility(fn):
+    hapFilled = False
+    susceptibility = []
+    sType = []
     with open(fn) as f:
-        line = next(f).rstrip()#header with version etc
-        line = line.split(" ")
-
-        line = next(f).rstrip()
-        line = line.split(" ")
-        hapFilled = False
+        line = next(f).rstrip().split(" ")#header with version etc
+        line = next(f).rstrip().split(" ")
         if line[0] == "H":
             hapFilled = True
         shift = int(hapFilled)
 
-        susceptibility = []
-        sType = []
-
         for line in f:
             if line[0] == "#":
                 next
-            line = line.rstrip()
-            line = line.split(" ")
-            line = [float(el) for el in line[shift:]]
+            line = line.rstrip().split(" ")[shift:]
             susceptibility.append( line[1:] )
             sType.append( int( line[0] ) )
-        return ([susceptibility, sType])
+        return susceptibility, sType
 
-def ReadPopulations(fn):
+def read_populations(fn):
+    sizes = []
+    contactDensity = []
+    contactAfter = []
+    startLD = []
+    endLD = []
+    samplingMultiplier = []
     with open(fn) as f:
-        line = next(f).rstrip()#header with version etc
-        line = line.split(" ")
+        line = next(f).rstrip().split(" ")#header with version etc
+        line = next(f).rstrip().split(" ")
 
-        line = next(f).rstrip()
-        line = line.split(" ")
-        # populations = []
-        sizes = []
-        contactDensity = []
-        # lockdown = []
-        contactAfter = []
-        startLD = []
-        endLD = []
-        samplingMultiplier = []
         for line in f:
             if line[0] == "#":
                 next
-            line = line.rstrip()
-            line = line.split(" ")
+            line = line.rstrip().split(" ")
             sizes.append(int(line[1]))
             contactDensity.append(float(line[2]))
             if len(line) == 4:
@@ -121,37 +126,20 @@ def ReadPopulations(fn):
                     contactAfter.append(float(part_line1[0]))
                     startLD.append(float(part_line1[1]))
                     endLD.append(float(part_line1[2]))
-        return ([sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier])
+    return sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier
 
-def ReadMigrationRates(fn):
+def read_matrix(fn):
     with open(fn) as f:
         line = next(f).rstrip()#header with version etc
         line = line.split(" ")
-        migrationRates = []
+        matrix = []
         for line in f:
             if line[0] == "#":
                 next
             line = line.rstrip()
             line = line.split(" ")
-            migrationRates.append( [float(v) for v in line] )
-        for i in range(len(migrationRates)):
-            migrationRates[i][i] = 0.0
-        return migrationRates
-
-def ReadSusceptibilityTransition(fn):
-    with open(fn) as f:
-        line = next(f).rstrip()#header with version etc
-        line = line.split(" ")
-        suscepTransition = []
-        for line in f:
-            if line[0] == "#":
-                next
-            line = line.rstrip()
-            line = line.split(" ")
-            suscepTransition.append( [float(v) for v in line] )
-        for i in range(len(suscepTransition)):
-            suscepTransition[i][i] = 0.0
-        return (suscepTransition)
+            matrix.append( [float(v) for v in line] )
+    return matrix
 
 def writeMutations(mut, len_prufer, name_file):
     #digits replacement

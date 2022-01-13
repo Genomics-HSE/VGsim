@@ -136,24 +136,24 @@ class Simulator:
 	def add_plot_infectious(self, population, haplotype, step_num=100, label_infectious=None, label_samples=None):
 		if self.fig == None:
 			self.fig, self.ax = plt.subplots(figsize=(8, 6))
-			self.ax.set_ylabel('Number of individuals')
+			self.ax.set_ylabel('Number of samples')
 			self.ax.set_xlabel('Time')
 			self.ax_2 = self.ax.twinx()
-			self.ax_2.set_ylabel('Number of samples')
+			self.ax_2.set_ylabel('Number of individuals')
 
 		infections, sample, time_points, lockdowns = self.simulation.get_data_infectious(population, haplotype, step_num)
 
 		if label_infectious == None:
-			self.ax.plot(time_points, infections, label='Infections-' + str(population) + '-' + str(haplotype))
+			self.ax_2.plot(time_points, infections, label='Individuals-' + str(population) + '-' + str(haplotype))
 		elif isinstance(label_infectious, str) == True:
-			self.ax.plot(time_points, infections, label=label_infectious)
+			self.ax_2.plot(time_points, infections, label=label_infectious)
 		else:
 			print("#TODO")
 
 		if label_samples == None:
-			self.ax_2.plot(time_points, sample, "--", label='Sampling-' + str(population) + '-' + str(haplotype))
+			self.ax.plot(time_points, sample, "--", label='Samples-' + str(population) + '-' + str(haplotype))
 		elif isinstance(label_label_samples, str) == True:
-			self.ax_2.plot(time_points, sample, "--", label=label_samples)
+			self.ax.plot(time_points, sample, "--", label=label_samples)
 		else:
 			print("#TODO")
 
@@ -178,16 +178,16 @@ class Simulator:
 	def add_plot_susceptible(self, population, susceptibility_type, step_num=100, label_susceptible=None):
 		if self.fig == None:
 			self.fig, self.ax = plt.subplots(figsize=(8, 6))
-			self.ax.set_ylabel('Number of individuals')
+			self.ax.set_ylabel('Number of samples')
 			self.ax.set_xlabel('Time')
 			self.ax_2 = self.ax.twinx()
-			self.ax_2.set_ylabel('Number of samples')
+			self.ax_2.set_ylabel('Number of individuals')
 
 		susceptible, time_points, lockdowns = self.simulation.get_data_susceptible(population, susceptibility_type, step_num)
 		if label_susceptible == None:
-			self.ax.plot(time_points, susceptible, label='Susceptible-' + str(population) + '-' + str(susceptibility_type))
+			self.ax_2.plot(time_points, susceptible, label='Susceptible-' + str(population) + '-' + str(susceptibility_type))
 		elif isinstance(label_susceptible, str) == True:
-			self.ax.plot(time_points, susceptible, label=label_susceptible)
+			self.ax_2.plot(time_points, susceptible, label=label_susceptible)
 		else:
 			print("#TODO")
 
@@ -220,6 +220,7 @@ class Simulator:
 
 	def plot(self):
 		plt.show()
+		self.fig = None
 
 
 	def simulate(self, iterations=1000, sample_size=None, time=-1):

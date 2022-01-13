@@ -123,7 +123,7 @@ cdef class BirthDeathModel:
 
         self.first_simulation = False
         self.sampling_probability = sampling_probability
-        self.strong_migration = strong_migration
+        self.strong_migration = strong_migration 
 
         self.sites = sites_number
         self.hapNum = 4**self.sites
@@ -180,7 +180,7 @@ cdef class BirthDeathModel:
         self.endLD = np.ones(self.popNum, dtype=float)
         self.samplingMultiplier = np.ones(self.popNum, dtype=float)
         self.maxEffectiveMigration = np.zeros(self.popNum, dtype=float)
-
+        
         self.mRate = np.zeros((self.hapNum, self.sites), dtype=float)
         self.totalHapMutType = np.zeros((self.hapNum, self.sites), dtype=float)
         self.tEventHapPopRate = np.zeros((self.popNum, self.hapNum), dtype=float)
@@ -946,7 +946,6 @@ cdef class BirthDeathModel:
             self.Error("Incorrect type of uninfection rate. Value should be int or float.")
         if rate<0:
             self.Error("Incorrect value of uninfection rate. Value should be more or equal 0.")
-
         if isinstance(haplotype, str):
             haplotypes = self.create_list_haplotypes(haplotype)
             for haplotype in haplotypes:
@@ -968,7 +967,6 @@ cdef class BirthDeathModel:
                 self.Error("Incorrect type of sampling probability. Value should be int or float.")
             if rate<0 or rate>1:
                 self.Error("Incorrect value of sampling probability. Value should be more or equal 0 and less or equal 1.")
-
             if isinstance(haplotype, str):
                 haplotypes = self.create_list_haplotypes(haplotype)
                 for haplotype in haplotypes:
@@ -1622,7 +1620,7 @@ cdef class BirthDeathModel:
                 self.susceptible[pn, target_type] += amount
         else:
             self.Error("Incorrect value of population. Value should be int or None.")
-
+       
     def set_infected_individuals(self, amount, source_haplotype, target_haplotype, population):
         if self.first_simulation:
             self.Error('#TODO')
