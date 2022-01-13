@@ -1,6 +1,9 @@
 class Simulator():
 	"""
-	#TODO
+	This is the class which creates the simulation.
+		sites_number: the number of mutable sites with strong phenotypic effect
+		populations_number: the number of populations (demes)
+		susceptibility_types: the number of susceptible groups (groups with different immunity response)
 
 	:param: sites_number=0, populations_number=1, susceptibility_types=2, seed=None, sampling_probability=False, strong_migration=False
 	:type: sites_number = int, populations_number = int, susceptibility_types = int, seed = float or None, sampling_probability = True or False, strong_migration = True or False
@@ -10,27 +13,26 @@ class Simulator():
 
 def print_basic_parameters():
 	"""
-	#TODO
+	This methods prints the basic parameters of the epidemiological model.
 	"""
 
 def print_populations():
 	"""
-	#TODO
+	This methods prints parameters of the population model.
 	"""
 
 def print_immunity_model():
 	"""
-	#TODO
+	This methods prints the basic parameters of the immunity model.
 	"""
 
 def print_all(basic_parameters=True, populations=True, immunity_model=True):
 	"""
-	#TODO
+	This methods prints all the parameters of the simulation.
 
 	:param: basic_parameters=True, populations=True, immunity_model=True
 	:type: basic_parameters = True or False, populations = True or False, immunity_model = True or False
 	"""
-
 
 def set_transmission_rate(rate, haplotype=None):
 	"""
@@ -42,6 +44,7 @@ def set_transmission_rate(rate, haplotype=None):
     :type: rate = float, haplotype = int or str or None
 	"""
 
+  
 def set_recovery_rate(rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
@@ -67,7 +70,6 @@ def set_mutation_rate(rate=None, substitution_weights=None, haplotype=None, site
     :param: rate=None, substitution_weights=None, haplotype=None, site_id=None
     :type: rate = float, substitution_weights = list of 4 elements, haplotype = int or str or None, site_id = int or None
 	"""
-
 
 def set_susceptibility_type(susceptibility_type, haplotype=None):
 	"""
@@ -142,6 +144,23 @@ def set_migration_probability(probability=None, total_probability=None, source=N
 	:type:	probability = float or None, total_probability = float or None, source = int or None, target = int or None
 	"""
 
+  
+def simulate(iterations, sample_size, time):
+	"""
+	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
+	It can be called multiple times, changes of most parameters are allowed between simulation runs.
+	
+	:param: iterations, sample_size, time
+	:type: iterations = int, sample_size = int, time = float
+	"""
+
+def genealogy(seed=None):
+	"""
+	Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
+
+	:param: seed=None
+	:type: seed = float or None
+	"""
 
 def output_newick(name_file="newick_output"):
 	"""
@@ -202,9 +221,10 @@ def add_plot_susceptible(population, susceptibility_type, step_num=100, label=No
 	:type: population = int, susceptibility_type = int, step_num = int, label = str or None
 	"""
 
-def add_legend():
+
+def plot():
 	"""
-	Add legend to the plot.
+	Show plot with all the trajectories added by the previous two methods.
 	"""
 
 def add_title(name="Plot"):
@@ -215,24 +235,7 @@ def add_title(name="Plot"):
 	:type: name = str
 	"""
 
-def plot():
+def add_legend():
 	"""
-	Show plot with all the trajectories added by the previous two methods.
-	"""
-
-
-def simulate(iterations, sample_size, time):
-	"""
-	#TODO
-
-	:param: iterations, sample_size, time
-	:type: iterations = int, sample_size = int, time = float
-	"""
-
-def genealogy(seed=None):
-	"""
-	#TODO
-
-	:param: seed=None
-	:type: seed = float or None
+	Add legend to the plot.
 	"""

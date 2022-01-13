@@ -19,7 +19,7 @@ to build them yourself. For this, you need a working toolchain for building C++
 code (gcc and clang are known to work). Since you are going to build Python extensions,
 you will need python development headers (e.g. on ubuntu linux the package name is `python-dev`).
 
-**For MacOS users: please make sure to use Python with Homebrew or Conda. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too.**
+**For MacOS users: please make sure to use Python with Homebrew or Conda. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install**
 
 To build the C extensions, run
 
@@ -27,7 +27,7 @@ To build the C extensions, run
 $ python -m pip install .
 ```
 
-That's it! 
+That's it!
 
 You may now run simulations:
 
@@ -39,7 +39,7 @@ If you encounter problems with either of these steps, please file an issue at
 `https://github.com/Genomics-HSE/VGsim`: please rerun with the `-v` flag,
 `$ python -mpip install . -v` and include the output.
 
-We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS. 
+We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS.
 On Apple Silicon, you need to have `numpy >= 1.21` (which is the first NumPy
 version to support this hardware).
 
@@ -47,6 +47,18 @@ Adding neutral mutations
 ------------------------
 
 We suggest to pipe the tree and non-neautral sites into phastSim (https://github.com/NicolaDM/phastSim) by Nicola de Maio to add neutral mutations and to obtain full sequences.
+
+Planned features
+----------------
+Here we list the features which we are adding or consider for the VGsim package.
+- Tau-leaping: in work (working prototype).
+- Population-level susceptibility transitions (e.g. to simulate different uneven efforts across the world): in work.
+- Memory usage optimisation to enable larger number of mutable sites: high priority.
+- Advanced sampling schemes: medium priority.
+- Super-spreading events: medium priority.
+- Life-cycle: low priority.
+- Recombinations: low priority.
+
 
 Citation
 --------
