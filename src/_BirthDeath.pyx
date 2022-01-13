@@ -210,24 +210,6 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
-        self.susceptible[pi, si] -= 1
-        self.totalSusceptible[pi] -= 1
-        self.liveBranches[pi, hi] += 1
-        self.totalInfectious[pi] += 1
-        self.globalInfectious += 1
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef inline void NewRecovery(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
-        self.susceptible[pi, si] += 1
-        self.totalSusceptible[pi] += 1
-        self.liveBranches[pi, hi] -= 1
-        self.totalInfectious[pi] -= 1
-        self.globalInfectious -= 1
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
     cdef void FirstInfection(self):
         if self.globalInfectious == 0:
             for sn in range(self.susNum):
