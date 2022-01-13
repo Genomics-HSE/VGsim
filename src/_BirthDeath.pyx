@@ -210,15 +210,6 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void FirstInfection(self):
-        if self.globalInfectious == 0:
-            for sn in range(self.susNum):
-                if self.susceptible[0, sn] != 0:
-                    self.NewInfection(0, sn, 0)
-                    break
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
     cdef inline void NewInfection(self, Py_ssize_t pi, Py_ssize_t si, Py_ssize_t hi):
         self.susceptible[pi, si] -= 1
         self.totalSusceptible[pi] -= 1
