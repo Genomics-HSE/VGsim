@@ -42,11 +42,12 @@ jobs:
     # Actually build it
     - name: Build
       run: |
-        python -mpip install meson==0.60.3 ninja numpy cython pytest prettytable
+        python -mpip install meson==0.60.3 ninja numpy cython pytest
         python -mpip install git+http://github.com/ev-br/mc_lib.git@v0.4
         meson setup build --prefix=$PWD/installdir
         meson install -C build
     - name: Run an example
       run: |
+        pip install matplotlib prettytable
         export PYTHONPATH=$PWD/installdir/lib/python${{ matrix.python-version }}/site-packages/
         python ./vgsim.py example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
