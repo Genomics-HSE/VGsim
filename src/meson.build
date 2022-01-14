@@ -13,6 +13,7 @@ py3.extension_module(
   '_BirthDeath', _birth_death,
   include_directories: inc_np,
   dependencies : py3_dep,
+  cpp_args: [numpy_nodepr_api],
   install: true,
   subdir: 'VGsim'
 )
