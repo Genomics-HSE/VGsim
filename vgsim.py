@@ -129,13 +129,13 @@ for i in range(len(suscepTransition)):
         if i != j:
             simulator.set_immunity_transition(suscepTransition[i][j], i, j)
 
-simulator.print_all()
-# simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
-# simulator.genealogy(int(seed))
+# simulator.print_all()
+simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
+simulator.genealogy(int(seed))
 
-# if clargs.createNewick:
-#     simulator.output_newick()
-# if clargs.writeMutations:
-#     simulator.output_mutations()
-# if clargs.writeMigrations:
-#     simulator.output_migrations()
+if clargs.createNewick:
+    simulator.output_newick()
+if clargs.writeMutations:
+    simulator.output_mutations()
+if clargs.writeMigrations:
+    simulator.output_migrations()
