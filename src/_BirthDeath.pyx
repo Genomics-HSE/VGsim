@@ -285,10 +285,9 @@ cdef class BirthDeathModel:
         for pn1 in range(self.popNum):
             self.maxEffectiveMigration[pn] = 0.0
             for pn2 in range(self.popNum):
-                self.effectiveMigration[pn1, pn2] = self.migrationRates[pn1, pn2]*self.contactDensity[pn2]/self.effectiveSizes[pn2]+self.migrationRates[pn2, pn1]*self.contactDensity[pn1]/self.effectiveSizes[pn1]
+                if pn1 == pn2:
+                    continue
                 for pn3 in range(self.popNum):
-                    if pn1 == pn2 == pn3:
-                        continue
                     self.effectiveMigration[pn1, pn2] += self.migrationRates[pn1, pn3]*self.migrationRates[pn2, pn3]*self.contactDensity[pn3]/self.effectiveSizes[pn3]
                 if self.effectiveMigration[pn1, pn2] > self.maxEffectiveMigration[pn2]:
                     self.maxEffectiveMigration[pn2] = self.effectiveMigration[pn1, pn2]
