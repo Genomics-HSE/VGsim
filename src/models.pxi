@@ -46,11 +46,10 @@ cdef class Migrations:
         self.oldPop.push_back(oldPop)
         self.newPop.push_back(newPop)
 
-
 cdef class Lockdowns:
     cdef:
         vector[bint] states
-        vector[Py_ssize_t] populationsId, 
+        vector[Py_ssize_t] populationsId
         vector[double] times
 
     def __init__(self):

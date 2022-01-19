@@ -132,7 +132,7 @@ class Simulator:
 		self.output_chain_events()
 		self.output_settings()
 
-
+    
 	def add_plot_infectious(self, population, haplotype, step_num=100, label_infectious=None, label_samples=None):
 		if self.fig == None:
 			self.fig, self.ax = plt.subplots(figsize=(8, 6))
@@ -223,11 +223,17 @@ class Simulator:
 		self.fig = None
 
 
-	def simulate(self, iterations=1000, sample_size=None, time=-1):
+	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct'):
+		self.first_sim = True
 		if sample_size==None:
-			sample_size = iterations
-		self.simulation.SimulatePopulation(iterations, sample_size, time)
-		self.simulation.Stats()
+			sample_size = -1
+		if method == 'direct':
+			self.simulation.SimulatePopulation(iterations, sample_size, time)
+			self.simulation.Stats()
+		elif method == 'tau':
+			self.simulation.SimulatePopulation_tau(iterations, sample_size, time)
+		else:
+			print("Unknown method. Choose between 'direct' and 'tau'.")
 
 	def genealogy(self, seed=None):
 		self.simulation.GetGenealogy(seed)
@@ -243,3 +249,9 @@ class Simulator:
 
 	def get_proportion(self):
 		return self.simulation.get_proportion()
+
+	def print_counters(self):
+		self.simulation.PrintCounters()
+
+	def print_propensities(self):
+		self.simulation.PrintPropensities()
