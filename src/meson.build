@@ -9,9 +9,9 @@ _birth_death = custom_target('_BirthDeath',
 )
 
 npymath_path = incdir_numpy / '..' / 'lib'
-npymath_lib = meson.get_compiler('c').find_library('npymath', dirs: npymath_path)
+npymath_lib = meson.get_compiler('cpp').find_library('npymath', dirs: npymath_path)
 npyrandom_path = incdir_numpy / '..' / '..' / 'random' / 'lib'
-npyrandom_lib = meson.get_compiler('c').find_library('npyrandom', dirs: npyrandom_path)
+npyrandom_lib = meson.get_compiler('cpp').find_library('npyrandom', dirs: npyrandom_path)
 
 # generate .so for rndm
 py3.extension_module(
