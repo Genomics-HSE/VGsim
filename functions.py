@@ -44,6 +44,7 @@ def set_transmission_rate(rate, haplotype=None):
     :type: rate = float, haplotype = int or str or None
 	"""
 
+  
 def set_recovery_rate(rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
@@ -94,6 +95,7 @@ def set_immunity_transition(rate, source=None, target=None):
 	:type: rate = float, source = int or None, target = int or None
 	"""
 
+
 def set_population_size(amount, population=None):
 	"""
 	The number of individuals in the population.
@@ -142,6 +144,7 @@ def set_migration_probability(probability=None, total_probability=None, source=N
 	:type:	probability = float or None, total_probability = float or None, source = int or None, target = int or None
 	"""
 
+  
 def simulate(iterations, sample_size, time):
 	"""
 	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
@@ -201,6 +204,7 @@ def epidemiology_timelines(step=1000, output_file=False):
 	Records simulation state changes over some period of time. step - a number of parts epidemiology_timelines is split on.
 	"""
 
+
 def add_plot_infectious(population, haplotype, step_num=100, label=None):
 	"""
 	Add to plot the trajectories of the change of the number of infectious individuals over time.  label allows to add the label to plot legend.
@@ -216,6 +220,7 @@ def add_plot_susceptible(population, susceptibility_type, step_num=100, label=No
 	:param: population, susceptibility_type, step_num=100, label=None
 	:type: population = int, susceptibility_type = int, step_num = int, label = str or None
 	"""
+
 
 def plot():
 	"""

@@ -1,10 +1,10 @@
 [build-system]
 requires  = [
     "wheel",
-    "meson==0.59.2",
+    "meson==0.60.3",
     "mesonpep517",
     "ninja",
-    "mc_lib @ git+http://github.com/ev-br/mc_lib.git@master"
+    "mc_lib @ git+http://github.com/ev-br/mc_lib.git@v0.4"
 ]
 
 build-backend = "mesonpep517.buildapi"
@@ -28,7 +28,7 @@ classifiers = [
 
 requires  = [
     "numpy>=1.19.5",
-    "mc_lib @ git+http://github.com/ev-br/mc_lib.git@master",
+    "mc_lib @ git+http://github.com/ev-br/mc_lib.git@v0.4",
     "prettytable",
     "matplotlib",
     "pytest"
