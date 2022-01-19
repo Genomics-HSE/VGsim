@@ -55,19 +55,6 @@ The GG haplotype can appear in the population only through mutations an both sit
 	substitution_weights=[1,1,1,2]#ATCG
 	simulator.set_mutation_rate(mutation_rate, substitution_weights)
 	simulator.set_mutation_rate(3*mutation_rate, haplotype="G*", mutation=1)
-	
-.. note::
-	set_mutation_rate(2.5, [2, 2, 3, 1], haplotype=”A*A”, site_id=1)
-		Let us consider a handy way to set mutation rates. In this example we change the parameters for the mutation arising at the second site of four haplotypes AAA, ATA, ACA, AGA. The mutation rate is set to 2.5 for all cases. The substitution weights will be the following:
-		
-	Haplotype AAA: A **A** A->A **T** A: 2, A **A** A->A **C** A: 3, A **A** A->A **G** A:1
-	
-	Haplotype ATA: A **T** A->A **A** A: 2, A **T** A->A **C** A: 3, A **T** A->A **G** A:1
-	
-	Haplotype ACA: A **C** A->A **A** A: 2, A **C** A->A **T** A: 2, A **C** A->A **G** A:1
-	
-	Haplotype AGA: A **G** A->A **A** A: 2, A **G** A->A **T** A: 3, A **G** A->A **C** A:3
-
 
 Susceptibility types
 --------------------

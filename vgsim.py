@@ -13,9 +13,8 @@ import math
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
 
-parser.add_argument('frate',
-                    help='file with rates')
-
+# parser.add_argument('frate',
+                    # help='file with rates')
 
 parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
                     help='number of iterations (default is 1000)')
@@ -26,6 +25,8 @@ parser.add_argument('--time', '-t', nargs=1, type=float, default=None,
 parser.add_argument('--seed', '-seed', nargs=1, type=float, default=None,
                     help='random seed')
 
+parser.add_argument('--rates', '-rt', nargs=1, default=None,
+                    help='rate: a file with rates for each haplotype')
 parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
                     help='population model: a file with population sizes etc, and a file with migration rate matrix')
 parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
@@ -34,7 +35,6 @@ parser.add_argument('--suscepTransition', '-st', nargs=1, default=None,
                     help='susceptibility transition file')
 
 parser.add_argument('--sampling_probability', help="#TODO", action="store_true")
-parser.add_argument('--strong_migration', help="#TODO", action="store_true")
 
 parser.add_argument("--createNewick", '-nwk', help="Create a newick file of tree *.nwk ", action="store_true")
 parser.add_argument("--writeMutations", '-tsv',
@@ -54,8 +54,8 @@ if clargs.citation != None:
     print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
     sys.exit(0)
 
-if isinstance(clargs.frate, list):
-    clargs.frate = clargs.frate[0]
+if isinstance(clargs.rates, list):
+    clargs.rates = clargs.rates[0]
 if isinstance(clargs.iterations, list):
     clargs.iterations = clargs.iterations[0]
 if isinstance(clargs.sampleSize, list):
@@ -69,7 +69,10 @@ if isinstance(clargs.suscepTransition, list):
 if isinstance(clargs.seed, list):
     clargs.seed = clargs.seed[0]
 
-bRate, dRate, sRate, mRate = read_rates(clargs.frate)
+if clargs.rates == None:
+    bRate, dRate, sRate, mRate = [2], [1], [0.1], [[]]
+else:
+    bRate, dRate, sRate, mRate = read_rates(clargs.rates)
 
 if clargs.sampleSize == None:
     clargs.sampleSize = clargs.iterations
@@ -99,7 +102,7 @@ if clargs.seed == None:
 else:
 	seed = clargs.seed
 
-simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability, strong_migration=clargs.strong_migration)
+simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
 
 for i in range(len(bRate)):
 	simulator.set_transmission_rate(bRate[i], i)
@@ -115,8 +118,7 @@ for i in range(len(sizes)):
     simulator.set_sampling_multiplier(samplingMultiplier[i], i)
     for j in range(len(sizes)):
         if i != j:
-            simulator.set_migration_probability(migrationRates[i][j], source=i, target=j)
-
+            simulator.set_migration_probability(probability=migrationRates[i][j], source=i, target=j)
 for i in range(len(susceptible)):
     for j in range(len(susceptible[i])):
         simulator.set_susceptibility(float(susceptible[i][j]), i, j)
@@ -130,7 +132,10 @@ for i in range(len(suscepTransition)):
             simulator.set_immunity_transition(suscepTransition[i][j], i, j)
 
 # simulator.print_all()
+# simulator.debug()
 simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
+# simulator.print_all()
+# simulator.debug()
 simulator.genealogy(int(seed))
 
 if clargs.createNewick:
