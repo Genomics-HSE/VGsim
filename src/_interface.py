@@ -132,7 +132,7 @@ class Simulator:
 		self.output_chain_events()
 		self.output_settings()
 
-    
+
 	def add_plot_infectious(self, population, haplotype, step_num=100, label_infectious=None, label_samples=None):
 		if self.fig == None:
 			self.fig, self.ax = plt.subplots(figsize=(8, 6))
@@ -225,8 +225,10 @@ class Simulator:
 
 	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct'):
 		self.first_sim = True
-		if sample_size==None:
+		if sample_size is None:
 			sample_size = -1
+		if time is None:
+			time = -1
 		if method == 'direct':
 			self.simulation.SimulatePopulation(iterations, sample_size, time)
 			self.simulation.Stats()

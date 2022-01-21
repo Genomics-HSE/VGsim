@@ -165,7 +165,7 @@ def set_lockdown(parameters, population=None):
 
 	:param parameters: list with three elements: contact density value during lockdown, fraction of infectious population when the lockdown is set, fraction of infectious population when lockdown is lifted.
     :param population: population for which the new lockdown parameters are being set (in case of None the value will be updated for all populations).
-    :type value: list of length 3
+    :type parameters: list of length 3
     :type population: int or None
 	"""
 
@@ -173,34 +173,48 @@ def set_sampling_multiplier(value, population=None):
 	"""
 	The relative sampling in the population (multiplicative modifier). Sampling rate of each haplotype is modified by this factor.
 
-	:param: value, population=None
-	:type: value = float, population = int or None
+	:param value: sampling multiplier value.
+    :param population: population for which the new sampling multiplier is being set (in case of None the value will be updated for all populations).
+    :type value: float
+    :type population: int or None
 	"""
 
-def set_migration_probability(probability=None, total_probability=None, source=None, target=None):
+def set_migration_probability(probability=None, cumulative=False, source=None, target=None):
 	"""
 	The probability that an individual from the population source is travelling to the population target. cumulative=True means that probability is the total probability to find an individual from population source outside of its population. All the entries (except for the diagonal) of the corresponding row of the migration probability matrix will be set to probability/(K-1), where K is the number of populations in the simulation.
 
-	:param: probability=None, total_probability=None, source=None, target=None
-	:type:	probability = float or None, total_probability = float or None, source = int or None, target = int or None
+	:param probability: probability value.
+    :param cumulative: if True, all the entries (except for the diagonal element) of row corresponding to source population is filled with probabilitie/(K-1).
+	:param source: source population with infectious individual  (None means that the new value will be set to all populations as source).
+    :param target: target population with susceptible individual (None means that the new value will be set to all populations as target).
+    :type probability: float
+    :type cumulative: bool
+	:type source: int or None
+    :type target: int or None
 	"""
 
 
-def simulate(iterations, sample_size, time):
+def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
 	"""
 	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
 	It can be called multiple times, changes of most parameters are allowed between simulation runs.
 
-	:param: iterations, sample_size, time
-	:type: iterations = int, sample_size = int, time = float
+	:param iterations: maximal number of iterations.
+    :param sample_size: desired sample size.
+	:param time: virtual (model) time to be simulated.
+    :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
+    :type iterations: int
+    :type sample_size: int or None
+	:type time: float or None
+    :type method: string
 	"""
 
 def genealogy(seed=None):
 	"""
 	Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
 
-	:param: seed=None
-	:type: seed = float or None
+	:param seed: seed value (None for random seed).
+    :type seed: int or None
 	"""
 
 def output_newick(name_file="newick_output"):
