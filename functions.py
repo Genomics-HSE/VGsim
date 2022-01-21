@@ -40,8 +40,10 @@ def set_transmission_rate(rate, haplotype=None):
 
 	Transmission rate: the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when (almost) all hosts are susceptible. See `Wikipedia`_ - parameter beta in SIR model.
 
-    :param: rate, haplotype=None
-    :type: rate = float, haplotype = int or str or None
+    :param rate: bla-bla-bla
+    :param haplotype: bla-bla-text
+    :type rate: float
+    :type haplotype: int or string or None
 	"""
 
   
