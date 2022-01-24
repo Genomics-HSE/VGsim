@@ -13,6 +13,7 @@ Tutorials and examples
    :maxdepth: 1
 
    Tutorials and examples
+   Haplotypes
 
 Documentation
 =============
