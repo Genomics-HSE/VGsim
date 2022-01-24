@@ -405,18 +405,18 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cdef void ImmunityTransition(self, Py_ssize_t pi):
         cdef:
-            Py_ssize_t si, ti
-        si, self.rn = fastChoose1(self.immuneSourcePopRate[pi], self.immunePopRate[pi], self.rn)
-        ti, self.rn = fastChoose1(self.suscepTransition[si], self.suscepCumulTransition[si], self.rn)
+            Py_ssize_t ssi, tsi
+        ssi, self.rn = fastChoose1(self.immuneSourcePopRate[pi], self.immunePopRate[pi], self.rn)
+        tsi, self.rn = fastChoose1(self.suscepTransition[ssi], self.suscepCumulTransition[ssi], self.rn)
 
-        self.susceptible[pi, si] -= 1
-        self.susceptible[pi, ti] += 1
-        self.immuneSourcePopRate[pi, si] = self.susceptible[pi, si]*self.suscepCumulTransition[si]
-        self.immuneSourcePopRate[pi, ti] = self.susceptible[pi, ti]*self.suscepCumulTransition[ti]
+        self.susceptible[pi, ssi] -= 1
+        self.susceptible[pi, tsi] += 1
+        self.immuneSourcePopRate[pi, ssi] = self.susceptible[pi, ssi]*self.suscepCumulTransition[ssi]
+        self.immuneSourcePopRate[pi, tsi] = self.susceptible[pi, tsi]*self.suscepCumulTransition[tsi]
         self.UpdateRates(pi, False, True, False)
 
         self.iCounter += 1
-        self.events.AddEvent(self.currentTime, SUSCCHANGE, si, pi, ti, 0)
+        self.events.AddEvent(self.currentTime, SUSCCHANGE, ssi, pi, tsi, 0)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -460,7 +460,7 @@ cdef class BirthDeathModel:
             Py_ssize_t mi, digit4, AS, DS, nhi
 
         mi, self.rn = fastChoose1(self.mRate[hi], self.tmRate[hi], self.rn)
-        digit4 = 4**mi
+        digit4 = 4**(self.sites-mi-1)
         AS = int(floor(hi/digit4) % 4)
         DS, self.rn = fastChoose1(self.hapMutType[hi, mi], self.totalHapMutType[hi, mi], self.rn)
         if DS >= AS:
@@ -2648,7 +2648,7 @@ cdef class BirthDeathModel:
     cdef Py_ssize_t Mutate(self, Py_ssize_t h, Py_ssize_t site, Py_ssize_t DS):
         cdef:
             Py_ssize_t mi, digit4, AS
-        digit4 = 4**site
+        digit4 = 4**(self.sites-site-1)
         AS = int(floor(h/digit4) % 4)
         if DS >= AS:
             DS += 1

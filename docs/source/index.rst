@@ -27,6 +27,5 @@ Citation
 Please cite our preprint (https://www.medrxiv.org/content/10.1101/2021.04.21.21255891) when using VGsim in your research.
 
 Shchur et al. VGsim: scalable viral genealogy simulator for global pandemic.
-Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig
+Vladimir Shchur, Vadim Spirin, Dmitry Sirotkin, EvgeniBurovski, Nicola De Maio, Russell Corbett-Detig
 medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891
-

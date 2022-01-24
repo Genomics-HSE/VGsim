@@ -1,6 +1,3 @@
-
-
-
 class Simulator():
 	"""
 	This is the class which creates the simulation.

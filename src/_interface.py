@@ -84,8 +84,8 @@ class Simulator:
 		self.simulation.set_recovery(amount, source_haplotype, target_type, population)
 
 
-	def set_chain_events(self, name_file):
-		self.simulation.set_chain_events(name_file)
+	def set_chain_events(self, file_name):
+		self.simulation.set_chain_events(file_name)
 
 	def set_settings(self, file_template):
 		self.simulation.set_settings(file_template)
@@ -122,13 +122,13 @@ class Simulator:
 		else:
 			return self.simulation.output_epidemiology_timelines(step, output_file)
 
-	def output_chain_events(self, name_file="chain events"):
-		self.simulation.output_chain_events(name_file)
+	def output_chain_events(self, file_name="chain_events"):
+		self.simulation.output_chain_events(file_name)
 
 	def output_settings(self, file_template="parameters"):
 		self.simulation.output_settings(file_template)
 
-	def output_state(self, file_template="parameters"):
+	def output_state(self):
 		self.output_chain_events()
 		self.output_settings()
 
@@ -243,7 +243,7 @@ class Simulator:
 
 	def citation(self):
 		print("VGsim: scalable viral genealogy simulator for global pandemic")
-		print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
+		print("Vladimir Shchur, Vadim Spirin, Dmitry Sirotkin, EvgeniBurovski, Nicola De Maio, Russell Corbett-Detig")
 		print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
 
 	def debug(self):

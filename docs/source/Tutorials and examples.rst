@@ -140,11 +140,11 @@ And the amount of travel is reduced with population 2
 	simulator.set_migration_rate(2/365/2, source=0, target=2)
 	simulator.set_migration_rate(2/365/2, source=1, target=2)
 
-Let’s run the simulation for some more iterations.
+Let’s run the simulation for some more iterations #TODO (but using the tau-leaping algorithm instead of direct).
 
 .. code-block:: python
 	
-	simulator.simulate(10000000)
+	simulator.simulate(1000, method='tau')
 
 Visualizing epidemiological trajectories
 ----------------------------------------
@@ -256,7 +256,7 @@ Resulting code
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-	simulator.simulate(1000000)
+	simulator.simulate(1000, method='tau')
 
 	population = 0
 	haplotype = 0
