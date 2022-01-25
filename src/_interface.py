@@ -141,42 +141,48 @@ class Simulator:
 			self.ax_2 = self.ax.twinx()
 			self.ax_2.set_ylabel('Number of individuals')
 
-		haplotypes = self.simulation.create_list_haplotypes(haplotype)
+		if isinstance(haplotype, int) == True:
+			self.plot_infectious(population, haplotype, step_num, label_infectious, label_samples)
+		elif isinstance(haplotype, str) == True:
+			haplotypes = self.simulation.create_list_haplotypes(haplotype)
+			for hi in haplotypes:
+				self.plot_infectious(population, hi, step_num, label_infectious, label_samples)
+		else:
+			print("#TODO")
 
-		for hi in haplotypes:
-			infections, sample, time_points, lockdowns = self.simulation.get_data_infectious(population, hi, step_num)
+	def plot_infectious(self, population, haplotype, step_num, label_infectious, label_samples):
+		infections, sample, time_points, lockdowns = self.simulation.get_data_infectious(population, haplotype, step_num)
 
-			if label_infectious == None:
-				self.ax_2.plot(time_points, infections, label='Individuals-' + str(population) + '-' + str(hi))
-			elif isinstance(label_infectious, str) == True:
-				self.ax_2.plot(time_points, infections, label=label_infectious)
-			else:
-				print("#TODO")
+		if label_infectious == None:
+			self.ax_2.plot(time_points, infections, label='Individuals-' + str(population) + '-' + str(haplotype))
+		elif isinstance(label_infectious, str) == True:
+			self.ax_2.plot(time_points, infections, label=label_infectious)
+		else:
+			print("#TODO")
 
-			if label_samples == None:
-				self.ax.plot(time_points, sample, "--", label='Samples-' + str(population) + '-' + str(hi))
-			elif isinstance(label_label_samples, str) == True:
-				self.ax.plot(time_points, sample, "--", label=label_samples)
-			else:
-				print("#TODO")
+		if label_samples == None:
+			self.ax.plot(time_points, sample, "--", label='Samples-' + str(population) + '-' + str(haplotype))
+		elif isinstance(label_label_samples, str) == True:
+			self.ax.plot(time_points, sample, "--", label=label_samples)
+		else:
+			print("#TODO")
 
-			if len(lockdowns) != 0:
-				point = 0
-				pointEnd = 0
-				for ld in range(0, len(lockdowns), 2):
-					if ld+1 == len(lockdowns):
-						while time_points[point] < lockdowns[ld][1]:
-							point += 1
-						plt.fill_between(time_points[point:], infections[point:], alpha=0.2)
-					else:
-						while time_points[point] < lockdowns[ld][1]:
-							point += 1
-						while time_points[pointEnd] < lockdowns[ld+1][1]:
-							pointEnd += 1
-						if pointEnd == point:
-							continue
-						plt.fill_between(time_points[point:pointEnd+1], infections[point:pointEnd+1], alpha=0.2)
-
+		if len(lockdowns) != 0:
+			point = 0
+			pointEnd = 0
+			for ld in range(0, len(lockdowns), 2):
+				if ld+1 == len(lockdowns):
+					while time_points[point] < lockdowns[ld][1]:
+						point += 1
+					plt.fill_between(time_points[point:], infections[point:], alpha=0.2)
+				else:
+					while time_points[point] < lockdowns[ld][1]:
+						point += 1
+					while time_points[pointEnd] < lockdowns[ld+1][1]:
+						pointEnd += 1
+					if pointEnd == point:
+						continue
+					plt.fill_between(time_points[point:pointEnd+1], infections[point:pointEnd+1], alpha=0.2)
 
 	def add_plot_susceptible(self, population, susceptibility_type, step_num=100, label_susceptible=None):
 		if self.fig == None:
