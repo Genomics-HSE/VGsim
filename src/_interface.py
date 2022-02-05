@@ -6,12 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Simulator:
-	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False):
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=False):
 		self.fig = None
 		if seed == None:
-			seed = randrange(sys.maxsize)
+			seed = int(randrange(sys.maxsize))
 
-		self.simulation = BirthDeathModel(number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability)
+		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
+			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, \
+			memory_optimization=memory_optimization)
 
 
 	def print_basic_parameters(self):
