@@ -1883,11 +1883,6 @@ cdef class BirthDeathModel:
 
 
     def output_tree_mutations(self):
-        tree = []
-        times = []
-        for i in range(self.tree.shape[0]):
-            tree.append(self.tree[i])
-            times.append(self.times[i])
         mut = [[], [], [], [], []]
         for i in range(self.mut.nodeId.size()):
             mut[0].append(self.mut.nodeId[i])
@@ -1900,11 +1895,11 @@ cdef class BirthDeathModel:
         for time in self.times:
             populations[time] = self.events.populations[times_dict[time]]
 
-        return tree, times, mut, populations
+        return self.tree, self.times, mut, populations
 
-    def output_migrations(self, name_file):
+    def output_migrations(self, name_file, file_path):
         #with open(name_file + '.mig', 'w') as file:
-        file = open(name_file + '.mig', 'w')
+        file = open(file_path + '/' + name_file + '.mig', 'w')
         file.write("Node Time Old_population New_population\n")
         for i in range(self.mig.nodeId.size()):
             file.write(str(self.mig.nodeId[i]) + " " + str(self.mig.time[i]) + " " + str(self.mig.oldPop[i]) + " " + str(self.mig.newPop[i]) + "\n")
