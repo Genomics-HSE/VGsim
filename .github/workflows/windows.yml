@@ -1,0 +1,55 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: windows/dev
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.8']
+        os:  [windows-latest]
+
+    steps:
+    - uses: ilammy/msvc-dev-cmd@v1
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install numpy cython pytest ninja
+        python -m pip install meson>=0.60.3
+
+    - name: Build/install mc_lib
+      run: |
+        git clone https://github.com/ev-br/mc_lib.git local_mclib
+        cd local_mclib
+        meson setup build --prefix=$PWD/installdir
+        meson install -C build
+        cd ..
+
+    # Actually build VGsim
+    - name: Build
+      run: |
+        $env:PYTHONPATH="$PWD\local_mclib\installdir\Lib\site-packages"
+        meson setup build --prefix=$PWD/installdir
+        meson install -C build
+
+    - name: Run an example
+      run: |
+        pip install matplotlib prettytable
+        $env:PYTHONPATH="$PWD\installdir\Lib\site-packages;$PWD\local_mclib\installdir\Lib\site-packages"
+        dir "$PWD\installdir\Lib\site-packages\VGsim"
+        python ./vgsim.py -it 100000 -seed 2022
