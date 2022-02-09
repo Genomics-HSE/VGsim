@@ -208,28 +208,34 @@ def genealogy(seed=None):
     :type seed: int or None
 	"""
 
-def output_newick(name_file="newick_output"):
+def output_newick(file_template="newick_output", file_path = ''):
 	"""
 	Record format of binary trees
 
-    :param: name_file="newick_output"
-    :type: name_file = str
+    :param file_template: template for file name
+    :param file_path: path to output file
+    :type file_template: str
+    :type file_path: str
 	"""
 
-def output_mutations(name_file="mutation_output"):
+def output_mutations(file_template="mutation_output", file_path = ''):
 	"""
 	Information about all mutations
 
-    :param: name_file="mutation_output"
-    :type: name_file = str
+    :param file_template: template for file name
+    :param file_path: path to output file
+    :type file_template: str
+    :type file_path: str
 	"""
 
-def output_migrations(name_file="migrations"):
+def output_migrations(file_template="migrations", file_path = ''):
 	"""
 	Information about all migrations
 
-    :param: name_file="migrations"
-    :type: name_file = str
+    :param file_template: template for file name
+    :param file_path: path to output file
+    :type file_template: str
+    :type file_path: str
 	"""
 
 def output_parameters(name_file="parameters"):
