@@ -4,6 +4,8 @@
 
 cimport cython
 
+from numpy cimport npy_int64
+
 from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
 from mc_lib.rndm cimport RndmWrapper
@@ -38,8 +40,8 @@ cdef class BirthDeathModel:
         Migrations mig
         Lockdowns loc
 
-        long[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, tree
-        long[:,::1] susceptible, liveBranches, liveBranches_for_plot
+        npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, tree
+        npy_int64[:,::1] susceptible, liveBranches, liveBranches_for_plot
 
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, maxSusceptibility, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, effectiveSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, maxEffectiveMigration, times
         double[:,::1] mRate, totalHapMutType, tEventHapPopRate, susceptibility, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
@@ -49,11 +51,11 @@ cdef class BirthDeathModel:
         double[:,:,::1] PropensitiesSuscep, PropensitiesTransmission
         double[:,::1] PropensitiesRecovery, PropensitiesSampling
 
-        long[:,:,:,::1] eventsMigr, eventsMutatations
-        long[:,:,::1] eventsSuscep, eventsTransmission
-        long[:,::1] eventsRecovery, eventsSampling
+        npy_int64[:,:,:,::1] eventsMigr, eventsMutatations
+        npy_int64[:,:,::1] eventsSuscep, eventsTransmission
+        npy_int64[:,::1] eventsRecovery, eventsSampling
         double[:,:,::1] infectiousAuxTau, susceptibleAuxTau
-        long[:,::1] infectiousDelta, susceptibleDelta
+        npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
     def __init__(self, sites_number, populations_number, susceptibility_types, seed, sampling_probability):
         self.rndm = RndmWrapper(seed=(seed, 0))
@@ -535,7 +537,7 @@ cdef class BirthDeathModel:
             vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
             vector[vector[Py_ssize_t]] vecint2
             vector[Py_ssize_t] vecint1
-            long[:,::1] liveBranches
+            npy_int64[:,::1] liveBranches
 
             double e_time, me_time
             Py_ssize_t e_type_, e_population, e_haplotype, e_newHaplotype, e_newPopulation
