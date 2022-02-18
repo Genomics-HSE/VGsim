@@ -29,8 +29,8 @@ cdef class BirthDeathModel:
         RndmWrapper rndm
 
         bint first_simulation, sampling_probability, memory_optimization
-        Py_ssize_t seed, sites, hapNum, popNum, susNum, bCounter, dCounter, sCounter, mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, currentHapNum, maxHapNum
-        double currentTime, maxEffectiveBirth, totalRate, totalMigrationRate, totalLen, rn, tau_l
+        Py_ssize_t seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep
+        double currentTime, totalRate, totalMigrationRate, totalLen, rn, tau_l
 
         Events events
         multiEvents multievents
@@ -40,16 +40,12 @@ cdef class BirthDeathModel:
 
         Py_ssize_t[::1] suscType
 
-        double[::1] bRate, dRate, sRate
-        double[:,::1] mRate, susceptibility
-        double[:,:,::1] hapMutType
-
-        long[::1] sizes, totalSusceptible, totalInfectious, lockdownON, tree
+        long[::1] sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, tree
         long[:,::1] susceptible, liveBranches, liveBranches_for_plot
 
-        double[::1] tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, effectiveSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
-        double[:,::1] tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
-        double[:,:,::1] eventHapPopRate, susceptHapPopRate
+        double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, effectiveSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
+        double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
+        double[:,:,::1] hapMutType, eventHapPopRate, susceptHapPopRate
 
         double[:,:,:,::1] PropensitiesMigr, PropensitiesMutatations
         double[:,:,::1] PropensitiesSuscep, PropensitiesTransmission
@@ -61,8 +57,6 @@ cdef class BirthDeathModel:
         double[:,:,::1] infectiousAuxTau, susceptibleAuxTau
         long[:,::1] infectiousDelta, susceptibleDelta
 
-        #Memory optimization
-        long[::1] hapToNum, numToHap
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimization):
         self.rndm = RndmWrapper(seed=(seed, 0))
@@ -82,6 +76,7 @@ cdef class BirthDeathModel:
             self.maxHapNum = memory_optimization
         else:
             self.maxHapNum = self.hapNum
+        self.addMemoryNum = 4
         self.susNum = number_of_susceptible_groups
         self.popNum = populations_number
 
@@ -122,7 +117,6 @@ cdef class BirthDeathModel:
         self.mRate = np.zeros((self.hapNum, self.sites), dtype=float)
         self.susceptibility = np.zeros((self.hapNum, self.susNum), dtype=float)
         self.hapMutType = np.ones((self.hapNum, self.sites, 3), dtype=float)
-        # self.hapMutType = np.zeros((self.hapNum, self.sites, 3), dtype=float)
 
         for hn in range(self.hapNum):
             self.bRate[hn] = 2.0
@@ -130,10 +124,7 @@ cdef class BirthDeathModel:
             self.sRate[hn] = 0.01
             for s in range(self.sites):
                 self.mRate[hn, s] = 0.01
-                # for i in range(3):
-                #     self.hapMutType[hn, s, i] = 1/3
             self.susceptibility[hn, 0] = 1.0
-
 
         self.sizes = np.zeros(self.popNum, dtype=np.int64)
         self.totalSusceptible = np.zeros(self.popNum, dtype=np.int64)
@@ -190,11 +181,7 @@ cdef class BirthDeathModel:
 
         #Memory optimization
         self.hapToNum = np.zeros(self.maxHapNum, dtype=np.int64)
-        for i in range(self.maxHapNum):
-            self.hapToNum[i] = -1
         self.numToHap = np.zeros(self.hapNum, dtype=np.int64)
-        for i in range(self.hapNum):
-            self.numToHap[i] = -1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -229,17 +216,15 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddMemory(self):
-        add_array = np.zeros(4, dtype=np.int64)
-        add_array[:] = -1
-        self.hapToNum = np.concatenate((self.hapToNum, add_array))
-        self.liveBranches = np.concatenate((self.liveBranches, np.zeros((self.popNum, 4), dtype=np.int64)), axis=1)
-        self.liveBranches_for_plot = np.concatenate((self.liveBranches_for_plot, np.zeros((self.popNum, 4), dtype=np.int64)), axis=1)
-        self.tmRate = np.concatenate((self.tmRate, np.zeros(4, dtype=float)))
-        self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, 4), dtype=float)), axis=1)
-        self.hapPopRate = np.concatenate((self.hapPopRate, np.zeros((self.popNum, 4), dtype=float)), axis=1)
-        self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, 4, 4), dtype=float)), axis=1)
-        self.susceptHapPopRate = np.concatenate((self.susceptHapPopRate, np.zeros((self.popNum, 4, self.susNum), dtype=float)), axis=1)
-        self.maxHapNum += 4
+        self.hapToNum = np.concatenate((self.hapToNum, np.zeros(self.addMemoryNum, dtype=np.int64)))
+        self.liveBranches = np.concatenate((self.liveBranches, np.zeros((self.popNum, self.addMemoryNum), dtype=np.int64)), axis=1)
+        self.liveBranches_for_plot = np.concatenate((self.liveBranches_for_plot, np.zeros((self.popNum, self.addMemoryNum), dtype=np.int64)), axis=1)
+        self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, dtype=float)))
+        self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
+        self.hapPopRate = np.concatenate((self.hapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
+        self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, 4), dtype=float)), axis=1)
+        self.susceptHapPopRate = np.concatenate((self.susceptHapPopRate, np.zeros((self.popNum, self.addMemoryNum, self.susNum), dtype=float)), axis=1)
+        self.maxHapNum += self.addMemoryNum
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -506,15 +491,14 @@ cdef class BirthDeathModel:
         AS = int(floor(ohi/digit4) % 4)
         DS, self.rn = fastChoose1(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] \
             + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
-        # DS, self.rn = fastChoose1(self.hapMutType[ohi, mi], 1, self.rn)
         if DS >= AS:
             DS += 1
         nhi = ohi + (DS-AS)*digit4
-        count = 0
-        for hn in self.hapToNum:
-            if hn == -1:
+        count = 1
+        for hn in range(1, self.currentHapNum):
+            if self.hapToNum[hn] == 0:
                 break
-            if hn == nhi:
+            if self.hapToNum[hn] == nhi:
                 count -= 1
             count += 1
         if count == self.currentHapNum:
@@ -1203,9 +1187,6 @@ cdef class BirthDeathModel:
                 self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
                 self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
                 self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
-                # self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if len(probabilities)!=4:
                 self.Error("#TODO")
@@ -1226,9 +1207,6 @@ cdef class BirthDeathModel:
                 self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
                 self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
                 self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
-                # self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, str) and isinstance(mutation,int):#DONE
             if rate<0:
                 self.Error("#TODO")
@@ -1260,9 +1238,6 @@ cdef class BirthDeathModel:
             self.hapMutType[haplotype, mutation, 0] = probabilities[0]
             self.hapMutType[haplotype, mutation, 1] = probabilities[1]
             self.hapMutType[haplotype, mutation, 2] = probabilities[2]
-            # self.hapMutType[haplotype, mutation, 0] = probabilities[0]/sum(probabilities)
-            # self.hapMutType[haplotype, mutation, 1] = probabilities[1]/sum(probabilities)
-            # self.hapMutType[haplotype, mutation, 2] = probabilities[2]/sum(probabilities)
         elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
             if len(probabilities)!=4:
                 self.Error("#TODO")
@@ -1282,9 +1257,6 @@ cdef class BirthDeathModel:
             self.hapMutType[haplotype, mutation, 0] = probabilities[0]
             self.hapMutType[haplotype, mutation, 1] = probabilities[1]
             self.hapMutType[haplotype, mutation, 2] = probabilities[2]
-            # self.hapMutType[haplotype, mutation, 0] = probabilities[0]/sum(probabilities)
-            # self.hapMutType[haplotype, mutation, 1] = probabilities[1]/sum(probabilities)
-            # self.hapMutType[haplotype, mutation, 2] = probabilities[2]/sum(probabilities)
         elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and isinstance(mutation,int):#DONE
             if rate<0:
                 self.Error("#TODO")
@@ -1316,9 +1288,6 @@ cdef class BirthDeathModel:
                 self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
                 self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
                 self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
-                # self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif rate==None and isinstance(probabilities, list) and haplotype==None and isinstance(mutation,int):#DONE
             if len(probabilities)!=4:
                 self.Error("#TODO")
@@ -1338,9 +1307,6 @@ cdef class BirthDeathModel:
                 self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
                 self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
                 self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
-                # self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                # self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif isinstance(rate, (int, float)) and probabilities==None and haplotype==None and isinstance(mutation,int):#DONE
             if rate<0:
                 self.Error("#TODO")
@@ -1372,9 +1338,6 @@ cdef class BirthDeathModel:
                     self.hapMutType[haplotype, s, 0] = probabilities_allele[0]
                     self.hapMutType[haplotype, s, 1] = probabilities_allele[1]
                     self.hapMutType[haplotype, s, 2] = probabilities_allele[2]
-                    # self.hapMutType[haplotype, s, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                    # self.hapMutType[haplotype, s, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                    # self.hapMutType[haplotype, s, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, str) and mutation==None:#DONE
             if len(probabilities)!=4:
                 self.Error("#TODO")
@@ -1394,9 +1357,6 @@ cdef class BirthDeathModel:
                     self.hapMutType[haplotype, s, 0] = probabilities_allele[0]
                     self.hapMutType[haplotype, s, 1] = probabilities_allele[1]
                     self.hapMutType[haplotype, s, 2] = probabilities_allele[2]
-                    # self.hapMutType[haplotype, s, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                    # self.hapMutType[haplotype, s, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                    # self.hapMutType[haplotype, s, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, str) and mutation==None:
             if rate<0:
                 self.Error("#TODO")
@@ -1426,9 +1386,6 @@ cdef class BirthDeathModel:
                 self.hapMutType[haplotype, s, 0] = probabilities[0]
                 self.hapMutType[haplotype, s, 1] = probabilities[1]
                 self.hapMutType[haplotype, s, 2] = probabilities[2]
-                # self.hapMutType[haplotype, s, 0] = probabilities[0]/sum(probabilities)
-                # self.hapMutType[haplotype, s, 1] = probabilities[1]/sum(probabilities)
-                # self.hapMutType[haplotype, s, 2] = probabilities[2]/sum(probabilities)
         elif rate==None and isinstance(probabilities, list) and isinstance(haplotype, int) and mutation==None:#DONE
             if len(probabilities)!=4:
                 self.Error("#TODO")
@@ -1447,9 +1404,6 @@ cdef class BirthDeathModel:
                 self.hapMutType[haplotype, s, 0] = probabilities[0]
                 self.hapMutType[haplotype, s, 1] = probabilities[1]
                 self.hapMutType[haplotype, s, 2] = probabilities[2]
-                # self.hapMutType[haplotype, s, 0] = probabilities[0]/sum(probabilities)
-                # self.hapMutType[haplotype, s, 1] = probabilities[1]/sum(probabilities)
-                # self.hapMutType[haplotype, s, 2] = probabilities[2]/sum(probabilities)
         elif isinstance(rate, (int, float)) and probabilities==None and isinstance(haplotype, int) and mutation==None:#DONE
             if rate<0:
                 self.Error("#TODO")
@@ -1479,9 +1433,6 @@ cdef class BirthDeathModel:
                     self.hapMutType[hn, s, 0] = probabilities_allele[0]
                     self.hapMutType[hn, s, 1] = probabilities_allele[1]
                     self.hapMutType[hn, s, 2] = probabilities_allele[2]
-                    # self.hapMutType[hn, s, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                    # self.hapMutType[hn, s, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                    # self.hapMutType[hn, s, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif rate==None and isinstance(probabilities, list) and haplotype==None and mutation==None:#DONE
             if len(probabilities)!=4:
                 self.Error("#TODO")
@@ -1500,9 +1451,6 @@ cdef class BirthDeathModel:
                     self.hapMutType[hn, s, 0] = probabilities_allele[0]
                     self.hapMutType[hn, s, 1] = probabilities_allele[1]
                     self.hapMutType[hn, s, 2] = probabilities_allele[2]
-                    # self.hapMutType[hn, s, 0] = probabilities_allele[0]/sum(probabilities_allele)
-                    # self.hapMutType[hn, s, 1] = probabilities_allele[1]/sum(probabilities_allele)
-                    # self.hapMutType[hn, s, 2] = probabilities_allele[2]/sum(probabilities_allele)
         elif isinstance(rate, (int, float)) and probabilities==None and haplotype==None and mutation==None:#DONE
             if rate<0:
                 self.Error("#TODO")
@@ -2191,53 +2139,18 @@ cdef class BirthDeathModel:
         print("Current time: ", self.currentTime)
 
     def Debug(self):
-
-      #   print("Susceptible type(const): ", sep=" ", end="")
-      #   for hn in range(self.hapNum):
-      #       print(self.suscType[hn], end=" ")
-      #   print()
-      #   print("Birth rate(const): ", sep="", end="")
-      #   for hn in range(self.hapNum):
-      #       print(self.bRate[hn], end=" ")
-      #   print()
-      #   print("Death rate(const): ", sep="", end="")
-      #   for hn in range(self.hapNum):
-      #       print(self.dRate[hn], end=" ")
-      #   print()
-      #   print("Sampling rate(const): ", sep="", end="")
-      #   for hn in range(self.hapNum):
-      #       print(self.sRate[hn], end=" ")
-      #   print()
-      #   print("Mutation rate(const)----")
-      #   for hn in range(self.hapNum):
-      #       for s in range(self.sites):
-      #           print(self.mRate[hn, s], end=" ")
-      #       print()
-      #   print()
-      # print("susceptibility(const)----")
-      #   for hn in range(self.currentHapNum):
-      #       for sn in range(self.susNum):
-      #           print(self.susceptibility[hn, sn], end=" ")
-      #       print()
-      #   print()
-      #   print("hapMutType(const)----")
-      #   for hn in range(self.currentHapNum):
-      #       for s in range(self.sites):
-      #           for i in range(3):
-      #               print(self.hapMutType[hn, s, i], end=" ")
-      #           print()
-      #       print()
-      #   print()
         print("Parameters")
+        print('first_simulation(mutable): ', self.first_simulation)
+        print("sampling_probability(const): ", self.sampling_probability)
+        print("memory_optimization(const): ", self.memory_optimization)
+        print()
+        print("seed(const): ", self.seed)
         print("sites(const): ", self.sites)
         print("hapNum(const): ", self.hapNum)
         print("currentHapNum(mutable): ", self.currentHapNum)
         print("maxHapNum(mutable): ", self.maxHapNum)
         print("popNum(const): ", self.popNum)
         print("susNum(const): ", self.susNum)
-        print("sampling_probability(const): ", self.sampling_probability)
-        print("memory_optimization(const): ", self.memory_optimization)
-
         print("bCounter(mutable): ", self.bCounter)
         print("dCounter(mutable): ", self.dCounter)
         print("sCounter(mutable): ", self.sCounter)
@@ -2247,48 +2160,24 @@ cdef class BirthDeathModel:
         print("migPlus(mutable): ", self.migPlus)
         print("migNonPlus(mutable): ", self.migNonPlus)
         print("globalInfectious(mutable): ", self.globalInfectious)
-
+        print()
         print("currentTime(mutable): ", self.currentTime)
-        print("seed(const): ", self.seed)
         print("totalRate(mutable): ", self.totalRate)
         print("totalMigrationTate(mutable): ", self.totalMigrationRate)
         print("rn(mutable): ", self.rn)
-
-        print("numToHap(mutable): ", sep="", end="")
+        print()
+        print("suscType(const): ", sep=" ", end="")
         for hn in range(self.hapNum):
-            print(self.numToHap[hn], end=" ")
+            print(self.suscType[hn], end=" ")
+        print()
         print()
         print("hapToNum(mutable): ", sep="", end="")
         for hn in range(self.maxHapNum):
             print(self.hapToNum[hn], end=" ")
         print()
-        print("tmRate(const): ", sep="", end="")
-        for hn in range(self.currentHapNum):
-            print(self.tmRate[hn], end=" ")
-        print()
-        print("maxEffectiveBirthMigration(const): ", sep="", end="")
-        for pn in range(self.popNum):
-            print(self.maxEffectiveBirthMigration[pn], end=" ")
-        print()
-        print("suscepCumulTransition(const): ", sep="", end="")
-        for sn in range(self.susNum):
-            print(self.suscepCumulTransition[sn], end=" ")
-        print()
-        print("infectPopRate(mutable): ", sep="", end="")
-        for pn in range(self.popNum):
-            print(self.infectPopRate[pn], end=" ")
-        print()
-        print("immunePopRate(mutable): ", sep="", end="")
-        for pn in range(self.popNum):
-            print(self.immunePopRate[pn], end=" ")
-        print()
-        print("popRate(mutable): ", sep="", end="")
-        for pn in range(self.popNum):
-            print(self.popRate[pn], end=" ")
-        print()
-        print("migPopRate(mutable): ", sep="", end="")
-        for pn in range(self.popNum):
-            print(self.migPopRate[pn], end=" ")
+        print("numToHap(mutable): ", sep="", end="")
+        for hn in range(self.hapNum):
+            print(self.numToHap[hn], end=" ")
         print()
         print("sizes(const): ", end="")
         for pn in range(self.popNum):
@@ -2305,6 +2194,60 @@ cdef class BirthDeathModel:
         print("lockdownON(mutable): ", end="")
         for pn in range(self.popNum):
             print(self.lockdownON[pn], end=" ")
+        print()
+        print()
+        print("susceptible(mutable)----")
+        for pn in range(self.popNum):
+            for sn in range(self.susNum):
+                print(self.susceptible[pn, sn], end=" ")
+            print()
+        print()
+        print("liveBranches(mutable)----")
+        for pn in range(self.popNum):
+            for hn in range(self.currentHapNum):
+                print(self.liveBranches[pn, hn], end=" ")
+            print()
+        print()
+        print()
+        print("Birth rate(const): ", sep="", end="")
+        for hn in range(self.hapNum):
+            print(self.bRate[hn], end=" ")
+        print()
+        print("Death rate(const): ", sep="", end="")
+        for hn in range(self.hapNum):
+            print(self.dRate[hn], end=" ")
+        print()
+        print("Sampling rate(const): ", sep="", end="")
+        for hn in range(self.hapNum):
+            print(self.sRate[hn], end=" ")
+        print()
+        print("tmRate(const): ", sep="", end="")
+        for hn in range(self.currentHapNum):
+            print(self.tmRate[hn], end=" ")
+        print()
+        print("maxEffectiveBirthMigration(const): ", sep="", end="")
+        for pn in range(self.popNum):
+            print(self.maxEffectiveBirthMigration[pn], end=" ")
+        print()
+        print("suscepCumulTransition(const): ", sep="", end="")
+        for sn in range(self.susNum):
+            print(self.suscepCumulTransition[sn], end=" ")
+        print()
+        print("immunePopRate(mutable): ", sep="", end="")
+        for pn in range(self.popNum):
+            print(self.immunePopRate[pn], end=" ")
+        print()
+        print("infectPopRate(mutable): ", sep="", end="")
+        for pn in range(self.popNum):
+            print(self.infectPopRate[pn], end=" ")
+        print()
+        print("popRate(mutable): ", sep="", end="")
+        for pn in range(self.popNum):
+            print(self.popRate[pn], end=" ")
+        print()
+        print("migPopRate(mutable): ", sep="", end="")
+        for pn in range(self.popNum):
+            print(self.migPopRate[pn], end=" ")
         print()
         print("effectiveSizes(const): ", end=" ")
         for pn in range(self.popNum):
@@ -2334,35 +2277,23 @@ cdef class BirthDeathModel:
         for pn in range(self.popNum):
             print(self.samplingMultiplier[pn], end=" ")
         print()
-
+        print()
+        print("mRate(const)----")
+        for hn in range(self.hapNum):
+            for s in range(self.sites):
+                print(self.mRate[hn, s], end=" ")
+            print()
+        print()
+        print("susceptibility(const)----")
+        for hn in range(self.currentHapNum):
+            for sn in range(self.susNum):
+                print(self.susceptibility[hn, sn], end=" ")
+            print()
+        print()
         print("tEventHapPopRate(mutable)----")
         for pn in range(self.popNum):
             for hn in range(self.currentHapNum):
                 print(self.tEventHapPopRate[pn, hn], end=" ")
-            print()
-        print()
-        print("susceptible(mutable)----")
-        for pn in range(self.popNum):
-            for sn in range(self.susNum):
-                print(self.susceptible[pn, sn], end=" ")
-            print()
-        print()
-        print("liveBranches(mutable)----")
-        for pn in range(self.popNum):
-            for hn in range(self.currentHapNum):
-                print(self.liveBranches[pn, hn], end=" ")
-            print()
-        print()
-        print("migrationRates(const)----")
-        for pn1 in range(self.popNum):
-            for pn2 in range(self.popNum):
-                print(self.migrationRates[pn1, pn2], end=" ")
-            print()
-        print()
-        print("effectiveMigration(const)----")
-        for pn1 in range(self.popNum):
-            for pn2 in range(self.popNum):
-                print(self.effectiveMigration[pn1, pn2], end=" ")
             print()
         print()
         print("suscepTransition(const)----")
@@ -2383,7 +2314,27 @@ cdef class BirthDeathModel:
                 print(self.hapPopRate[pn, hn], end=" ")
             print()
         print()
-
+        print("migrationRates(const)----")
+        for pn1 in range(self.popNum):
+            for pn2 in range(self.popNum):
+                print(self.migrationRates[pn1, pn2], end=" ")
+            print()
+        print()
+        print("effectiveMigration(const)----")
+        for pn1 in range(self.popNum):
+            for pn2 in range(self.popNum):
+                print(self.effectiveMigration[pn1, pn2], end=" ")
+            print()
+        print()
+        print()
+        print("hapMutType(const)----")
+        for hn in range(self.currentHapNum):
+            for s in range(self.sites):
+                for i in range(3):
+                    print(self.hapMutType[hn, s, i], end=" ")
+                print()
+            print()
+        print()
         print("eventHapPopRate(mutable)----")
         for pn in range(self.popNum):
             for hn in range(self.currentHapNum):
