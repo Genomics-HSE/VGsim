@@ -189,8 +189,8 @@ cdef class BirthDeathModel:
         if self.globalInfectious == 0:
             for sn in range(self.susNum):
                 if self.susceptible[0, sn] != 0:
-                    self.NewInfections(0, sn, 0)
                     self.AddHaplotype(0)
+                    self.NewInfections(0, sn, 0)
                     return
 
     @cython.boundscheck(False)
@@ -326,7 +326,6 @@ cdef class BirthDeathModel:
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time):
         cdef Py_ssize_t pi
         self.events.CreateEvents(iterations)
-        self.UpdateAllRates()
         if self.first_simulation == False:
             self.FirstInfection()
             self.first_simulation = True
