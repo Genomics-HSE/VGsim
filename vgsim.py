@@ -23,7 +23,7 @@ parser.add_argument('--sampleSize', '-s', nargs=1, type=int, default=None,
 parser.add_argument('--time', '-t', nargs=1, type=float, default=None,
                     help='time for stopping simulation (default is None)')
 parser.add_argument('--max_haplotypes_number', '-mhn', nargs=1, type=int, default=None,
-                    help='')
+                    help='#TODO')
 parser.add_argument('--seed', '-seed', nargs=1, type=float, default=None,
                     help='random seed')
 
@@ -108,7 +108,7 @@ if clargs.seed == None:
 else:
 	seed = clargs.seed
 
-simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), maximum_number_of_haplotypes=clargs.max_haplotypes_number ,populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
+simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), memory_optimization=clargs.max_haplotypes_number ,populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
 
 for i in range(len(bRate)):
 	simulator.set_transmission_rate(bRate[i], i)
