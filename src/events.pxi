@@ -32,13 +32,6 @@ cdef class Events:
         self.size = 0
         self.ptr = 0#pointer to the first empty cell
 
-        #self.times = np.zeros(self.size, dtype=float)
-        #self.types = np.zeros(self.size, dtype=int)
-        #self.haplotypes = np.zeros(self.size, dtype=int)
-        #self.populations = np.zeros(self.size, dtype=int)
-        #self.newHaplotypes = np.zeros(self.size, dtype=int)
-        #self.newPopulations = np.zeros(self.size, dtype=int)
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
@@ -119,14 +112,6 @@ cdef class multiEvents:
     def __init__(self):
         self.size = 0
         self.ptr = 0#pointer to the first empty cell
-
-        #self.num = np.zeros(1, dtype=int)
-        #self.times = np.zeros(1, dtype=float)
-        #self.types = np.zeros(1, dtype=int)
-        #self.haplotypes = np.zeros(1, dtype=int)
-        #self.populations = np.zeros(1, dtype=int)
-        #self.newHaplotypes = np.zeros(1, dtype=int)
-        #self.newPopulations = np.zeros(1, dtype=int)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

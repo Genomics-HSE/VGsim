@@ -63,7 +63,7 @@ cdef class BirthDeathModel:
 
         self.first_simulation = False
         self.sampling_probability = sampling_probability
-        if memory_optimization == False:
+        if memory_optimization == None:
             self.memory_optimization = False
         else:
             self.memory_optimization = True
