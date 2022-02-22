@@ -40,7 +40,7 @@ cdef class BirthDeathModel:
         Migrations mig
         Lockdowns loc
 
-        npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, tree
+        npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, tree
         npy_int64[:,::1] susceptible, liveBranches, liveBranches_for_plot
 
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, effectiveSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
