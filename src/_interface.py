@@ -95,15 +95,15 @@ class Simulator:
 		self.set_settings(file_template)
 
 
-	def output_newick(self, file_template="newick_output", file_path = ''):
+	def output_newick(self, file_template="newick_output", file_path = None):
 		pruferSeq, times, mut, populations = self.simulation.output_tree_mutations()
 		writeGenomeNewick(pruferSeq, times, populations, file_template, file_path)
 
-	def output_mutations(self, file_template="mutation_output", file_path = ''):
+	def output_mutations(self, file_template="mutation_output", file_path = None):
 		pruferSeq, times, mut, populations = self.simulation.output_tree_mutations()
 		writeMutations(mut, len(pruferSeq), file_template, file_path)
 
-	def output_migrations(self, file_template="migrations", file_path = ''):
+	def output_migrations(self, file_template="migrations", file_path = None):
 		self.simulation.output_migrations(file_template, file_path)
 
 	def output_sample_data(self, output_print=False):
