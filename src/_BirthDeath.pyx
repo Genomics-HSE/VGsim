@@ -1903,10 +1903,14 @@ cdef class BirthDeathModel:
         return self.tree, self.times, mut, populations
 
     def output_migrations(self, name_file, file_path):
-        with open(file_path + '/' + name_file + '.mig', 'w') as file:
-            file.write("Node\tTime\tOld_population\tNew_population\n")
-            for i in range(self.mig.nodeId.size()):
-                file.write(str(self.mig.nodeId[i]) + '\t' + str(self.mig.time[i]) + '\t' + str(self.mig.oldPop[i]) + '\t' + str(self.mig.newPop[i]) + "\n")
+        if file_path != None:
+            f_mig = open(file_path + '/' + name_file + '.mig', 'w')
+        else:
+            f_mig = open(name_file + '.mig', 'w')
+        f_mig.write("Node\tTime\tOld_population\tNew_population\n")
+        for i in range(self.mig.nodeId.size()):
+            f_mig.write(str(self.mig.nodeId[i]) + '\t' + str(self.mig.time[i]) + '\t' + str(self.mig.oldPop[i]) + '\t' + str(self.mig.newPop[i]) + "\n")
+        f_mig.close()
 
     def output_sample_data(self):
         time, pop, hap = [], [], []
