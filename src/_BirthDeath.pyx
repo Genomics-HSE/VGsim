@@ -311,11 +311,11 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     @cython.cdivision(True)
     cdef inline double BirthRate(self, Py_ssize_t pi, Py_ssize_t hi):
-        cdef double ws = 0.0, ps = 0.0
+        cdef double ws, ps = 0.0
 
         for sn in range(self.susNum):
             self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn]*self.susceptibility[self.hapToNum[hi], sn]
-            ws += self.susceptHapPopRate[pi, hi, sn]
+            ws = self.susceptHapPopRate[pi, hi, sn]
             for pn in range(self.popNum):
                 ps += ws*self.migrationRates[pi, pn]*self.migrationRates[pi, pn]*self.contactDensity[pn]/self.effectiveSizes[pn]
 
