@@ -832,7 +832,7 @@ cdef class BirthDeathModel:
             field.append("M" + str(s))
             field.append("MW" + str(s))
         table.field_names = field
-        for hn in range(self.hapNum):
+        for hn in range(self.currentHapNum):
             list = ["\n" + self.calculate_string(hn), "\n\033[43m{}\033[0m".format(str(self.bRate[hn])), "\n\033[43m{}\033[0m".format(str(self.dRate[hn])), "\n\033[43m{}\033[0m".format(str(self.sRate[hn])), "\n\033[43m{}\033[0m".format(str(self.suscType[hn]))]
             # list = ["\n" + self.calculate_string(hn), "\n\033[43m{}\033[0m".format(str(self.bRate[hn])), "\n\033[43m{}\033[0m".format(str(self.dRate[hn])), "\n\033[43m{}\033[0m".format(str(self.sRate[hn])), "\n\033[43m{}\033[0m".format(str(self.suscType[hn]))]
             for s in range(self.sites):
@@ -904,7 +904,7 @@ cdef class BirthDeathModel:
         field = ["H\\ID"]
         for pn in range(self.popNum):
             field.append(pn)
-        for hn in range(self.hapNum):
+        for hn in range(self.currentHapNum):
             row = [self.calculate_string(hn)]
             for pn in range(self.popNum):
                 row.append(self.liveBranches_for_plot[pn, hn])
@@ -947,7 +947,7 @@ cdef class BirthDeathModel:
         for sn in range(self.susNum):
             field.append("S" + str(sn))
         table_immunity.field_names = field
-        for hn in range(self.hapNum):
+        for hn in range(self.currentHapNum):
             row = [self.calculate_string(hn)]
             for sn in range(self.susNum):
                 row.append(self.susceptibility[hn, sn])
