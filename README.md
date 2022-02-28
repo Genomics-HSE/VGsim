@@ -23,6 +23,14 @@ you will need python development headers (e.g. on ubuntu linux the package name 
 
 **For MacOS users: please make sure to use Python with Homebrew or Conda. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install**
 
+Creating conda environment
+```
+$ conda create -n conda_vgsim
+$ conda activate conda_vgsim
+$ conda install python=3.9
+```
+Please separate environment creation and Python installation, otherwise wrong Python paths might be added.
+
 To build the C extensions, run
 
 ```
