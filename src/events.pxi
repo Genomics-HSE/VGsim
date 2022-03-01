@@ -32,13 +32,6 @@ cdef class Events:
         self.size = 0
         self.ptr = 0#pointer to the first empty cell
 
-        #self.times = np.zeros(self.size, dtype=float)
-        #self.types = np.zeros(self.size, dtype=int)
-        #self.haplotypes = np.zeros(self.size, dtype=int)
-        #self.populations = np.zeros(self.size, dtype=int)
-        #self.newHaplotypes = np.zeros(self.size, dtype=int)
-        #self.newPopulations = np.zeros(self.size, dtype=int)
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddEvent(self, double time_, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
@@ -60,18 +53,18 @@ cdef class Events:
         if self.ptr == 0:
             self.size += iterations
             self.times = np.zeros(self.size, dtype=float)
-            self.types = np.zeros(self.size, dtype=int)
-            self.haplotypes = np.zeros(self.size, dtype=int)
-            self.populations = np.zeros(self.size, dtype=int)
-            self.newHaplotypes = np.zeros(self.size, dtype=int)
-            self.newPopulations = np.zeros(self.size, dtype=int)
+            self.types = np.zeros(self.size, dtype=np.int64)
+            self.haplotypes = np.zeros(self.size, dtype=np.int64)
+            self.populations = np.zeros(self.size, dtype=np.int64)
+            self.newHaplotypes = np.zeros(self.size, dtype=np.int64)
+            self.newPopulations = np.zeros(self.size, dtype=np.int64)
         else:
             self.times = np.concatenate((self.times, np.zeros(iterations + self.ptr - self.size, dtype=float)))
-            self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
             self.size = iterations + self.ptr
 
 cdef class multiEvent:
@@ -120,14 +113,6 @@ cdef class multiEvents:
         self.size = 0
         self.ptr = 0#pointer to the first empty cell
 
-        #self.num = np.zeros(1, dtype=int)
-        #self.times = np.zeros(1, dtype=float)
-        #self.types = np.zeros(1, dtype=int)
-        #self.haplotypes = np.zeros(1, dtype=int)
-        #self.populations = np.zeros(1, dtype=int)
-        #self.newHaplotypes = np.zeros(1, dtype=int)
-        #self.newPopulations = np.zeros(1, dtype=int)
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddEvents(self, Py_ssize_t num, double time_, Py_ssize_t type_, Py_ssize_t haplotype, Py_ssize_t population, Py_ssize_t newHaplotype, Py_ssize_t newPopulation):
@@ -149,19 +134,19 @@ cdef class multiEvents:
     cdef void CreateEvents(self, Py_ssize_t iterations):
         if self.ptr == 0:
             self.size = iterations
-            self.num = np.zeros(self.size, dtype=int)
+            self.num = np.zeros(self.size, dtype=np.int64)
             self.times = np.zeros(self.size, dtype=float)
-            self.types = np.zeros(self.size, dtype=int)
-            self.haplotypes = np.zeros(self.size, dtype=int)
-            self.populations = np.zeros(self.size, dtype=int)
-            self.newHaplotypes = np.zeros(self.size, dtype=int)
-            self.newPopulations = np.zeros(self.size, dtype=int)
+            self.types = np.zeros(self.size, dtype=np.int64)
+            self.haplotypes = np.zeros(self.size, dtype=np.int64)
+            self.populations = np.zeros(self.size, dtype=np.int64)
+            self.newHaplotypes = np.zeros(self.size, dtype=np.int64)
+            self.newPopulations = np.zeros(self.size, dtype=np.int64)
         else:
-            self.num = np.concatenate((self.num, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.num = np.concatenate((self.num, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
             self.times = np.concatenate((self.times, np.zeros(iterations + self.ptr - self.size, dtype=float)))
-            self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=int)))
-            self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=int)))
+            self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+            self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
             self.size = iterations + self.ptr

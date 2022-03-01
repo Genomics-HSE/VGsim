@@ -162,12 +162,17 @@ def writeMutations(mut, len_prufer, name_file, file_path):
     for nodeId in mutations_dict:
         mutations_dict[nodeId] = mutations_dict[nodeId][:-1]
 
-    with open(file_path + '/' + name_file + ".tsv", 'w') as f_mut:
-        for i in range(len_prufer):
-            if i in mutations_dict:
-                f_mut.write(str(i)+'\t'+str(mutations_dict[i])+'\n')
-            else:
-                f_mut.write(str(i)+'\n')
+    if file_path != None:
+        f_mut = open(file_path + '/' + name_file + ".tsv", 'w')
+    else:
+        f_mut = open(name_file + ".tsv", 'w')
+
+    for i in range(len_prufer):
+        if i in mutations_dict:
+            f_mut.write(str(i)+'\t'+str(mutations_dict[i])+'\n')
+        else:
+            f_mut.write(str(i)+'\n')
+    f_mut.close()
 
 class Vertex():
     def __init__(self, root, root_time, children, populations):
@@ -234,9 +239,16 @@ def writeGenomeNewick(pruferSeq, times, populations, name_file, file_path):
 
     result = Vertex(root, root_time, children, populations)
 
-    with open(file_path + '/' + name_file + '_tree.nwk', 'w') as f_nwk:
-        f_nwk.write(result.get_children(root_time))
-        f_nwk.write(';')
+    if file_path != None:
+        f_nwk = open(file_path + '/' + name_file + '_tree.nwk', 'w')
+        f_pop = open(file_path + '/' + name_file + '_sample_population.txt', 'w')
+    else:
+        f_nwk = open(name_file + '_tree.nwk', 'w')
+        f_pop = open(name_file + '_sample_population.txt', 'w')
 
-    with open(file_path + '/' + name_file + '_sample_population.txt', 'w') as f_pop:
-        f_pop.write(result.write_population())
+    f_nwk.write(result.get_children(root_time))
+    f_nwk.write(';')
+    f_pop.write(result.write_population())
+
+    f_nwk.close()
+    f_pop.close()

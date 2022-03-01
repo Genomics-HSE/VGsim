@@ -22,6 +22,8 @@ parser.add_argument('--sampleSize', '-s', nargs=1, type=int, default=None,
                     help='number of sample (default is None)')
 parser.add_argument('--time', '-t', nargs=1, type=float, default=None,
                     help='time for stopping simulation (default is None)')
+parser.add_argument('--max_haplotypes_number', '-mhn', nargs=1, type=int, default=None,
+                    help='#TODO')
 parser.add_argument('--seed', '-seed', nargs=1, type=float, default=None,
                     help='random seed')
 
@@ -43,6 +45,8 @@ parser.add_argument("--writeMutations", '-tsv',
 parser.add_argument("--writeMigrations",
                     help="Create a migration file *.txt ",
                     action="store_true")
+parser.add_argument("--output_chain_events", nargs=1, default=None,
+                    help="#TODO")
 
 parser.add_argument("-citation", '-c', help="Information for citation.")
 
@@ -68,6 +72,8 @@ if isinstance(clargs.suscepTransition, list):
     clargs.suscepTransition = clargs.suscepTransition[0]
 if isinstance(clargs.seed, list):
     clargs.seed = clargs.seed[0]
+if isinstance(clargs.output_chain_events, list):
+    clargs.output_chain_events = clargs.output_chain_events[0]
 
 if clargs.rates == None:
     bRate, dRate, sRate, mRate = [2], [1], [0.1], [[]]
@@ -102,7 +108,7 @@ if clargs.seed == None:
 else:
 	seed = clargs.seed
 
-simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
+simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), memory_optimization=clargs.max_haplotypes_number ,populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
 
 for i in range(len(bRate)):
 	simulator.set_transmission_rate(bRate[i], i)
@@ -144,3 +150,5 @@ if clargs.writeMutations:
     simulator.output_mutations()
 if clargs.writeMigrations:
     simulator.output_migrations()
+if clargs.output_chain_events:
+    simulator.output_chain_events(clargs.output_chain_events)
