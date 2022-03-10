@@ -153,9 +153,8 @@ class Simulator:
 
 	def plot_infectious(self, population, haplotype, step_num, label_infectious, label_samples):
 		infections, sample, time_points, lockdowns = self.simulation.get_data_infectious(population, haplotype, step_num)
-
 		if label_infectious == None:
-			self.ax_2.plot(time_points, infections, label='Individuals-' + str(population) + '-' + str(haplotype))
+			self.ax_2.plot(time_points, infections, label='Infectious-' + str(population) + '-' + str(haplotype))
 		elif isinstance(label_infectious, str) == True:
 			self.ax_2.plot(time_points, infections, label=label_infectious)
 		else:
