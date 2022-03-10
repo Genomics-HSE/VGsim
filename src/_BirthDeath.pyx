@@ -526,15 +526,18 @@ cdef class BirthDeathModel:
         hi, self.rn = fastChoose2(self.liveBranches[spi], self.totalInfectious[spi], self.rn)
         for sn in range(self.susNum):
             ws += self.susceptHapPopRate[tpi, hi, sn]
-        si, self.rn = fastChoose1(self.susceptHapPopRate[tpi, hi], ws, self.rn)
+        if ws != 0.0:
+            si, self.rn = fastChoose1(self.susceptHapPopRate[tpi, hi], ws, self.rn)
 
-        p_accept = self.effectiveMigration[spi, tpi]*self.bRate[self.hapToNum[hi]]*self.susceptibility[self.hapToNum[hi], si]/self.maxEffectiveBirthMigration[tpi]
-        if self.rn < p_accept:
-            self.NewInfections(tpi, si, hi)
-            self.UpdateRates(tpi, True, True, True)
+            p_accept = self.effectiveMigration[spi, tpi]*self.bRate[self.hapToNum[hi]]*self.susceptibility[self.hapToNum[hi], si]/self.maxEffectiveBirthMigration[tpi]
+            if self.rn < p_accept:
+                self.NewInfections(tpi, si, hi)
+                self.UpdateRates(tpi, True, True, True)
 
-            self.migPlus += 1
-            self.events.AddEvent(self.currentTime, MIGRATION, self.hapToNum[hi], spi, si, tpi)
+                self.migPlus += 1
+                self.events.AddEvent(self.currentTime, MIGRATION, self.hapToNum[hi], spi, si, tpi)
+            else:
+                self.migNonPlus += 1
         else:
             self.migNonPlus += 1
         return tpi
