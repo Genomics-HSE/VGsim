@@ -87,13 +87,12 @@ For developers, it is recommended to manually build the package. This process is
 
 From the `VGsim` directory, first let us configure `PYTHOPATH`.
 ```
-PWD=$(pwd)
 ver=$(python -c'from sys import version_info as v; print("%s.%s"%(v.major, v.minor))')
 export PYTHONPATH=$PWD/installdir/lib/python$ver/site-packages/  
 ```
 Remember to do it in every terminal window/tab where you work on the project (e.g. with your `jupyter notebook`)! Now we are ready to build `VGsim`.
 ```
-meson setup build --prefix=/Users/User/Documents/VGsim/installdir     
+meson setup build --prefix=$PWD/installdir    
 meson install -C build
 ```
 That's it!
