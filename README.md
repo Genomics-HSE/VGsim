@@ -95,4 +95,7 @@ Remember to do it in every terminal window/tab where you work on the project (e.
 meson setup build --prefix=$PWD/installdir    
 meson install -C build
 ```
-That's it!
+That's it! For subsequent rebuilds (in the same terminal session) you need to run only the last command
+```
+meson install -C build
+```
