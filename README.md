@@ -79,3 +79,23 @@ Please cite our preprint (https://www.medrxiv.org/content/10.1101/2021.04.21.212
 Shchur et al. VGsim: scalable viral genealogy simulator for global pandemic.
 medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891
 ```
+
+Fast build
+----------
+
+For developers, it is recommended to manually build the package. This process is much faster then using pip, so it is handy while actively working with the code.
+
+From the `VGsim` directory, first let us configure `PYTHOPATH`.
+```
+ver=$(python -c'from sys import version_info as v; print("%s.%s"%(v.major, v.minor))')
+export PYTHONPATH=$PWD/installdir/lib/python$ver/site-packages/  
+```
+Remember to do it in every terminal window/tab where you work on the project (e.g. with your `jupyter notebook`)! Now we are ready to build `VGsim`.
+```
+meson setup build --prefix=$PWD/installdir    
+meson install -C build
+```
+That's it! For subsequent rebuilds (in the same terminal session) you need to run only the last command
+```
+meson install -C build
+```
