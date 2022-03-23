@@ -2,6 +2,9 @@ API
 ===
 
 .. autoclass:: functions.Simulator
+    :members:
+
+    .. automethod:: __init__
 
 Epidemiological model
 ---------------------

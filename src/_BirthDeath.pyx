@@ -2037,7 +2037,7 @@ cdef class BirthDeathModel:
         Date = np.zeros(step_num+1)
         Sample = np.zeros(step_num+1)
 
-        point = 1
+        point = 0
         for j in range(self.events.ptr):
             if point != step_num and time_points[point] < self.events.times[j]:
                 Date[point+1] = Date[point]
@@ -2072,7 +2072,7 @@ cdef class BirthDeathModel:
             Date[0] = self.sizes[pop]
             Date[1] = self.sizes[pop]
 
-        point = 1
+        point = 0
         for j in range(self.events.ptr):
             if point != step_num and time_points[point] < self.events.times[j]:
                 Date[point+1] = Date[point]
