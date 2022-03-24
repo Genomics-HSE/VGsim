@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Simulator:
-	def __init__(self, number_of_sites = 0, populations_number = 1, number_of_susceptible_groups = 1, seed = None, sampling_probability = False, memory_optimization = False):
+
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=None):
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
