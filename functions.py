@@ -1,6 +1,6 @@
 class Simulator():
 	"""
-	This is the class which creates the simulation.
+	This is the most important class which creates and proceeds the simulation.
 		sites_number: the number of mutable sites with strong phenotypic effect
 		populations_number: the number of populations (demes)
 		susceptibility_types: the number of susceptible groups (groups with different immunity response)
