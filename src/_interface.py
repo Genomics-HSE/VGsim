@@ -133,6 +133,9 @@ class Simulator:
 		self.output_chain_events()
 		self.output_settings()
 
+	def get_tree(self):
+		return self.simulation.get_tree()
+
 	def get_data_susceptible(self, population, susceptibility_type,
 							 step_num):  # returns susceptible, time_points, lockdowns
 		return self.simulation.get_data_susceptible(population, susceptibility_type, step_num)
