@@ -147,7 +147,7 @@ cdef class BirthDeathModel:
         self.startLD = np.ones(self.popNum, dtype=float)
         self.endLD = np.ones(self.popNum, dtype=float)
         self.samplingMultiplier = np.ones(self.popNum, dtype=float)
- 
+
         self.suscepTransition = np.zeros( (self.susNum, self.susNum), dtype=float)
         self.immuneSourcePopRate = np.zeros((self.popNum, self.susNum), dtype=float)
         self.migrationRates = np.zeros((self.popNum, self.popNum), dtype=float)
@@ -888,7 +888,7 @@ cdef class BirthDeathModel:
         table_populations.field_names = ["ID", "Size", "CD",'CDBLC', "CDALD", "SLD", "ELD", "SM"]
         for pn in range(self.popNum):
             table_populations.add_row([pn, self.sizes[pn], self.contactDensity[pn], self.contactDensityBeforeLockdown[pn], self.contactDensityAfterLockdown[pn], self.startLD[pn], self.endLD[pn], self.samplingMultiplier[pn]])
-        
+
         print(table_populations)
         print("Legend:")
         print("ID - number of population")
@@ -1121,7 +1121,7 @@ cdef class BirthDeathModel:
             self.Error("Incorrect type of uninfection rate. Value should be int or float.")
         if rate<0:
             self.Error("Incorrect value of uninfection rate. Value should be more or equal 0.")
-        
+
         if isinstance(haplotype, str):
             haplotypes = self.create_list_haplotypes(haplotype)
             for haplotype in haplotypes:
@@ -1143,7 +1143,7 @@ cdef class BirthDeathModel:
                 self.Error("Incorrect type of sampling probability. Value should be int or float.")
             if rate<0 or rate>1:
                 self.Error("Incorrect value of sampling probability. Value should be more or equal 0 and less or equal 1.")
-            
+
             if isinstance(haplotype, str):
                 haplotypes = self.create_list_haplotypes(haplotype)
                 for haplotype in haplotypes:
@@ -1170,7 +1170,7 @@ cdef class BirthDeathModel:
                 self.Error("Incorrect type of sampling rate. Value should be int or float.")
             if rate<0:
                 self.Error("Incorrect value of sampling rate. Value should be more or equal 0.")
-            
+
             if isinstance(haplotype, str):
                 haplotypes = self.create_list_haplotypes(haplotype)
                 for haplotype in haplotypes:
@@ -1787,7 +1787,7 @@ cdef class BirthDeathModel:
                 self.susceptible[pn, target_type] += amount
         else:
             self.Error("Incorrect value of population. Value should be int or None.")
-       
+
     def set_infected_individuals(self, amount, source_haplotype, target_haplotype, population):
         if self.first_simulation:
             self.Error('#TODO')
@@ -1982,7 +1982,7 @@ cdef class BirthDeathModel:
                         for k in range(self.hapNum):
                             logDynamics[i].write(str(hapDate[i, k]) + " ")
                         logDynamics[i].write("\n")
-                    point += 1 
+                    point += 1
                 else:
                     log["time"].append(time_points[point])
                     for i in range(self.popNum):
@@ -1990,12 +1990,12 @@ cdef class BirthDeathModel:
                             log["P" + str(i)]["S" + str(j)].append(suscepDate[i, j])
                         for j  in range(self.hapNum):
                             log["P" + str(i)]["H" + str(j)].append(hapDate[i, j])
-                    point += 1 
+                    point += 1
 
         if output_file == True:
             for i in range(self.popNum-1, -1, -1):
                 logDynamics[i].close()
-        else: 
+        else:
             return log
 
     def output_chain_events(self, name_file):
@@ -2055,6 +2055,8 @@ cdef class BirthDeathModel:
             comand += ('-st ' + file_template + '/' + file_template + '.st ')
         print(comand)
 
+    def get_tree(self):
+        return self.tree, self.times
 
     def get_data_infectious(self, pop, hap, step_num):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
@@ -2365,7 +2367,7 @@ cdef class BirthDeathModel:
     # cdef inline double MigrationPropensity(self, Py_ssize_t spn, Py_ssize_t tpn, Py_ssize_t sn, Py_ssize_t hn):
     #     return self.effectiveMigration[tpn, spn]*self.susceptible[tpn, sn]*self.infectious[spn, hn]*self.bRate[hn]*\
     #     self.susceptibility[hn, sn]*self.migrationRates[spn, spn]
-    
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -2736,4 +2738,3 @@ cdef class BirthDeathModel:
                 for i in range(self.susNum):
                     print("Transmission", s, h, i, self.PropensitiesTransmission[s, h, i])
                     #print("migr=", self.migrationRates[s, s], "  prop", prop)
-
