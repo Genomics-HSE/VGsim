@@ -16,7 +16,7 @@ VGsim is the Python package for simulation of viral genealogies in the world-sca
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    modules 

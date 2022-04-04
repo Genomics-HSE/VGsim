@@ -74,8 +74,8 @@ def set_mutation_rate(rate=None, substitution_weights=None, haplotype=None, site
 	This method allows setting the mutation rate and the weights for each single nucleotide substitution (given the mutation happened). haplotype is the ancestral haplotype for the mutation. site_id is the position on the haplotype where mutation arises. substitution_weights are given in the order of derived variant ATCG. The derived variant cannot be the same as the ancestral state, so the corresponding array entry will be ignored.
 
     :param rate: mutation rate value (None would not change the old value).
-    :param substitution_weights: weights of each single nucleotide substitution given mutation occured (None would not change the old values). See XXX for example.
-    :param haplotype: haplotypes for which the new value is being set. See XXX for details.
+    :param substitution_weights: weights of each single nucleotide substitution given mutation occured (None would not change the old values). `See for example <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+    :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
     :type rate: float or None
     :type substitution_weights: list of four non-negative integers or None
     :type haplotype: int or string or None
@@ -150,7 +150,7 @@ def set_susceptible_individuals(amount, source_type, target_type, population=Non
     :type population: int or None
 	"""
 
-def set_lockdown(parameters, population=None):
+def set_npi(parameters, population=None):
 	"""
 	Setting conditions when lockdown in a population is imposed and lifted with the contact density during the lockdown.
 
