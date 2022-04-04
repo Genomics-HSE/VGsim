@@ -27,7 +27,7 @@ Population model
 
 .. autofunction:: functions.set_population_size
 .. autofunction:: functions.set_contact_density
-.. autofunction:: functions.set_lockdown
+.. autofunction:: functions.set_npi
 .. autofunction:: functions.set_sampling_multiplier
 .. autofunction:: functions.set_migration_probability
 
