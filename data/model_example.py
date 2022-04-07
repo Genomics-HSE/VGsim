@@ -15,8 +15,8 @@ mutation_rate = 0.003
 substitution_weights = [1, 1, 1, 1]  # ATCG
 simulator.set_mutation_rate(mutation_rate, substitution_weights)
 
-simulator.set_recovery_rate(0.0)
-simulator.set_sampling_rate(0.1)
+simulator.set_recovery_rate(0.09)
+simulator.set_sampling_rate(0.01)
 
 simulator.set_susceptibility_type(0)  # default
 simulator.set_susceptibility_type(1, haplotype="A")
