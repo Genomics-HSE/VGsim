@@ -1,15 +1,29 @@
 class Simulator():
 	"""
 	This is the most important class which creates and proceeds the simulation.
-		sites_number: the number of mutable sites with strong phenotypic effect
-		populations_number: the number of populations (demes)
-		susceptibility_types: the number of susceptible groups (groups with different immunity response)
-
-	:param: sites_number=0, populations_number=1, susceptibility_types=2, seed=None, sampling_probability=False, strong_migration=False
-	:type: sites_number = int, populations_number = int, susceptibility_types = int, seed = float or None, sampling_probability = True or False, strong_migration = True or False
 	"""
-	def __init__(self):
-		pass
+
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=None):
+		"""
+
+		:param number_of_sites: the number of mutable sites
+		:type number_of_sites: int
+
+		:param populations_number: the number of populations (demes)
+		:type populations_number: int
+
+		:param number_of_susceptible_groups: the number of susceptible groups (groups with different immunity response)
+		:type number_of_susceptible_groups: int
+
+		:param seed: seed to generate simulation from. If **None**, then chosen at random
+		:type seed: float or None
+
+		:param sampling_probability: the probability of sampling. Must be between 0 and 1
+		:type sampling_probability: float
+
+		:param memory_optimization: if True, then memory optimization is conducted (useful for large number of possible haplotypes)
+		:type memory_optimization: bool
+"""
 
 def print_basic_parameters():
 	"""
