@@ -58,8 +58,7 @@ def set_transmission_rate(rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
-	Transmission rate is the the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when all but one of the hosts are susceptible.
-See `Wikipedia`_ - that is parameter beta in SIR model.
+	Transmission rate is the the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when all but one of the hosts are susceptible. See `Wikipedia`_ - that is parameter beta in SIR model.
 
 	:param rate: transmission rate value.
 	:type rate: float
@@ -307,11 +306,11 @@ def output_migrations(file_template="migrations", file_path = None):
 	"""
 	Outputs the information about all migrations
 
-    :param file_template: template for the file name
-    :type file_template: str
+	:param file_template: template for the file name
+	:type file_template: str
 
-    :param file_path: path to output file
-    :type file_path: str
+	:param file_path: path to output file
+	:type file_path: str
 	"""
 
 def output_sample_data(output_print=False):
@@ -319,8 +318,9 @@ def output_sample_data(output_print=False):
 	Show all information about sampling, time, place, etc.
 
 	:param output_print: if *Thue*, it outputs data about each sample to the console. Data includes time of sampling, population and haplotype of sampled individual.
-    :type output_print: bool
-    :return: 3 lists with times, population ids and haplotypes of the sampled individuals
+	:type output_print: bool
+
+	:return: 3 lists with times, population ids and haplotypes of the sampled individuals
 	"""
 
 
@@ -329,27 +329,10 @@ def output_epidemiology_timelines(step=1000, output_file=False):
 	Records simulation state changes over some period of time.
 
 	:param step: a number of steps which split the epidemiology timelines.
-    :type step: str
+	:type step: str
 
-    :param output_file: if **True**, the timeline is written in the output file
-    :type output_file: bool
-	"""
-
-
-def add_plot_infectious(population, haplotype, step_num=100, label=None):
-	"""
-	Add to plot the trajectories of the change of the number of infectious individuals over time.  label allows to add the label to plot legend.
-
-	:param: population, haplotype, step_num=100, label=None
-	:type: population = int, haplotype = int or str, step_num = int, label = str or None
-	"""
-
-def add_plot_susceptible(population, susceptibility_type, step_num=100, label=None):
-	"""
-	Add to plot the trajectories of the change of the number of susceptible individuals over time.
-
-	:param: population, susceptibility_type, step_num=100, label=None
-	:type: population = int, susceptibility_type = int, step_num = int, label = str or None
+	:param output_file: if **True**, the timeline is written in the output file
+	:type output_file: bool
 	"""
 
 def output_chain_events(file_name="chain_events"):
@@ -379,10 +362,10 @@ def get_data_susceptible(population, susceptibility_type,
 	"""
 	Returns the list with the amount of sucseptible individuals over some period of time.
 
-	:param population: population id, for which we get the data
+	:param population: population to retrieve data from
 	:param population: int
 
-	:param susceptibility_type: susceptibility type, for which we get the data
+	:param susceptibility_type: susceptibility type to retrieve data from
 	:param susceptibility_type: int
 
 	:param step_num: number of steps which split the epidemiology timeline.
@@ -396,13 +379,13 @@ def get_data_infectious(self, population, haplotype,
 	"""
 	Returns the list with the amount of infectious individuals over some period of time.
 
-	:param population: population id, for which we get the data
+	:param population: population to retrieve data from
 	:param population: int
 
-	:param haplotype: haplotype, for which we get the data
+	:param haplotype: haplotype to retrieve data from
 	:param haplotype: int
 
-	:param step_num: number of steps which split the epidemiology timeline.
+	:param step_num: number of steps which split the epidemiology timeline
 	:param step_num: int
 
 	:return: 3 lists - amounts of infectious individuals on the time points, time points themselves at which we retrieve amounts of individuals, and lockdowns data for the current epidemiology
@@ -411,14 +394,63 @@ def get_data_infectious(self, population, haplotype,
 
 def plot_infectious(population, haplotype, step_num, label_infectious, label_samples):
 	"""
+	Creates plots for infectious and sampled individuals.
 
-	:param population:
-	:param haplotype:
-	:param step_num:
-	:param label_infectious:
-	:param label_samples:
-	:return:
+	:param population: population id for the plot
+	:type population: int
+
+	:param haplotype: haplotype for the plot
+	:type haplotype: int or str
+
+	:param step_num: number of steps which split the epidemiology timeline
+	:type step_num: int
+
+	:param label_infectious: the label for the infectious plot in the plot legend
+	:type label_infectious: str
+
+	:param label_samples: the label for the samples plot in the plot legend
+	:type label_samples: str
 	"""
+
+
+def add_plot_infectious(population, haplotype, step_num=100, label_infectious=None, label_samples=None):
+	"""
+	Add to plot the trajectories of the change of the number of infectious individuals over time.
+
+	:param population: population id for the plot
+	:type population: int
+
+	:param haplotype: haplotype for the plot
+	:type haplotype: int or str
+
+	:param step_num: number of steps which split the epidemiology timeline
+	:type step_num: int
+
+	:param label_infectious: the label for the infectious plot
+	:type label_infectious: str or None
+
+	:param label_samples: the label for the samples plot
+	:type label_samples: str or None
+	"""
+
+
+def add_plot_susceptible(population, susceptibility_type, step_num=100, label=None):
+	"""
+	Add to plot the trajectories of the change of the number of susceptible individuals over time.
+
+	:param population: population id for the plot
+	:type population: int
+
+	:param haplotype: haplotype for the plot
+	:type haplotype: int or str
+
+	:param step_num: number of steps which split the epidemiology timeline
+	:type step_num: int
+
+	:param label: the label for the susceptible plot
+	:type label: str
+	"""
+
 
 def add_legend():
 	"""
@@ -427,35 +459,39 @@ def add_legend():
 
 def add_title(name="Plot"):
 	"""
-	Plot title.
+	Add plot title.
 
-	:param: name="Plot"
-	:type: name = str
+	:param name: the title for the plot
+	:type name: str
 	"""
 
 def plot():
 	"""
-	Show plot with all the trajectories added by the previous two methods.
+	Show plot with all the trajectories added by other methods.
 	"""
 
 def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
 	"""
-	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
+	This methods performs the simulation. The simulation interrupts when either one of the following conditions is satisfied: the number of iterations equals *iterations*, the number of collected samples equals *sample_size*, ot the total virtual time of the epidemic exceeds *time*
 	It can be called multiple times, changes of most parameters are allowed between simulation runs.
 
     :param iterations: maximal number of iterations.
-    :param sample_size: desired sample size.
-    :param time: virtual (model) time to be simulated.
-    :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
     :type iterations: int
+
+    :param sample_size: desired sample size.
     :type sample_size: int or None
+
+    :param time: virtual (model) time to be simulated.
     :type time: float or None
+
+    :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
     :type method: string
 	"""
 
+
 def genealogy(seed=None):
 	"""
-	Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
+	Generates a genealogy based on the chain of events generated during all the instances of simulate() method.
 
     :param seed: seed value (None for random seed).
     :type seed: int or None
@@ -463,28 +499,25 @@ def genealogy(seed=None):
 
 def citation():
 	"""
-	:return:
+	Prints a citation of the paper in the console
 	"""
 
 def debug():
 	"""
-
-	:return:
+	Returns all of the available information about simulation. Mainly used for the debug purposes. Not documented.
 	"""
 
 def get_proportion():
 	"""
-	:return:
+	Used for paper preparation. Not documented.
 	"""
 
 def print_counters():
 	"""
-
-	:return:
+	Used for paper preparation. Not documented.
 	"""
 
 def print_propensities():
 	"""
-
-	:return:
+	Used for paper preparation. Not documented.
 	"""
