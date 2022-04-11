@@ -118,34 +118,31 @@ Flags
      - float
      - random seed
    * - -pm or --populationModel
-     - path to two file
-     - population model: a file with population sizes etc, and a file with migration rate matrix
+     - str
+     - path to the population model: a file with population sizes etc, and a file with migration rate matrix
    * - -su or --susceptibility
-     - path to file
-     - susceptibility file
+     - str
+     - path to the susceptibility file
    * - -st or --suscepTransition
-     - path to file
-     - susceptibility transition file
+     - str
+     - path to the susceptibility transition file
    * - --sampling_probability
-     - None
-     - #TODO
-   * - --strong_migration
-     - None
-     - #TODO
+     - float
+     - used to specify sampling as a share of recovered individuals
    * - -nwk or --createNewick
      - None
-     - Create a newick file of tree *.nwk
+     - Create a newick file of tree
    * - -tsv or --writeMutations
      - None
-     - Create a mutation file *.tsv
+     - Create a mutation file
    * - --writeMigrations
      - None
-     - Create a migration file *.txt
+     - Create a migration file
    * - -c or -citation
      - None
      - Information for citation
 
-Output
-------
+Tree output
+-----------
 
 The final genealogical tree can be exported into Newick format with `--createNewick` or `-nwk`, and mutations can be exported in a tsv file with `--writeMutations` or `-tsv`. This format is compatible with phastSim (https://github.com/NicolaDM/phastSim) and Usher (REF).
