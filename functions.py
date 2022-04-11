@@ -150,58 +150,48 @@ def set_immunity_transition(self, rate, source=None, target=None):
 	"""
 
 
-def set_population_size(amount, population=None):
+def set_population_size(self, size, population=None):
 	"""
-	The number of individuals in the population.
+	Set the number of individuals in the population.
 
-    :param amount: total number of individuals in the population.
-    :param population: population for which the new population size is set (in case of None the value will be updated for all populations).
-    :type amount: int
-    :type population: int or None
+	:param size: total number of individuals in the population.
+	:type size: int
+
+	:param population: population for which the new population size is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
 	"""
 
-def set_contact_density(value, population=None):
+def set_contact_density(self, value, population=None):
 	"""
 	The relative number of contacts per time units.
 
-    :param value: contact density value.
-    :param population: population for which the new contact density size is being set (in case of None the value will be updated for all populations).
-    :type value: float
-    :type population: int or None
+	:param value: contact density value.
+	:type value: float
+
+	:param population: population for which the new contact density size is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
 	"""
 
-def set_susceptible_individuals(amount, source_type, target_type, population=None):
+def set_lockdown(self, parameters, population=None):
 	"""
-	The method allows to move susceptible individuals between susceptibility groups.
+	Setting conditions when lockdown in a population is imposed and lifted with the certain contact density during the lockdown.
 
-    :param amount: the number of individuals to be moved.
-    :param source_type: source susceptibility group from which individuals are moved.
-    :param target_type: target susceptibility group into which individuals are moved.
-    :param population: population for which the new value is being set (in case of None the value will be updated for all populations).
-    :type amount: int
-    :type source_type: int or None
-    :type target_type: float
-    :type population: int or None
+	:param parameters: list with three elements: contact density value during lockdown, fraction of infectious population when the lockdown is set, fraction of infectious population when lockdown is lifted.
+	:type parameters: list of length 3 with float values
+
+	:param population: population for which the lockdown parameters are being set (in case of None the value will be updated for all populations).
+	:type population: int or None
 	"""
 
-def set_lockdown(parameters, population=None):
-	"""
-	Setting conditions when lockdown in a population is imposed and lifted with the contact density during the lockdown.
-
-    :param parameters: list with three elements: contact density value during lockdown, fraction of infectious population when the lockdown is set, fraction of infectious population when lockdown is lifted.
-    :param population: population for which the new lockdown parameters are being set (in case of None the value will be updated for all populations).
-    :type parameters: list of length 3
-    :type population: int or None
-	"""
-
-def set_sampling_multiplier(value, population=None):
+def set_sampling_multiplier(self, multiplier, population=None):
 	"""
 	The relative sampling in the population (multiplicative modifier). Sampling rate of each haplotype is modified by this factor.
 
-    :param value: sampling multiplier value.
-    :param population: population for which the new sampling multiplier is being set (in case of None the value will be updated for all populations).
-    :type value: float
-    :type population: int or None
+	:param value: sampling multiplier value.
+	:type value: float
+
+	:param population: population for which the new sampling multiplier is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
 	"""
 
 def set_migration_probability(probability=None, cumulative=False, source=None, target=None):
@@ -216,6 +206,20 @@ def set_migration_probability(probability=None, cumulative=False, source=None, t
     :type cumulative: bool
     :type source: int or None
     :type target: int or None
+	"""
+
+def set_susceptible_individuals(amount, source_type, target_type, population=None):
+	"""
+	The method allows to move susceptible individuals between susceptibility groups.
+
+    :param amount: the number of individuals to be moved.
+    :param source_type: source susceptibility group from which individuals are moved.
+    :param target_type: target susceptibility group into which individuals are moved.
+    :param population: population for which the new value is being set (in case of None the value will be updated for all populations).
+    :type amount: int
+    :type source_type: int or None
+    :type target_type: float
+    :type population: int or None
 	"""
 
 
