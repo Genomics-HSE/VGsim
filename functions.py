@@ -213,7 +213,7 @@ def set_migration_probability(probability=None, total_probability=None, source=N
 
 def set_susceptible_individuals(amount, source_type, target_type, population=None):
 	"""
-	The method allows to move susceptible individuals between susceptibility groups.
+	The method allows moving susceptible individuals between susceptibility groups.
 	
 	:param amount: the number of individuals to be moved.
 	:type amount: int
@@ -230,82 +230,99 @@ def set_susceptible_individuals(amount, source_type, target_type, population=Non
 
 def set_infected_individuals(amount, source_haplotype, target_haplotype, population=None):
 	"""
-	:param amount: 
-	:param source_haplotype: 
-	:param target_haplotype: 
-	:param population:
+	The method allows moving infected individuals between susceptibility groups.
+
+	:param amount: the number of individuals to be moved.
+	:type amount: int
+
+	:param source_haplotype: source haplotype from which individuals are moved.
+	:type source_haplotype: int
+
+	:param target_haplotype: target haplotype into which individuals are moved.
+	:type target_haplotype: int
+
+	:param population: population for which the new value is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
 	"""
 
 def set_infection(amount, source_type, target_haplotype, population=None):
 	"""
-	:param amount:
-	:param source_type:
-	:param target_haplotype:
-	:param population:
+	The method allows moving individuals from susceptibility group to target haplotype.
+
+	:param amount: the number of individuals to be moved.
+	:type amount: int
+
+	:param source_type: source susceptibility group from which individuals are moved.
+	:type source_type: int
+
+	:param target_haplotype: target haplotype into which individuals are moved.
+	:type target_haplotype: int
+
+	:param population: population for which the new value is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
 	"""
 
 def set_chain_events(file_name):
 	"""
-	:param file_name:
-	:return:
+	Allows to import chain of events directly from the .npy file
+
+	:param file_name: a name of the file (without the .npy extension)
+	:type file_name: str
 	"""
 
 def set_settings(file_template):
 	"""
-	:param file_template:
-	:return:
+	Currently is a placeholder and does nothing. Do not include in actual docs until it does something.
 	"""
 
 def set_state(set_state):
 	"""
-	:param set_state:
-	:return:
+	Calls set_chain_events and set_setting. Now identical to set_events. Do not include in docs until it starts to differ.
 	"""
 
 
-
-def output_newick(file_template="newick_output", file_path = ''):
+def output_newick(file_template="newick_output", file_path = None):
 	"""
-	Record format of binary trees
+	Outputs the result of simulation in the newick format.
 
-    :param file_template: template for file name
-    :param file_path: path to output file
+    :param file_template: template for the file name
     :type file_template: str
+
+    :param file_path: path to output file
     :type file_path: str
 	"""
 
-def output_mutations(file_template="mutation_output", file_path = ''):
+def output_mutations(file_template="mutation_output", file_path = None):
 	"""
-	Information about all mutations
+	Outputs the information about all mutations
 
-    :param file_template: template for file name
-    :param file_path: path to output file
+    :param file_template: template for the file name
     :type file_template: str
+
+    :param file_path: path to output file
     :type file_path: str
 	"""
-
-def output_migrations(file_template="migrations", file_path = ''):
-	"""
-	Information about all migrations
-
-    :param file_template: template for file name
-    :param file_path: path to output file
-    :type file_template: str
-    :type file_path: str
-	"""
-
-def output_sample_data():
-	"""
-	Show all information about sampling, time, place, etc.
-	"""
-
 
 def output_migrations(file_template="migrations", file_path = None):
 	"""
-	:param file_template:
-	:param file_path:
-	:return:
+	Outputs the information about all migrations
+
+    :param file_template: template for the file name
+    :type file_template: str
+
+    :param file_path: path to output file
+    :type file_path: str
 	"""
+
+def output_sample_data(output_print=False):
+	"""
+	Show all information about sampling, time, place, etc.
+
+	:param output_print: if *Thue*, it outputs data about each sample to the console. Data includes time of sampling, population and haplotype of sampled individual.
+    :type output_print: bool
+    :return: 3 lists with times, population ids and haplotypes of the sampled individuals
+	"""
+
 
 def output_epidemiology_timelines(step=1000, output_file=False):
 	"""
