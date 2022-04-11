@@ -326,7 +326,13 @@ def output_sample_data(output_print=False):
 
 def output_epidemiology_timelines(step=1000, output_file=False):
 	"""
-	Records simulation state changes over some period of time. step - a number of parts epidemiology_timelines is split on.
+	Records simulation state changes over some period of time.
+
+	:param step: a number of steps which split the epidemiology timelines.
+    :type step: str
+
+    :param output_file: if **True**, the timeline is written in the output file
+    :type output_file: bool
 	"""
 
 
@@ -348,24 +354,25 @@ def add_plot_susceptible(population, susceptibility_type, step_num=100, label=No
 
 def output_chain_events(file_name="chain_events"):
 	"""
+	Outputs event chain.
 
-	:param file_name:
-	:return:
+	:param file_name: file name for the output
+	:param file_name: str
 	"""
 
 def output_settings(self, file_template="parameters"):
 	"""
+	Outputs settings.
 
-	:param self:
-	:param file_template:
-	:return:
+	:param file_template: file name for the output
+	:param file_template: str
 	"""
 
 def output_state():
 	"""
-
-	:return:
+	Outputs event chain and settings.
 	"""
+
 
 def get_data_susceptible(population, susceptibility_type,
 							 step_num):
