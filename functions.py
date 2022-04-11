@@ -194,18 +194,21 @@ def set_sampling_multiplier(self, multiplier, population=None):
 	:type population: int or None
 	"""
 
-def set_migration_probability(probability=None, cumulative=False, source=None, target=None):
+def set_migration_probability(self, probability=None, total_probability=None, source=None, target=None):
 	"""
-	The probability that an individual from the population source is travelling to the population target. cumulative=True means that probability is the total probability to find an individual from population source outside of its population. All the entries (except for the diagonal) of the corresponding row of the migration probability matrix will be set to probability/(K-1), where K is the number of populations in the simulation.
+	The probability that an individual from the population source is travelling to the population target.
 
-    :param probability: probability value.
-    :param cumulative: if True, all the entries (except for the diagonal element) of row corresponding to source population is filled with probabilitie/(K-1).
-    :param source: source population with infectious individual  (None means that the new value will be set to all populations as source).
-    :param target: target population with susceptible individual (None means that the new value will be set to all populations as target).
-    :type probability: float
-    :type cumulative: bool
-    :type source: int or None
-    :type target: int or None
+	:param probability: probability of migration value.
+	:type probability: float
+
+	:param total_probability: if True, all the entries (except for the diagonal element) of row corresponding to source population is filled with probabilitie/(K-1). That represents individual travelling out of its population to a random destination.
+	:type total_probability: bool
+
+	:param source: source population with infectious individual (None means that the new value will be set to all populations as source).
+	:type source: int or None
+
+	:param target: target population with infectious individual (None means that the new value will be set to all populations as source).
+	:type target: int or None
 	"""
 
 def set_susceptible_individuals(amount, source_type, target_type, population=None):
