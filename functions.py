@@ -19,10 +19,10 @@ class Simulator():
 		:type seed: float or None
 
 		:param sampling_probability: whether we set sampling probability as a share of recovered individuals (**True** value) or we will set it explicitly. Default is **False**.
-		:type sampling_probability: bool
+		:type sampling_probability: bool or None
 
 		:param memory_optimization: if True, then memory optimization is conducted (useful for large number of possible haplotypes)
-		:type memory_optimization: bool
+		:type memory_optimization: bool or None
 		"""
 
 def print_basic_parameters():
@@ -107,7 +107,7 @@ def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutat
 	:type haplotype: int or string or None
 
 	:param mutation: the id of position on the haplotype where mutation arises.
-	:type mutation: int
+	:type mutation: int or None
 	"""
 
 def set_susceptibility_type(self, susceptibility_type, haplotype=None):
@@ -121,28 +121,32 @@ def set_susceptibility_type(self, susceptibility_type, haplotype=None):
 	:type haplotype: int or string or None
 	"""
 
-def set_susceptibility(susceptibility, haplotype=None, susceptibility_type=None):
+def set_susceptibility(self, rate, haplotype=None, susceptibility_type=None):
 	"""
-	Susceptibility is a multiplicative modifier of the transmission rate based on the susceptible host immunity with a susceptibility_type. It can decrease or increase the transmission rate of a particular haplotype to the individuals of susceptibility_type.
+	Susceptibility is a multiplicative modifier of the transmission rate based on the susceptible host immunity with a certain *susceptibility_type*. It can decrease or increase the transmission rate of a particular haplotype to the individuals of said *susceptibility_type*.
 
-    :param susceptibility: susceptibility value.
-    :param haplotype: haplotypes for which the new susceptibility value is being set. See XXX for details.
-    :param susceptibility_type: immunity group id for which the new susceptibility value is being set.
-    :type susceptibility: int
-    :type haplotype: int or string or None
-    :type susceptibility_type: int
+	:param rate: susceptibility value.
+	:type rate: float
+
+	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:type haplotype: int or string or None
+
+	:param susceptibility_type: immunity group id for which the new susceptibility value is being set.
+	:type susceptibility_type: int or None
 	"""
 
-def set_immunity_transition(rate, source=None, target=None):
+def set_immunity_transition(self, rate, source=None, target=None):
 	"""
 	The change of immunity without infection (e.g. due to vaccination or immunity loss with time).
 
-    :param rate: transition rate value.
-    :param source: source immunity group id (None means that the new value will be set to all immunity groups as source).
-    :param target: target immunity group id (None means that the new value will be set to all immunity groups as target).
-    :type rate: float
-    :type source: int or None
-    :type target: int or None
+	:param rate: transition rate value.
+	:type rate: float
+
+	:param source: source immunity group id (None means that the new value will be set to all immunity groups as source).
+	:type source: int or None
+
+	:param target: target immunity group id (None means that the new value will be set to all immunity groups as source).
+	:type target: int or None
 	"""
 
 
