@@ -82,6 +82,7 @@ class Simulator:
 	def set_infection(self, amount, source_type, target_haplotype, population=None):
 		self.simulation.set_infection(amount, source_type, target_haplotype, population)
 
+    
 	def set_chain_events(self, file_name):
 		self.simulation.set_chain_events(file_name)
 
@@ -128,6 +129,9 @@ class Simulator:
 	def output_state(self):
 		self.output_chain_events()
 		self.output_settings()
+
+	def get_tree(self):
+		return self.simulation.get_tree()
 
 	def get_data_susceptible(self, population, susceptibility_type,
 							 step_num):  # returns susceptible, time_points, lockdowns

@@ -7,7 +7,6 @@ One of the key features of VGsim is a usage of pathogen haplotypes (or strains).
     If you have many haplotypes in your simulation, we encourage you to set *memory_optimisation* field in **Simulator** class to *True*. That might help with the memory performance for your simulation.
 
 
-
 Single nucleotide mutations lead to different haplotypes arising in the population. The rates of such mutations can be finely tuned: the user can set them independently for each site and each derived state of each haplotype.
 
 VGsim’s API provides a convenient tool to set values of different parameters to a particular haplotype or to groups of haplotypes. Every API function with a parameter ``haplotype`` supports the following parameter values.

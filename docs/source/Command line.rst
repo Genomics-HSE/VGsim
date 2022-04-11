@@ -1,7 +1,7 @@
 Command line
 ============
 
-Basic infirmation
+Basic information
 -----------------
 
 We consider Python API to be the main way of working with VGsim. Therefore all the documentation and developement are mainly connected with API, but not command line. We do not garantee, that command line will have the same functionality with the API and encourage you not to use it extensively.

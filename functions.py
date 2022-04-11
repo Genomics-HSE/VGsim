@@ -434,6 +434,7 @@ def add_plot_infectious(population, haplotype, step_num=100, label_infectious=No
 	"""
 
 
+
 def add_plot_susceptible(population, susceptibility_type, step_num=100, label=None):
 	"""
 	Add to plot the trajectories of the change of the number of susceptible individuals over time.

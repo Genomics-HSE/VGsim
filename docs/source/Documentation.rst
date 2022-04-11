@@ -25,7 +25,6 @@ Host immunity
 .. autofunction:: functions.set_susceptibility
 .. autofunction:: functions.set_immunity_transition
 
-
 Population model
 ----------------
 
