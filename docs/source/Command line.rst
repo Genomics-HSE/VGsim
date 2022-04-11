@@ -1,11 +1,10 @@
 Command line
 ============
 
-Stopping criterion
-------------------
+Basic infirmation
+-----------------
 
-Exists two variants to stop simulation.
-First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
+We consider Python API to be the main way of working with VGsim. Therefore all the documentation and developement are mainly connected with API, but not command line. We do not garantee, that command line will have the same functionality with the API and encourage you not to use it extensively.
 
 
 Setting haplotype (strain) model
@@ -88,6 +87,13 @@ The user can specify the rates of direct transitions between susceptibility type
 	0.0 0.0 0.0001
 	0.001 0.0 0.0001
 	0.0 0.0 0.0
+
+Stopping criterion
+------------------
+
+There exists two variants to stop simulation.
+First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
+
 
 Flags
 -----
