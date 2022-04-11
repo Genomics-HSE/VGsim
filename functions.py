@@ -44,8 +44,14 @@ def print_all(basic_parameters=True, populations=True, immunity_model=True):
 	"""
 	This methods prints all the parameters of the simulation.
 
-	:param: basic_parameters=True, populations=True, immunity_model=True
-	:type: basic_parameters = True or False, populations = True or False, immunity_model = True or False
+	:param basic_parameters: whether to output the basic parameters of the epidemiological model.
+	:type basic_parameters: bool
+
+	:param populations: whether to output parameters of the population model.
+	:type populations: bool
+
+	:param immunity_model: whether to output parameters of the immunity model.
+	:type immunity_model: bool
 	"""
 
 def set_transmission_rate(rate, haplotype=None):
