@@ -3,7 +3,7 @@ class Simulator():
 	This is the most important class which creates and proceeds the simulation.
 	"""
 
-	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=None):
+	def __init__(number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=None):
 		"""
 
 		:param number_of_sites: the number of mutable sites
@@ -40,7 +40,7 @@ def print_immunity_model():
 	This methods prints the basic parameters of the immunity model.
 	"""
 
-def print_all(self, basic_parameters=True, populations=True, immunity_model=True):
+def print_all(basic_parameters=True, populations=True, immunity_model=True):
 	"""
 	This methods prints all the parameters of the simulation.
 
@@ -54,7 +54,7 @@ def print_all(self, basic_parameters=True, populations=True, immunity_model=True
 	:type immunity_model: bool
 	"""
 
-def set_transmission_rate(self, rate, haplotype=None):
+def set_transmission_rate(rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
@@ -69,7 +69,7 @@ See `Wikipedia`_ - that is parameter beta in SIR model.
 	"""
 
 
-def set_recovery_rate(self, rate, haplotype=None):
+def set_recovery_rate(rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
@@ -82,7 +82,7 @@ def set_recovery_rate(self, rate, haplotype=None):
 	:type haplotype: int or string or None
 	"""
 
-def set_sampling_rate(self, rate, haplotype=None):
+def set_sampling_rate(rate, haplotype=None):
 	"""
 	Sampling rate: the rate at which infected individuals are sampled. The genealogy will be generated only for these samples. Alternatively, if *sampling_probability* is **True**, it will specify the fraction of recovered individuals which are sampled.
 
@@ -93,7 +93,7 @@ def set_sampling_rate(self, rate, haplotype=None):
 	:type haplotype: int or string or None
 	"""
 
-def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None):
+def set_mutation_rate(rate=None, probabilities=None, haplotype=None, mutation=None):
 	"""
 	This method allows setting the mutation rate and the weights for each single nucleotide substitution (given the mutation happened).
 
@@ -110,7 +110,7 @@ def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutat
 	:type mutation: int or None
 	"""
 
-def set_susceptibility_type(self, susceptibility_type, haplotype=None):
+def set_susceptibility_type(susceptibility_type, haplotype=None):
 	"""
 	The type of immunity (or the susceptibility group) which an individual gets after being infected with a pathogen of a haplotype.
 
@@ -121,7 +121,7 @@ def set_susceptibility_type(self, susceptibility_type, haplotype=None):
 	:type haplotype: int or string or None
 	"""
 
-def set_susceptibility(self, rate, haplotype=None, susceptibility_type=None):
+def set_susceptibility(rate, haplotype=None, susceptibility_type=None):
 	"""
 	Susceptibility is a multiplicative modifier of the transmission rate based on the susceptible host immunity with a certain *susceptibility_type*. It can decrease or increase the transmission rate of a particular haplotype to the individuals of said *susceptibility_type*.
 
@@ -135,7 +135,7 @@ def set_susceptibility(self, rate, haplotype=None, susceptibility_type=None):
 	:type susceptibility_type: int or None
 	"""
 
-def set_immunity_transition(self, rate, source=None, target=None):
+def set_immunity_transition(rate, source=None, target=None):
 	"""
 	The change of immunity without infection (e.g. due to vaccination or immunity loss with time).
 
@@ -150,7 +150,7 @@ def set_immunity_transition(self, rate, source=None, target=None):
 	"""
 
 
-def set_population_size(self, size, population=None):
+def set_population_size(size, population=None):
 	"""
 	Set the number of individuals in the population.
 
@@ -161,7 +161,7 @@ def set_population_size(self, size, population=None):
 	:type population: int or None
 	"""
 
-def set_contact_density(self, value, population=None):
+def set_contact_density(value, population=None):
 	"""
 	The relative number of contacts per time units.
 
@@ -172,7 +172,7 @@ def set_contact_density(self, value, population=None):
 	:type population: int or None
 	"""
 
-def set_lockdown(self, parameters, population=None):
+def set_lockdown(parameters, population=None):
 	"""
 	Setting conditions when lockdown in a population is imposed and lifted with the certain contact density during the lockdown.
 
@@ -183,7 +183,7 @@ def set_lockdown(self, parameters, population=None):
 	:type population: int or None
 	"""
 
-def set_sampling_multiplier(self, multiplier, population=None):
+def set_sampling_multiplier(multiplier, population=None):
 	"""
 	The relative sampling in the population (multiplicative modifier). Sampling rate of each haplotype is modified by this factor.
 
@@ -194,7 +194,7 @@ def set_sampling_multiplier(self, multiplier, population=None):
 	:type population: int or None
 	"""
 
-def set_migration_probability(self, probability=None, total_probability=None, source=None, target=None):
+def set_migration_probability(probability=None, total_probability=None, source=None, target=None):
 	"""
 	The probability that an individual from the population source is travelling to the population target.
 
@@ -214,40 +214,55 @@ def set_migration_probability(self, probability=None, total_probability=None, so
 def set_susceptible_individuals(amount, source_type, target_type, population=None):
 	"""
 	The method allows to move susceptible individuals between susceptibility groups.
+	
+	:param amount: the number of individuals to be moved.
+	:type amount: int
 
-    :param amount: the number of individuals to be moved.
-    :param source_type: source susceptibility group from which individuals are moved.
-    :param target_type: target susceptibility group into which individuals are moved.
-    :param population: population for which the new value is being set (in case of None the value will be updated for all populations).
-    :type amount: int
-    :type source_type: int or None
-    :type target_type: float
-    :type population: int or None
+	:param source_type: source susceptibility group from which individuals are moved.
+	:type source_type: int
+
+	:param target_type: target susceptibility group into which individuals are moved.
+	:type target_type: int
+	
+	:param population: population for which the new value is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
+	"""
+
+def set_infected_individuals(amount, source_haplotype, target_haplotype, population=None):
+	"""
+	:param amount: 
+	:param source_haplotype: 
+	:param target_haplotype: 
+	:param population:
+	"""
+
+def set_infection(amount, source_type, target_haplotype, population=None):
+	"""
+	:param amount:
+	:param source_type:
+	:param target_haplotype:
+	:param population:
+	"""
+
+def set_chain_events(file_name):
+	"""
+	:param file_name:
+	:return:
+	"""
+
+def set_settings(file_template):
+	"""
+	:param file_template:
+	:return:
+	"""
+
+def set_state(set_state):
+	"""
+	:param set_state:
+	:return:
 	"""
 
 
-def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
-	"""
-	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
-	It can be called multiple times, changes of most parameters are allowed between simulation runs.
-
-    :param iterations: maximal number of iterations.
-    :param sample_size: desired sample size.
-    :param time: virtual (model) time to be simulated.
-    :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
-    :type iterations: int
-    :type sample_size: int or None
-    :type time: float or None
-    :type method: string
-	"""
-
-def genealogy(seed=None):
-	"""
-	Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
-
-    :param seed: seed value (None for random seed).
-    :type seed: int or None
-	"""
 
 def output_newick(file_template="newick_output", file_path = ''):
 	"""
@@ -279,20 +294,20 @@ def output_migrations(file_template="migrations", file_path = ''):
     :type file_path: str
 	"""
 
-def output_parameters(name_file="parameters"):
-	"""
-	Make the directory with files for launching via console
-
-	:param: name_file="parameters"
-	:type: name_file = str
-	"""
-
-def sample_data():
+def output_sample_data():
 	"""
 	Show all information about sampling, time, place, etc.
 	"""
 
-def epidemiology_timelines(step=1000, output_file=False):
+
+def output_migrations(file_template="migrations", file_path = None):
+	"""
+	:param file_template:
+	:param file_path:
+	:return:
+	"""
+
+def output_epidemiology_timelines(step=1000, output_file=False):
 	"""
 	Records simulation state changes over some period of time. step - a number of parts epidemiology_timelines is split on.
 	"""
@@ -314,10 +329,62 @@ def add_plot_susceptible(population, susceptibility_type, step_num=100, label=No
 	:type: population = int, susceptibility_type = int, step_num = int, label = str or None
 	"""
 
-
-def plot():
+def output_chain_events(file_name="chain_events"):
 	"""
-	Show plot with all the trajectories added by the previous two methods.
+
+	:param file_name:
+	:return:
+	"""
+
+def output_settings(self, file_template="parameters"):
+	"""
+
+	:param self:
+	:param file_template:
+	:return:
+	"""
+
+def output_state():
+	"""
+
+	:return:
+	"""
+
+def get_data_susceptible(population, susceptibility_type,
+							 step_num):
+	"""
+
+	:param population:
+	:param susceptibility_type:
+	:param step_num:
+	:return:
+	"""
+
+def get_data_infectious(self, population, haplotype,
+							step_num):
+	"""
+
+	:param self:
+	:param population:
+	:param haplotype:
+	:param step_num:
+	:return:
+	"""
+
+def plot_infectious(population, haplotype, step_num, label_infectious, label_samples):
+	"""
+
+	:param population:
+	:param haplotype:
+	:param step_num:
+	:param label_infectious:
+	:param label_samples:
+	:return:
+	"""
+
+def add_legend():
+	"""
+	Add legend to the plot.
 	"""
 
 def add_title(name="Plot"):
@@ -328,7 +395,58 @@ def add_title(name="Plot"):
 	:type: name = str
 	"""
 
-def add_legend():
+def plot():
 	"""
-	Add legend to the plot.
+	Show plot with all the trajectories added by the previous two methods.
+	"""
+
+def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
+	"""
+	This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
+	It can be called multiple times, changes of most parameters are allowed between simulation runs.
+
+    :param iterations: maximal number of iterations.
+    :param sample_size: desired sample size.
+    :param time: virtual (model) time to be simulated.
+    :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
+    :type iterations: int
+    :type sample_size: int or None
+    :type time: float or None
+    :type method: string
+	"""
+
+def genealogy(seed=None):
+	"""
+	Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
+
+    :param seed: seed value (None for random seed).
+    :type seed: int or None
+	"""
+
+def citation():
+	"""
+	:return:
+	"""
+
+def debug():
+	"""
+
+	:return:
+	"""
+
+def get_proportion():
+	"""
+	:return:
+	"""
+
+def print_counters():
+	"""
+
+	:return:
+	"""
+
+def print_propensities():
+	"""
+
+	:return:
 	"""
