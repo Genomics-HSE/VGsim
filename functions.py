@@ -377,23 +377,37 @@ def output_state():
 def get_data_susceptible(population, susceptibility_type,
 							 step_num):
 	"""
+	Returns the list with the amount of sucseptible individuals over some period of time.
 
-	:param population:
-	:param susceptibility_type:
-	:param step_num:
-	:return:
+	:param population: population id, for which we get the data
+	:param population: int
+
+	:param susceptibility_type: susceptibility type, for which we get the data
+	:param susceptibility_type: int
+
+	:param step_num: number of steps which split the epidemiology timeline.
+	:param step_num: int
+
+	:return: 3 lists - amounts of susceptible individuals on the time points, time points themselves at which we retrieve amounts of individuals, and lockdowns data for the current epidemiology
 	"""
 
 def get_data_infectious(self, population, haplotype,
 							step_num):
 	"""
+	Returns the list with the amount of infectious individuals over some period of time.
 
-	:param self:
-	:param population:
-	:param haplotype:
-	:param step_num:
-	:return:
+	:param population: population id, for which we get the data
+	:param population: int
+
+	:param haplotype: haplotype, for which we get the data
+	:param haplotype: int
+
+	:param step_num: number of steps which split the epidemiology timeline.
+	:param step_num: int
+
+	:return: 3 lists - amounts of infectious individuals on the time points, time points themselves at which we retrieve amounts of individuals, and lockdowns data for the current epidemiology
 	"""
+
 
 def plot_infectious(population, haplotype, step_num, label_infectious, label_samples):
 	"""
