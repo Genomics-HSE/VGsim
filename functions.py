@@ -18,12 +18,12 @@ class Simulator():
 		:param seed: seed to generate simulation from. If **None**, then chosen at random
 		:type seed: float or None
 
-		:param sampling_probability: the probability of sampling. Must be between 0 and 1
-		:type sampling_probability: float
+		:param sampling_probability: whether we set sampling probability as a share of recovered individuals (**True** value) or we will set it explicitly. Default is **False**.
+		:type sampling_probability: bool
 
 		:param memory_optimization: if True, then memory optimization is conducted (useful for large number of possible haplotypes)
 		:type memory_optimization: bool
-"""
+		"""
 
 def print_basic_parameters():
 	"""
@@ -40,7 +40,7 @@ def print_immunity_model():
 	This methods prints the basic parameters of the immunity model.
 	"""
 
-def print_all(basic_parameters=True, populations=True, immunity_model=True):
+def print_all(self, basic_parameters=True, populations=True, immunity_model=True):
 	"""
 	This methods prints all the parameters of the simulation.
 
@@ -54,61 +54,71 @@ def print_all(basic_parameters=True, populations=True, immunity_model=True):
 	:type immunity_model: bool
 	"""
 
-def set_transmission_rate(rate, haplotype=None):
+def set_transmission_rate(self, rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
-	Transmission rate: the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when (almost) all hosts are susceptible. See `Wikipedia`_ - parameter beta in SIR model.
+	Transmission rate is the the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when all but one of the hosts are susceptible.
+See `Wikipedia`_ - that is parameter beta in SIR model.
 
-    :param rate: transmission rate value.
-    :param haplotype: haplotypes for which the new value is being set. See XXX for details.
-    :type rate: float
-    :type haplotype: int or string or None
+	:param rate: transmission rate value.
+	:type rate: float
+
+	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:type haplotype: int or string or None
 	"""
 
 
-def set_recovery_rate(rate, haplotype=None):
+def set_recovery_rate(self, rate, haplotype=None):
 	"""
 	.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
-	Recovery rate: the inverse of the expected recovery time. `Wikipedia`_ - parameter gamma in SIR model.
+	Recovery rate is the inverse of the expected recovery time - non-negative float value. See `Wikipedia`_ - that is parameter gamma in SIR model.
 
-    :param rate: recovery rate value.
-    :param haplotype: haplotypes for which the new value is being set. See XXX for details.
-    :type rate: float
-    :type haplotype: int or string or None
+	:param rate: recovery rate value.
+	:type rate: float
+
+	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:type haplotype: int or string or None
 	"""
 
-def set_sampling_rate(rate, haplotype=None):
+def set_sampling_rate(self, rate, haplotype=None):
 	"""
-	Sampling rate: the rate at which infected individuals are sampled. The genealogy will be generated only for these samples. Alternatively, one can set probability=True in order to specify the fraction of recovered individuals which are sampled.
+	Sampling rate: the rate at which infected individuals are sampled. The genealogy will be generated only for these samples. Alternatively, if *sampling_probability* is **True**, it will specify the fraction of recovered individuals which are sampled.
 
-    :param rate: sampling rate value.
-    :param haplotype: haplotypes for which the new value is being set. See XXX for details.
-    :type rate: float
-    :type haplotype: int or string or None
-	"""
+	:param rate: sampling rate value.
+	:type rate: float
 
-def set_mutation_rate(rate=None, substitution_weights=None, haplotype=None, site_id=None):
-	"""
-	This method allows setting the mutation rate and the weights for each single nucleotide substitution (given the mutation happened). haplotype is the ancestral haplotype for the mutation. site_id is the position on the haplotype where mutation arises. substitution_weights are given in the order of derived variant ATCG. The derived variant cannot be the same as the ancestral state, so the corresponding array entry will be ignored.
-
-    :param rate: mutation rate value (None would not change the old value).
-    :param substitution_weights: weights of each single nucleotide substitution given mutation occured (None would not change the old values). See XXX for example.
-    :param haplotype: haplotypes for which the new value is being set. See XXX for details.
-    :type rate: float or None
-    :type substitution_weights: list of four non-negative integers or None
-    :type haplotype: int or string or None
+	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:type haplotype: int or string or None
 	"""
 
-def set_susceptibility_type(susceptibility_type, haplotype=None):
+def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None):
+	"""
+	This method allows setting the mutation rate and the weights for each single nucleotide substitution (given the mutation happened).
+
+	:param rate: mutation rate value (None would not change the old value).
+	:type rate: float or None
+
+	:param probabilities: weights of each single nucleotide substitution given mutation occured (None would not change the old values). See :ref:`Haplotypes` for example.
+	:type probabilities: list of four non-negative integers or None
+
+	:param haplotype: the ancestral haplotype for the mutation. See :ref:`Haplotypes` for details.
+	:type haplotype: int or string or None
+
+	:param mutation: the id of position on the haplotype where mutation arises.
+	:type mutation: int
+	"""
+
+def set_susceptibility_type(self, susceptibility_type, haplotype=None):
 	"""
 	The type of immunity (or the susceptibility group) which an individual gets after being infected with a pathogen of a haplotype.
 
-    :param susceptibility_type: immunity group id.
-    :param haplotype: haplotypes for which the new value is being set. See XXX for details.
-    :type susceptibility_type: int
-    :type haplotype: int or string or None
+	:param susceptibility_type: immunity group id.
+	:type susceptibility_type: int
+
+	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:type haplotype: int or string or None
 	"""
 
 def set_susceptibility(susceptibility, haplotype=None, susceptibility_type=None):
