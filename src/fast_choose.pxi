@@ -1,3 +1,6 @@
+def print_err(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
@@ -25,7 +28,7 @@ cdef inline (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef inline (Py_ssize_t, double) fastChoose2(long[::1] w, long tw, double rn):
+cdef inline (Py_ssize_t, double) fastChoose2(npy_int64[::1] w, npy_int64 tw, double rn):
     cdef:
         Py_ssize_t i
         double total
@@ -67,7 +70,7 @@ cdef inline (Py_ssize_t, double) fastChoose1_skip(double[::1] w, double tw, doub
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef inline (Py_ssize_t, double) fastChoose2_skip(long[::1] w, long tw, double rn, Py_ssize_t skip):
+cdef inline (Py_ssize_t, double) fastChoose2_skip(npy_int64[::1] w, npy_int64 tw, double rn, Py_ssize_t skip):
     cdef:
         Py_ssize_t i
         double total

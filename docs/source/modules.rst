@@ -1,15 +1,25 @@
-VGsim
-=====
+Installation
+============
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
-   VGsim
+   Installation
 
-Extra
-=====
+Tutorials and examples
+======================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
-   Extra
+   Tutorials and examples
+   Haplotypes
+
+Documentation
+=============
+
+.. toctree::
+   :maxdepth: 1
+
+   Documentation
+   Command line
