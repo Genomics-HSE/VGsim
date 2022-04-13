@@ -38,4 +38,3 @@ version to support this hardware).
 If you encounter problems with either of these steps, please file an issue at
 ``https://github.com/Genomics-HSE/VGsim``: please rerun with the ``-v`` flag,
 ``$ python -mpip install . -v`` and include the output.
-
