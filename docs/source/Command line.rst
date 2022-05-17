@@ -123,9 +123,6 @@ Flags
    * - --sampling_probability
      - None
      - #TODO
-   * - --strong_migration
-     - None
-     - #TODO
    * - -nwk or --createNewick
      - None
      - Create a newick file of tree *.nwk
