@@ -10,6 +10,7 @@ class Simulator:
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
+		print('User seed:', seed)
 
 		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
 			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, \
@@ -63,8 +64,8 @@ class Simulator:
 	def set_contact_density(self, value, population=None):
 		self.simulation.set_contact_density(value, population)
 
-	def set_lockdown(self, parameters, population=None):
-		self.simulation.set_lockdown(parameters, population)
+	def set_npi(self, parameters, population=None):
+		self.simulation.set_npi(parameters, population)
 
 	def set_sampling_multiplier(self, multiplier, population=None):
 		self.simulation.set_sampling_multiplier(multiplier, population)
@@ -73,17 +74,18 @@ class Simulator:
 		self.simulation.set_migration_probability(probability, total_probability, source, target)
 
 
-	def set_susceptible_individuals(self, amount, source_type, target_type, population=None):
-		self.simulation.set_susceptible_individuals(amount, source_type, target_type, population)
+	# Rewrite due to memory optimization
+	# def set_susceptible_individuals(self, amount, source_type, target_type, population=None):
+	# 	self.simulation.set_susceptible_individuals(amount, source_type, target_type, population)
 
-	def set_infected_individuals(self, amount, source_haplotype, target_haplotype, population=None):
-		self.simulation.set_infected_individuals(amount, source_haplotype, target_haplotype, population)
+	# def set_infected_individuals(self, amount, source_haplotype, target_haplotype, population=None):
+	# 	self.simulation.set_infected_individuals(amount, source_haplotype, target_haplotype, population)
 
-	def set_infection(self, amount, source_type, target_haplotype, population=None):
-		self.simulation.set_infection(amount, source_type, target_haplotype, population)
+	# def set_infection(self, amount, source_type, target_haplotype, population=None):
+	# 	self.simulation.set_infection(amount, source_type, target_haplotype, population)
 
-	def set_recovery(self, amount, source_haplotype, target_type, population=None):
-		self.simulation.set_recovery(amount, source_haplotype, target_type, population)
+	# def set_recovery(self, amount, source_haplotype, target_type, population=None):
+	# 	self.simulation.set_recovery(amount, source_haplotype, target_type, population)
 
 
 	def set_chain_events(self, file_name):
@@ -164,14 +166,14 @@ class Simulator:
 	def plot_infectious(self, population, haplotype, step_num, label_infectious, label_samples):
 		infections, sample, time_points, lockdowns = self.simulation.get_data_infectious(population, haplotype, step_num)
 		if label_infectious == None:
-			self.ax_2.plot(time_points, infections, label='Infectious-' + str(population) + '-' + str(haplotype))
+			self.ax_2.plot(time_points, infections, label='Infectious pop:' + str(population) + ' hap:' + self.simulation.calculate_string(haplotype))
 		elif isinstance(label_infectious, str) == True:
 			self.ax_2.plot(time_points, infections, label=label_infectious)
 		else:
 			print("#TODO")
 
 		if label_samples == None:
-			self.ax.plot(time_points, sample, "--", label='Samples-' + str(population) + '-' + str(haplotype))
+			self.ax.plot(time_points, sample, "--", label='Samples pop:' + str(population) + ' hap:' + self.simulation.calculate_string(haplotype))
 		elif isinstance(label_label_samples, str) == True:
 			self.ax.plot(time_points, sample, "--", label=label_samples)
 		else:
@@ -204,7 +206,7 @@ class Simulator:
 
 		susceptible, time_points, lockdowns = self.simulation.get_data_susceptible(population, susceptibility_type, step_num)
 		if label_susceptible == None:
-			self.ax_2.plot(time_points, susceptible, label='Susceptible-' + str(population) + '-' + str(susceptibility_type))
+			self.ax_2.plot(time_points, susceptible, label='Susceptible pop:' + str(population) + ' sus:' + str(susceptibility_type))
 		elif isinstance(label_susceptible, str) == True:
 			self.ax_2.plot(time_points, susceptible, label=label_susceptible)
 		else:
@@ -238,21 +240,24 @@ class Simulator:
 		self.ax.set_title(name)
 
 	def plot(self):
+	# def plot(self, filename):
 		plt.show()
+		# plt.savefig(filename)
 		self.fig = None
 
 
-	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct'):
-		self.first_sim = True
+	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct', attempts=200):
 		if sample_size is None:
 			sample_size = -1
 		if time is None:
 			time = -1
+
 		if method == 'direct':
-			self.simulation.SimulatePopulation(iterations, sample_size, time)
+			self.simulation.SimulatePopulation(iterations, sample_size, time, attempts)
 			self.simulation.Stats()
 		elif method == 'tau':
 			self.simulation.SimulatePopulation_tau(iterations, sample_size, time)
+			self.simulation.Stats()
 		else:
 			print("Unknown method. Choose between 'direct' and 'tau'.")
 
