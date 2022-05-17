@@ -1,154 +1,300 @@
-#!/usr/bin/env python3
+class Simulator():
+	"""
+	This is the class which creates the simulation.
 
-import argparse
-import sys
-import time
-# from VGsim import BirthDeathModel, PopulationModel, Population, Lockdown
-# from VGsim.IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility, ReadSusceptibilityTransition, writeGenomeNewick, writeMutations
-from VGsim.IO import read_matrix, read_rates, read_populations, read_susceptibility
-from VGsim import Simulator
-from random import randrange
-import numpy as np
-import math
+	:param sites_number: the number of mutable sites with strong phenotypic effect
+	:param populations_number: the number of populations (demes)
+	:param susceptibility_types: the number of susceptible groups (groups with different immunity response)
+	:param seed: seed for random generator
+	:param sampling_probability: #TODO
+	:type sites_number: non-negative integer
+	:type populations_number: positive integer
+	:type susceptibility_types: positive integer
+	:type seed: non-negative integer
+	:type sampling_probability: True ot False
+	"""
+	def __init__(self, sites_number=0, populations_number=1, susceptibility_types=1, seed=None, sampling_probability=False):
+		pass
 
-parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
+	def print_basic_parameters():
+		"""
+		This methods prints the basic parameters of the epidemiological model.
+		"""
 
-# parser.add_argument('frate',
-                    # help='file with rates')
+	def print_populations():
+		"""
+		This methods prints parameters of the population model.
+		"""
 
-parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
-                    help='number of iterations (default is 1000)')
-parser.add_argument('--sampleSize', '-s', nargs=1, type=int, default=None,
-                    help='number of sample (default is None)')
-parser.add_argument('--time', '-t', nargs=1, type=float, default=None,
-                    help='time for stopping simulation (default is None)')
-parser.add_argument('--max_haplotypes_number', '-mhn', nargs=1, type=int, default=None,
-                    help='#TODO')
-parser.add_argument('--seed', '-seed', nargs=1, type=float, default=None,
-                    help='random seed')
+	def print_immunity_model():
+		"""
+		This methods prints the basic parameters of the immunity model.
+		"""
 
-parser.add_argument('--rates', '-rt', nargs=1, default=None,
-                    help='rate: a file with rates for each haplotype')
-parser.add_argument('--populationModel', '-pm', nargs=2, default=None,
-                    help='population model: a file with population sizes etc, and a file with migration rate matrix')
-parser.add_argument('--susceptibility', '-su', nargs=1, default=None,
-                    help='susceptibility file')
-parser.add_argument('--suscepTransition', '-st', nargs=1, default=None,
-                    help='susceptibility transition file')
+	def print_all(basic_parameters=True, populations=True, immunity_model=True):
+		"""
+		This methods prints all the parameters of the simulation.
 
-parser.add_argument('--sampling_probability', help="#TODO", action="store_true")
+		:param: basic_parameters=True, populations=True, immunity_model=True
+		:type: basic_parameters = True or False, populations = True or False, immunity_model = True or False
+		"""
 
-parser.add_argument("--createNewick", '-nwk', help="Create a newick file of tree *.nwk ", action="store_true")
-parser.add_argument("--writeMutations", '-tsv',
-                    help="Create a mutation file *.tsv ",
-                    action="store_true")
-parser.add_argument("--writeMigrations",
-                    help="Create a migration file *.txt ",
-                    action="store_true")
-parser.add_argument("--output_chain_events", nargs=1, default=None,
-                    help="#TODO")
+	def set_transmission_rate(rate, haplotype=None):
+		"""
+		.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
-parser.add_argument("-citation", '-c', help="Information for citation.")
+		Transmission rate: the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when (almost) all hosts are susceptible. This is parameter beta in `SIR model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology>`_.
 
-clargs = parser.parse_args()
+	    :param rate: transmission rate value.
+	    :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :type rate: float
+	    :type haplotype: integer or string or None
+		"""
 
-if clargs.citation != None:
-    print("VGsim: scalable viral genealogy simulator for global pandemic")
-    print("Vladimir Shchur, Vadim Spirin, Victor Pokrovskii, Evgeni Burovski, Nicola De Maio, Russell Corbett-Detig")
-    print("medRxiv 2021.04.21.21255891; doi: https://doi.org/10.1101/2021.04.21.21255891")
-    sys.exit(0)
 
-if isinstance(clargs.rates, list):
-    clargs.rates = clargs.rates[0]
-if isinstance(clargs.iterations, list):
-    clargs.iterations = clargs.iterations[0]
-if isinstance(clargs.sampleSize, list):
-    clargs.sampleSize = clargs.sampleSize[0]
-if isinstance(clargs.time, list):
-	clargs.time = clargs.time[0]
-if isinstance(clargs.susceptibility, list):
-    clargs.susceptibility = clargs.susceptibility[0]
-if isinstance(clargs.suscepTransition, list):
-    clargs.suscepTransition = clargs.suscepTransition[0]
-if isinstance(clargs.seed, list):
-    clargs.seed = clargs.seed[0]
-if isinstance(clargs.output_chain_events, list):
-    clargs.output_chain_events = clargs.output_chain_events[0]
+	def set_recovery_rate(rate, haplotype=None):
+		"""
+		.. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
-if clargs.rates == None:
-    bRate, dRate, sRate, mRate = [2], [1], [0.1], [[]]
-else:
-    bRate, dRate, sRate, mRate = read_rates(clargs.rates)
+		Recovery rate: the inverse of the expected recovery time. This is parameter gamma in `SIR model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology>`_.
 
-if clargs.sampleSize == None:
-    clargs.sampleSize = clargs.iterations
-if clargs.time == None:
-    clargs.time = -1
+	    :param rate: recovery rate value.
+	    :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :type rate: float
+	    :type haplotype: integer or string or None
+		"""
 
-if clargs.populationModel == None:
-    sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier = [1000000], [1], [1], [1], [1], [1]
-    migrationRates = [[0.0]]
-else:
-    sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier = read_populations(clargs.populationModel[0])
-    migrationRates = read_matrix(clargs.populationModel[1])
+	def set_sampling_rate(rate, haplotype=None):
+		"""
+		Sampling rate: the rate at which infected individuals are sampled. The genealogy will be generated only for these samples. Alternatively, one can set probability=True in order to specify the fraction of recovered individuals which are sampled.
 
-if clargs.susceptibility == None:
-    susceptible = [[1.0] for _ in range(len(bRate))]
-    susType = [0 for _ in range(len(bRate))]
-else:
-    susceptible, susType = read_susceptibility(clargs.susceptibility)
+	    :param rate: sampling rate value.
+	    :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :type rate: float
+	    :type haplotype: integer or string or None
+		"""
 
-if clargs.suscepTransition == None:
-    suscepTransition = [[0.0]]
-else:
-    suscepTransition = read_matrix(clargs.suscepTransition)
+	def set_mutation_rate(rate=None, substitution_weights=None, haplotype=None, site_id=None):
+		"""
+		This method allows setting the mutation rate and the weights for each single nucleotide substitution (given the mutation happened). haplotype is the ancestral haplotype for the mutation. site_id is the position on the haplotype where mutation arises. substitution_weights are given in the order of derived variant ATCG. The derived variant cannot be the same as the ancestral state, so the corresponding array entry will be ignored.
 
-if clargs.seed == None:
-    seed = randrange(sys.maxsize)
-else:
-	seed = clargs.seed
+	    :param rate: mutation rate value (None would not change the old value).
+	    :param substitution_weights: weights of each single nucleotide substitution given mutation occured (None would not change the old values). `See for example <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :param site_id: #TODO
+	    :type rate: float or None
+	    :type substitution_weights: list of four non-negative integers or None
+	    :type haplotype: unsigned integer or string or None
+	    :type site_id: unsigned integer
+		"""
 
-simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), memory_optimization=clargs.max_haplotypes_number ,populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
+	def set_susceptibility_type(susceptibility_type, haplotype=None):
+		"""
+		The type of immunity (or the susceptibility group) which an individual gets after being infected with a pathogen of a haplotype.
 
-for i in range(len(bRate)):
-	simulator.set_transmission_rate(bRate[i], i)
-	simulator.set_recovery_rate(dRate[i], i)
-	simulator.set_sampling_rate(sRate[i], i)
-	for j in range(len(mRate[0])):
-		simulator.set_mutation_rate(mRate[i][j][0], [mRate[i][j][1], mRate[i][j][2], mRate[i][j][3], mRate[i][j][4]], i, j)
+	    :param susceptibility_type: immunity group id.
+	    :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :type susceptibility_type: non-negative integer
+	    :type haplotype: non-negative integer or string or None
+		"""
 
-for i in range(len(sizes)):
-    simulator.set_population_size(sizes[i], i)
-    simulator.set_contact_density(contactDensity[i], i)
-    simulator.set_lockdown([contactAfter[i], startLD[i], endLD[i]], i)
-    simulator.set_sampling_multiplier(samplingMultiplier[i], i)
-    for j in range(len(sizes)):
-        if i != j:
-            simulator.set_migration_probability(probability=migrationRates[i][j], source=i, target=j)
-for i in range(len(susceptible)):
-    for j in range(len(susceptible[i])):
-        simulator.set_susceptibility(float(susceptible[i][j]), i, j)
+	def set_susceptibility(susceptibility, haplotype=None, susceptibility_type=None):
+		"""
+		Susceptibility is a multiplicative modifier of the transmission rate based on the susceptible host immunity with a susceptibility_type. It can decrease or increase the transmission rate of a particular haplotype to the individuals of susceptibility_type.
 
-for i in range(len(susType)):
-    simulator.set_susceptibility_type(susType[i], i)
+	    :param susceptibility: susceptibility value.
+	    :param haplotype: haplotypes for which the new susceptibility value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+	    :param susceptibility_type: immunity group id for which the new susceptibility value is being set.
+	    :type susceptibility: float
+	    :type haplotype: non-negative integer or string or None
+	    :type susceptibility_type: non-negative integer
+		"""
 
-for i in range(len(suscepTransition)):
-    for j in range(len(suscepTransition[i])):
-        if i != j:
-            simulator.set_immunity_transition(suscepTransition[i][j], i, j)
+	def set_immunity_transition(rate, source=None, target=None):
+		"""
+		The change of immunity without infection (e.g. due to vaccination or immunity loss with time).
 
-# simulator.print_all()
-# simulator.debug()
-simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
-# simulator.print_all()
-# simulator.debug()
-simulator.genealogy(int(seed))
+	    :param rate: transition rate value.
+	    :param source: source immunity group id.
+	    :param target: target immunity group id.
+	    :type rate: float
+	    :type source: non-negative integer or None
+	    :type target: non-negative integer or None
+		"""
 
-if clargs.createNewick:
-    simulator.output_newick()
-if clargs.writeMutations:
-    simulator.output_mutations()
-if clargs.writeMigrations:
-    simulator.output_migrations()
-if clargs.output_chain_events:
-    simulator.output_chain_events(clargs.output_chain_events)
+
+	def set_population_size(amount, population=None):
+		"""
+		The number of individuals in the population.
+
+	    :param amount: total number of individuals in the population.
+	    :param population: population for which the new population size is set.
+	    :type amount: non-negative integer
+	    :type population: non-negative integer or None
+		"""
+
+	def set_contact_density(value, population=None):
+		"""
+		The relative number of contacts per time units.
+
+	    :param value: contact density value.
+	    :param population: population for which the new contact density size is being set.
+	    :type value: float
+	    :type population: non-negative integer or None
+		"""
+
+	# def set_susceptible_individuals(amount, source_type, target_type, population=None):
+	# 	"""
+	# 	The method allows to move susceptible individuals between susceptibility groups.
+
+	#     :param amount: the number of individuals to be moved.
+	#     :param source_type: source susceptibility group from which individuals are moved.
+	#     :param target_type: target susceptibility group into which individuals are moved.
+	#     :param population: population for which the new value is being set.
+	#     :type amount: non-negative integer
+	#     :type source_type: non-negative integer or None
+	#     :type target_type: non-negative integer or None
+	#     :type population: non-negative integer or None
+	# 	"""
+
+	def set_npi(parameters, population=None):
+		"""
+		Setting conditions when lockdown in a population is imposed and lifted with the contact density during the lockdown.
+
+	    :param parameters: list with three elements: contact density value during lockdown, fraction of infectious population when the lockdown is set, fraction of infectious population when lockdown is lifted.
+	    :param population: population for which the new lockdown parameters are being set.
+	    :type parameters: list of length 3
+	    :type population: int or None
+		"""
+
+	def set_sampling_multiplier(value, population=None):
+		"""
+		The relative sampling in the population (multiplicative modifier). Sampling rate of each haplotype is modified by this factor.
+
+	    :param value: sampling multiplier value.
+	    :param population: population for which the new sampling multiplier is being set.
+	    :type value: float
+	    :type population: int or None
+		"""
+
+	def set_migration_probability(probability=None, total_probability=None, source=None, target=None):
+		"""
+		The probability that an individual from the population source is travelling to the population target.
+
+	    :param probability: probability value.
+	    :param total_probability: if True, all the entries (except for the diagonal element) of row corresponding to source population is filled with probabilitie/(K-1).
+	    :param source: source population with infectious individual  (None means that the new value will be set to all populations as source).
+	    :param target: target population with susceptible individual (None means that the new value will be set to all populations as target).
+	    :type probability: float
+	    :type total_probability: float
+	    :type source: int or None
+	    :type target: int or None
+		"""
+
+
+	def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
+		"""
+		This methods starts the simulation. The simulation interrupts when either one of the conditions is satisfied: the number of iterations is iterations, the number of collected samples is sample_size, ot the total virtual time of the epidemic exceeds time
+		It can be called multiple times, changes of most parameters are allowed between simulation runs.
+
+	    :param iterations: maximal number of iterations.
+	    :param sample_size: desired sample size.
+	    :param time: virtual (model) time to be simulated.
+	    :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
+	    :type iterations: int
+	    :type sample_size: int or None
+	    :type time: float or None
+	    :type method: string
+		"""
+
+	def genealogy(seed=None):
+		"""
+		Generating a genealogy based on the chain of events generated during all the instances of simulate() method.
+
+	    :param seed: seed value (None for random seed).
+	    :type seed: int or None
+		"""
+
+	def output_newick(file_template="newick_output", file_path = ''):
+		"""
+		Record format of binary trees
+
+	    :param file_template: template for file name
+	    :param file_path: path to output file
+	    :type file_template: str
+	    :type file_path: str
+		"""
+
+	def output_mutations(file_template="mutation_output", file_path = ''):
+		"""
+		Information about all mutations
+
+	    :param file_template: template for file name
+	    :param file_path: path to output file
+	    :type file_template: str
+	    :type file_path: str
+		"""
+
+	def output_migrations(file_template="migrations", file_path = ''):
+		"""
+		Information about all migrations
+
+	    :param file_template: template for file name
+	    :param file_path: path to output file
+	    :type file_template: str
+	    :type file_path: str
+		"""
+
+	def output_parameters(name_file="parameters"):
+		"""
+		Make the directory with files for launching via console
+
+		:param: name_file="parameters"
+		:type: name_file = str
+		"""
+
+	def sample_data():
+		"""
+		Show all information about sampling, time, place, etc.
+		"""
+
+	def epidemiology_timelines(step=1000, output_file=False):
+		"""
+		Records simulation state changes over some period of time. step - a number of parts epidemiology_timelines is split on.
+		"""
+
+
+	def add_plot_infectious(population, haplotype, step_num=100, label=None):
+		"""
+		Add to plot the trajectories of the change of the number of infectious individuals over time.  label allows to add the label to plot legend.
+
+		:param: population, haplotype, step_num=100, label=None
+		:type: population = int, haplotype = int or str, step_num = int, label = str or None
+		"""
+
+	def add_plot_susceptible(population, susceptibility_type, step_num=100, label=None):
+		"""
+		Add to plot the trajectories of the change of the number of susceptible individuals over time.
+
+		:param: population, susceptibility_type, step_num=100, label=None
+		:type: population = int, susceptibility_type = int, step_num = int, label = str or None
+		"""
+
+
+	def plot():
+		"""
+		Show plot with all the trajectories added by the previous two methods.
+		"""
+
+	def add_title(name="Plot"):
+		"""
+		Plot title.
+
+		:param: name="Plot"
+		:type: name = str
+		"""
+
+	def add_legend():
+		"""
+		Add legend to the plot.
+		"""
