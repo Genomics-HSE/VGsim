@@ -71,7 +71,6 @@ cdef class BirthDeathModel:
         self.susNum = number_of_susceptible_groups
         self.popNum = populations_number
 
-        print('Check!')
         #Memory optimization
         if isinstance(memory_optimization, list) and len(memory_optimization) == 2:
             self.memory_optimization = True
@@ -94,8 +93,6 @@ cdef class BirthDeathModel:
             self.addMemoryNum = 0
             self.currentHapNum = self.hapNum
 
-        print('Check!')
-
         self.hapToNum = np.zeros(self.hapNum, dtype=np.int64) # from haplotype to program number
         self.numToHap = np.zeros(self.maxHapNum, dtype=np.int64) # from program number to haplotype
 
@@ -107,7 +104,6 @@ cdef class BirthDeathModel:
                 self.hapToNum[hn] = hn
                 self.numToHap[hn] = hn
 
-        print('Check!')
         self.bCounter = 0
         self.dCounter = 0
         self.sCounter = 0
@@ -145,7 +141,6 @@ cdef class BirthDeathModel:
         self.susceptibility = np.zeros((self.hapNum, self.susNum), dtype=float)
         self.hapMutType = np.ones((self.hapNum, self.sites, 3), dtype=float)
 
-        print('Check!')
         for hn in range(self.hapNum):
             self.bRate[hn] = 2.0
             self.dRate[hn] = 1.0
@@ -187,7 +182,6 @@ cdef class BirthDeathModel:
             self.totalSusceptible[pn] = 1000000
             self.susceptible[pn, 0] = 1000000
 
-        print('Check!')
         #Init propensities
         self.PropensitiesMigr = np.zeros((self.popNum, self.popNum, self.susNum, self.hapNum), dtype=float)
         self.PropensitiesSuscep = np.zeros((self.popNum, self.susNum, self.susNum), dtype=float)
@@ -209,7 +203,6 @@ cdef class BirthDeathModel:
 
         self.infectiousDelta = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
         self.susceptibleDelta = np.zeros((self.popNum, self.susNum), dtype=np.int64)
-        print('Check!')
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
