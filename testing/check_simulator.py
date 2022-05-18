@@ -29,6 +29,7 @@ def check_data(num):
 			sys.exit(1)
 
 	os.remove("test_" + str(num) + ".npy")
+	print('Correct data!')
 
 #1 model
 simulator = VGsim.Simulator(seed=2020)
