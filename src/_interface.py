@@ -239,10 +239,10 @@ class Simulator:
 	def add_title(self, name="Plot"):
 		self.ax.set_title(name)
 
-	def plot(self):
-	# def plot(self, filename):
+	def plot(self, name_file=None):
 		plt.show()
-		# plt.savefig(filename)
+		if filename:
+			plt.savefig(name_file)
 		self.fig = None
 
 
