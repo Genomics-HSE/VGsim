@@ -48,7 +48,7 @@ That's it!
 You may now run simulations:
 
 ```
-$ python ./vgsim.py -r example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+$ python ./testing/test.py -r example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
 ```
 
 If you prefer to not use ``conda``, the package builds fine with just pip. We recommend using virtual environments, via the standard library ``venv`` package (or a third-party ``virtualenv`` package). For MacOS users: please make sure to use Python with Homebrew. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install. YMMV.
