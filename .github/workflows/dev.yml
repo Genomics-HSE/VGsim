@@ -50,4 +50,5 @@ jobs:
       run: |
         pip install matplotlib prettytable
         export PYTHONPATH=$PWD/installdir/lib/python${{ matrix.python-version }}/site-packages/
-        python ./testing/test.py -it 100000 -seed 2022
+        cd testing
+        python ./test.py -it 100000 -seed 2022

@@ -120,7 +120,7 @@ for i in range(len(bRate)):
 for i in range(len(sizes)):
     simulator.set_population_size(sizes[i], i)
     simulator.set_contact_density(contactDensity[i], i)
-    simulator.set_lockdown([contactAfter[i], startLD[i], endLD[i]], i)
+    simulator.set_npi([contactAfter[i], startLD[i], endLD[i]], i)
     simulator.set_sampling_multiplier(samplingMultiplier[i], i)
     for j in range(len(sizes)):
         if i != j:
