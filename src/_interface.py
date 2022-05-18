@@ -240,9 +240,9 @@ class Simulator:
 		self.ax.set_title(name)
 
 	def plot(self, name_file=None):
-		plt.show()
-		if filename:
+		if name_file:
 			plt.savefig(name_file)
+		plt.show()
 		self.fig = None
 
 

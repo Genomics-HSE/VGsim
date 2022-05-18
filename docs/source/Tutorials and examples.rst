@@ -127,7 +127,7 @@ Let us simulate the first 110 days. The first argument is the maximal number of 
 
 Example of output
 
-#TODO plot
+.. image:: output.png
 
 After these 90 days, the vaccine was developed, and the susceptible individuals of types 0 and 1 can move to type 2 with the rate 0.05 (average waiting time of 20 days to get vaccinated).
 
@@ -158,43 +158,27 @@ Now let us plot how the haplotypes appear and spread in each population.
 
 .. code-block:: python
 
-	haplotype = 'AA'
-	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
 	simulator.add_title(name="AA haplotype")
 	simulator.add_legend()
 	simulator.plot()
 
-	#TODO plot
-
-Now let’s also plot how haplotype GG spreads in different populations.
-
-.. code-block:: python
-	
-	haplotype = 'GG'
-	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
-	simulator.add_title(name="GG haplotype")
-	simulator.add_legend()
-	simulator.plot()
-
-	#TODO plot
+.. image:: AA_haplotype.png
 
 And finally let us look how the susceptible group sizes change.
 
 .. code-block:: python
 
-	population = 0
-	simulator.add_plot_susceptible(population, susceptibility_type=0, step_num=100)
-	simulator.add_plot_susceptible(population, susceptibility_type=1, step_num=100)
-	simulator.add_plot_susceptible(population, susceptibility_type=2, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=0, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=1, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=2, step_num=100)
 	simulator.add_title(name="Susceptible group sizes")
 	simulator.add_legend()
 	simulator.plot()
 
-	#TODO plot
+.. image:: Susceptible_group_sizes.png
 
 Extracting the genealogy
 ------------------------
@@ -279,26 +263,23 @@ Resulting code
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-	haplotype = 'AA'
-	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
 	simulator.add_title(name="AA haplotype")
 	simulator.add_legend()
 	simulator.plot()
 
-	haplotype = 'GG'
-	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
-	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=0, haplotype='GG', step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype='GG', step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype='GG', step_num=100)
 	simulator.add_title(name="GG haplotype")
 	simulator.add_legend()
 	simulator.plot()
 
-	population = 0
-	simulator.add_plot_susceptible(population, susceptibility_type=0, step_num=100)
-	simulator.add_plot_susceptible(population, susceptibility_type=1, step_num=100)
-	simulator.add_plot_susceptible(population, susceptibility_type=2, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=0, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=1, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=2, step_num=100)
 	simulator.add_title(name="Susceptible group sizes")
 	simulator.add_legend()
 	simulator.plot()
