@@ -51,3 +51,7 @@ jobs:
       run: |
         cd testing
         python ./test.py -it 100000 -seed 2022 -rt example/example.rt -pm example/example.pp example/example.mg -su example/example.su -st example/example.st
+    - name: Run an test 3
+      run: |
+        cd testing
+        python ./check_simulator.py
