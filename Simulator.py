@@ -1,30 +1,3 @@
-class Simulator():
-	"""
-	This is the most important class which creates and proceeds the simulation.
-	"""
-
-	def __init__(number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=None):
-		"""
-
-		:param number_of_sites: the number of mutable sites
-		:type number_of_sites: int
-
-		:param populations_number: the number of populations (demes)
-		:type populations_number: int
-
-		:param number_of_susceptible_groups: the number of susceptible groups (groups with different immunity response)
-		:type number_of_susceptible_groups: int
-
-		:param seed: seed to generate simulation from. If **None**, then chosen at random
-		:type seed: float or None
-
-		:param sampling_probability: whether we set sampling probability as a share of recovered individuals (**True** value) or we will set it explicitly. Default is **False**.
-		:type sampling_probability: bool or None
-
-		:param memory_optimization: if True, then memory optimization is conducted (useful for large number of possible haplotypes)
-		:type memory_optimization: bool or None
-		"""
-
 def print_basic_parameters():
 	"""
 	This methods prints the basic parameters of the epidemiological model.
@@ -63,7 +36,7 @@ def set_transmission_rate(rate, haplotype=None):
 	:param rate: transmission rate value.
 	:type rate: float
 
-	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type haplotype: int or string or None
 	"""
 
@@ -77,7 +50,7 @@ def set_recovery_rate(rate, haplotype=None):
 	:param rate: recovery rate value.
 	:type rate: float
 
-	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type haplotype: int or string or None
 	"""
 
@@ -88,7 +61,7 @@ def set_sampling_rate(rate, haplotype=None):
 	:param rate: sampling rate value.
 	:type rate: float
 
-	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type haplotype: int or string or None
 	"""
 
@@ -99,10 +72,10 @@ def set_mutation_rate(rate=None, probabilities=None, haplotype=None, mutation=No
 	:param rate: mutation rate value (None would not change the old value).
 	:type rate: float or None
 
-	:param probabilities: weights of each single nucleotide substitution given mutation occured (None would not change the old values). See :ref:`Haplotypes` for example.
+	:param probabilities: weights of each single nucleotide substitution given mutation occured (None would not change the old values). `See for example <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type probabilities: list of four non-negative integers or None
 
-	:param haplotype: the ancestral haplotype for the mutation. See :ref:`Haplotypes` for details.
+	:param haplotype: the ancestral haplotype for the mutation. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type haplotype: int or string or None
 
 	:param mutation: the id of position on the haplotype where mutation arises.
@@ -116,7 +89,7 @@ def set_susceptibility_type(susceptibility_type, haplotype=None):
 	:param susceptibility_type: immunity group id.
 	:type susceptibility_type: int
 
-	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type haplotype: int or string or None
 	"""
 
@@ -127,7 +100,7 @@ def set_susceptibility(rate, haplotype=None, susceptibility_type=None):
 	:param rate: susceptibility value.
 	:type rate: float
 
-	:param haplotype: haplotypes for which the new value is being set. See :ref:`Haplotypes` for details.
+	:param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
 	:type haplotype: int or string or None
 
 	:param susceptibility_type: immunity group id for which the new susceptibility value is being set.
@@ -171,7 +144,7 @@ def set_contact_density(value, population=None):
 	:type population: int or None
 	"""
 
-def set_lockdown(parameters, population=None):
+def set_npi(parameters, population=None):
 	"""
 	Setting conditions when lockdown in a population is imposed and lifted with the certain contact density during the lockdown.
 
@@ -357,36 +330,34 @@ def output_state():
 	"""
 
 
-def get_data_susceptible(population, susceptibility_type,
-							 step_num):
+def get_data_susceptible(population, susceptibility_type, step_num):
 	"""
 	Returns the list with the amount of sucseptible individuals over some period of time.
 
 	:param population: population to retrieve data from
-	:param population: int
+	:type population: int
 
 	:param susceptibility_type: susceptibility type to retrieve data from
-	:param susceptibility_type: int
+	:type susceptibility_type: int
 
 	:param step_num: number of steps which split the epidemiology timeline.
-	:param step_num: int
+	:type step_num: int
 
 	:return: 3 lists - amounts of susceptible individuals on the time points, time points themselves at which we retrieve amounts of individuals, and lockdowns data for the current epidemiology
 	"""
 
-def get_data_infectious(self, population, haplotype,
-							step_num):
+def get_data_infectious(self, population, haplotype, step_num):
 	"""
 	Returns the list with the amount of infectious individuals over some period of time.
 
 	:param population: population to retrieve data from
-	:param population: int
+	:type population: int
 
 	:param haplotype: haplotype to retrieve data from
-	:param haplotype: int
+	:type haplotype: int
 
 	:param step_num: number of steps which split the epidemiology timeline
-	:param step_num: int
+	:type step_num: int
 
 	:return: 3 lists - amounts of infectious individuals on the time points, time points themselves at which we retrieve amounts of individuals, and lockdowns data for the current epidemiology
 	"""

@@ -127,7 +127,7 @@ Let us simulate the first 110 days. The first argument is the maximal number of 
 
 Example of output
 
-.. image:: output.png
+#TODO plot
 
 After these 90 days, the vaccine was developed, and the susceptible individuals of types 0 and 1 can move to type 2 with the rate 0.05 (average waiting time of 20 days to get vaccinated).
 
@@ -151,53 +151,50 @@ And the amount of travels is reduced with population 2
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-Let’s run the simulation for some more iterations, but using the tau-leaping algorithm instead of direct.
-
-.. code-block:: python
-	
-	simulator.simulate(1000, method='tau')
-
-#TODO attach example of picture with output
-
 Visualizing epidemiological trajectories
 ----------------------------------------
 
-#TODO many plots or not
-
-
 Now let us plot how the haplotypes appear and spread in each population.
-Только АА в каждой
+
+.. code-block:: python
+
+	haplotype = 'AA'
+	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_title(name="AA haplotype")
+	simulator.add_legend()
+	simulator.plot()
+
+	#TODO plot
+
+Now let’s also plot how haplotype GG spreads in different populations.
+
+.. code-block:: python
+	
+	haplotype = 'GG'
+	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_title(name="GG haplotype")
+	simulator.add_legend()
+	simulator.plot()
+
+	#TODO plot
+
+And finally let us look how the susceptible group sizes change.
 
 .. code-block:: python
 
 	population = 0
-	haplotype = 0
-	simulator.add_plot_infectious(population, haplotype, step_num=100)
-
-
-Now let’s also plot how haplotype GG spreads in different populations.
-Только GG в каждой
-.. code-block:: python
-	
-	susceptibility_type = 0
-	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
-
-And finally let us look how the susceptible group sizes change.
-И все типы для первой
-
-.. code-block:: python	
-	
-	simulator.add_title(name="Plot")
-
-.. code-block:: python
-	
+	simulator.add_plot_susceptible(population, susceptibility_type=0, step_num=100)
+	simulator.add_plot_susceptible(population, susceptibility_type=1, step_num=100)
+	simulator.add_plot_susceptible(population, susceptibility_type=2, step_num=100)
+	simulator.add_title(name="Susceptible group sizes")
 	simulator.add_legend()
-
-.. code-block:: python
-	
 	simulator.plot()
 
-.. image:: plot.png
+	#TODO plot
 
 Extracting the genealogy
 ------------------------
@@ -282,17 +279,29 @@ Resulting code
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-	.. simulator.simulate(1000, method='tau')
+	haplotype = 'AA'
+	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_title(name="AA haplotype")
+	simulator.add_legend()
+	simulator.plot()
 
-	.. population = 0
-	.. haplotype = 0
-	.. simulator.add_plot_infectious(population, haplotype, step_num=100)
+	haplotype = 'GG'
+	simulator.add_plot_infectious(population=0, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype, step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype, step_num=100)
+	simulator.add_title(name="GG haplotype")
+	simulator.add_legend()
+	simulator.plot()
 
-	.. susceptibility_type = 0
-	.. simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
-	.. simulator.add_title(name="Plot")
-	.. simulator.add_legend()
-	.. simulator.plot()
+	population = 0
+	simulator.add_plot_susceptible(population, susceptibility_type=0, step_num=100)
+	simulator.add_plot_susceptible(population, susceptibility_type=1, step_num=100)
+	simulator.add_plot_susceptible(population, susceptibility_type=2, step_num=100)
+	simulator.add_title(name="Susceptible group sizes")
+	simulator.add_legend()
+	simulator.plot()
 
 	simulator.genealogy()
 	file_name = "example"
