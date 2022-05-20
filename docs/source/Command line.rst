@@ -1,10 +1,11 @@
 Command line
 ============
 
-Basic information
------------------
+Stopping criterion
+------------------
 
-We consider Python API to be the main way of working with VGsim. Therefore all the documentation and developement are mainly connected with API, but not command line. We do not garantee, that command line will have the same functionality with the API and encourage you not to use it extensively.
+Exists two variants to stop simulation.
+First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
 
 
 Setting haplotype (strain) model
@@ -88,13 +89,6 @@ The user can specify the rates of direct transitions between susceptibility type
 	0.001 0.0 0.0001
 	0.0 0.0 0.0
 
-Stopping criterion
-------------------
-
-There exists two variants to stop simulation.
-First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
-
-
 Flags
 -----
 
@@ -118,31 +112,31 @@ Flags
      - float
      - random seed
    * - -pm or --populationModel
-     - str
-     - path to the population model: a file with population sizes etc, and a file with migration rate matrix
+     - path to two file
+     - population model: a file with population sizes etc, and a file with migration rate matrix
    * - -su or --susceptibility
-     - str
-     - path to the susceptibility file
+     - path to file
+     - susceptibility file
    * - -st or --suscepTransition
-     - str
-     - path to the susceptibility transition file
+     - path to file
+     - susceptibility transition file
    * - --sampling_probability
-     - float
-     - used to specify sampling as a share of recovered individuals
+     - None
+     - #TODO
    * - -nwk or --createNewick
      - None
-     - Create a newick file of tree
+     - Create a newick file of tree *.nwk
    * - -tsv or --writeMutations
      - None
-     - Create a mutation file
+     - Create a mutation file *.tsv
    * - --writeMigrations
      - None
-     - Create a migration file
+     - Create a migration file *.txt
    * - -c or -citation
      - None
      - Information for citation
 
-Tree output
------------
+Output
+------
 
 The final genealogical tree can be exported into Newick format with `--createNewick` or `-nwk`, and mutations can be exported in a tsv file with `--writeMutations` or `-tsv`. This format is compatible with phastSim (https://github.com/NicolaDM/phastSim) and Usher (REF).
