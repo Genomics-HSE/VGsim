@@ -1121,7 +1121,7 @@ cdef class BirthDeathModel:
             self.Error("Incorrect type of uninfection rate. Value should be int or float.")
         if rate<0:
             self.Error("Incorrect value of uninfection rate. Value should be more or equal 0.")
-
+            
         if isinstance(haplotype, str):
             haplotypes = self.create_list_haplotypes(haplotype)
             for haplotype in haplotypes:
@@ -1982,7 +1982,8 @@ cdef class BirthDeathModel:
                         for k in range(self.hapNum):
                             logDynamics[i].write(str(hapDate[i, k]) + " ")
                         logDynamics[i].write("\n")
-                    point += 1
+                    point += 1 
+
                 else:
                     log["time"].append(time_points[point])
                     for i in range(self.popNum):
@@ -1990,12 +1991,12 @@ cdef class BirthDeathModel:
                             log["P" + str(i)]["S" + str(j)].append(suscepDate[i, j])
                         for j  in range(self.hapNum):
                             log["P" + str(i)]["H" + str(j)].append(hapDate[i, j])
-                    point += 1
+                    point += 1 
 
         if output_file == True:
             for i in range(self.popNum-1, -1, -1):
                 logDynamics[i].close()
-        else:
+        else: 
             return log
 
     def output_chain_events(self, name_file):
@@ -2367,7 +2368,6 @@ cdef class BirthDeathModel:
     # cdef inline double MigrationPropensity(self, Py_ssize_t spn, Py_ssize_t tpn, Py_ssize_t sn, Py_ssize_t hn):
     #     return self.effectiveMigration[tpn, spn]*self.susceptible[tpn, sn]*self.infectious[spn, hn]*self.bRate[hn]*\
     #     self.susceptibility[hn, sn]*self.migrationRates[spn, spn]
-
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

@@ -82,10 +82,7 @@ class Simulator:
 	def set_infection(self, amount, source_type, target_haplotype, population=None):
 		self.simulation.set_infection(amount, source_type, target_haplotype, population)
 
-	def set_recovery(self, amount, source_haplotype, target_type, population=None):
-		self.simulation.set_recovery(amount, source_haplotype, target_type, population)
-
-
+    
 	def set_chain_events(self, file_name):
 		self.simulation.set_chain_events(file_name)
 
@@ -111,11 +108,11 @@ class Simulator:
 	def output_sample_data(self, output_print=False):
 		time, pop, hap = self.simulation.output_sample_data()
 		if output_print:
-			return time, pop, hap
-		else:
 			print(time)
 			print(pop)
 			print(hap)
+		return time, pop, hap
+
 
 	def output_epidemiology_timelines(self, step=1000, output_file=False):
 		if output_file == True:
@@ -172,7 +169,7 @@ class Simulator:
 
 		if label_samples == None:
 			self.ax.plot(time_points, sample, "--", label='Samples-' + str(population) + '-' + str(haplotype))
-		elif isinstance(label_label_samples, str) == True:
+		elif isinstance(label_samples, str) == True:
 			self.ax.plot(time_points, sample, "--", label=label_samples)
 		else:
 			print("#TODO")

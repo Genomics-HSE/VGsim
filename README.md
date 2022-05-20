@@ -63,8 +63,9 @@ Planned features
 ----------------
 Here we list the features which we are adding or consider for the VGsim package.
 - Tau-leaping: done (beta-version).
+- Memory usage optimisation to enable larger number of mutable sites: done (beta-version).
 - Population-level susceptibility transitions (e.g. to simulate different uneven efforts across the world): in work.
-- Memory usage optimisation to enable larger number of mutable sites: high priority.
+- Advanced immunity model: in work.
 - Advanced sampling schemes: medium priority.
 - Super-spreading events: medium priority.
 - Life-cycle: low priority.

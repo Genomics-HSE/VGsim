@@ -1,7 +1,11 @@
 Haplotypes
 ==========
 
-One of the key features of VGsim are pathogen haplotypes (or strains). Haplotype determines haplotype properties: transmissibility, mutation rates, interaction with immunity etc. Currently VGsim is optimized for a relatively small number of haplotypes within a simulation. This number is equal to 4^U, where U is the number of genetic sites. Each site is assumed to have a single nucleotide with four possible alleles (A, T, C or G).
+One of the key features of VGsim is a usage of pathogen haplotypes (or strains). Haplotype determines haplotype properties: transmissibility, mutation rates, interaction with immunity etc. Currently VGsim is optimized for a relatively small number of haplotypes within a simulation. This number is equal to 4^U, where U is the number of genetic sites. Each site is assumed to have a single nucleotide with four possible alleles (A, T, C or G).
+
+.. note::
+    If you have many haplotypes in your simulation, we encourage you to set *memory_optimisation* field in **Simulator** class to *True*. That might help with the memory performance for your simulation.
+
 
 Single nucleotide mutations lead to different haplotypes arising in the population. The rates of such mutations can be finely tuned: the user can set them independently for each site and each derived state of each haplotype.
 

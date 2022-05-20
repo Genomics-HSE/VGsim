@@ -14,6 +14,7 @@ Tutorials and examples
 
    Tutorials and examples
    Haplotypes
+   Migration
 
 Documentation
 =============
