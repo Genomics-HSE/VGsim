@@ -6,7 +6,7 @@ In this tutorial we will create a simulation scenario: we will choose parameters
 Initialisation
 --------------
 
-We begin with choosing the number of mutable sites, where single nucleotide substitution can occur. We will have 2 such sites, leading to 16 different haplotypes might appear following mutations.
+We begin with choosing the number of mutable sites, where single nucleotide substitution can occur. We will have 2 such sites. Hence, 16 different haplotypes might appear in the simulation as a result of mutations.
 
 Next, we need to decide how many populations (demes) there are in the simulation. Let’s create three populations.
 
