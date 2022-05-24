@@ -1,12 +1,16 @@
 Command line
 ============
 
-Stopping criterion
-------------------
+Stopping conditions
+-------------------
 
-Exists two variants to stop simulation.
-First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
+At present, the user can set three conditions to stop a simulation. The simulation stops when at least one of the conditions is satisfied.
 
+**Maximal number of iterations.** `-it` or `--iterations` sets the maximal number of steps in the exact or tau-leaping algorithm.
+
+**Maximal sample size.** `-s` or `--sampleSize` sets the desired number of sampled infection cases. Genealogy is simulated only for the sampled cases.
+
+**Simulated time** `-t` or `--time` is the simulated time (in the same units as rates, do not confuse with the run time) for how long the epidemics develops.
 
 Setting haplotype (strain) model
 --------------------------------
@@ -101,28 +105,28 @@ Flags
      - Meaning
    * - -it or --iterations
      - int
-     - number of iterations (default is 1000)
+     - maximal number of iterations (default is 1000)
    * - -s or --sampleSize
      - int
-     - number of sample (default is None)
+     - maximal number of samples (default is None)
    * - -t or --time
      - float
-     - time for stopping simulation (default is None)
+     - maximal simulated time for epidemics, do not confuse with the run time (default is None)
    * - -seed or --seed
      - float
      - random seed
    * - -pm or --populationModel
-     - path to two file
+     - two files
      - population model: a file with population sizes etc, and a file with migration rate matrix
    * - -su or --susceptibility
-     - path to file
+     - file
      - susceptibility file
    * - -st or --suscepTransition
-     - path to file
+     - file
      - susceptibility transition file
    * - --sampling_probability
-     - None
-     - #TODO
+     - float [0.0, 1.0]
+     - the probability that an infection case is sampled
    * - -nwk or --createNewick
      - None
      - Create a newick file of tree *.nwk
