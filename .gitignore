@@ -69,3 +69,5 @@ target/
 *~
 \#*
 cythonize.dat
+
+.DS_Store

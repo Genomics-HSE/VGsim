@@ -51,4 +51,5 @@ jobs:
       run: |
         pip install matplotlib prettytable
         $env:PYTHONPATH="$PWD\installdir\Lib\site-packages;$PWD\local_mclib\installdir\Lib\site-packages"
-        python ./vgsim.py -it 100000 -seed 2022
+        cd testing
+        python ./test.py -it 100000 -seed 2022

@@ -6,7 +6,7 @@ In this tutorial we will create a simulation scenario: we will choose parameters
 Initialisation
 --------------
 
-We begin with choosing the number of mutable sites, where single nucleotide substitution can occur. We will have 2 such sites, leading to 16 different haplotypes might appear following mutations.
+We begin with choosing the number of mutable sites, where single nucleotide substitution can occur. We will have 2 such sites. Hence, 16 different haplotypes might appear in the simulation as a result of mutations.
 
 Next, we need to decide how many populations (demes) there are in the simulation. Let’s create three populations.
 
@@ -27,7 +27,7 @@ Transmission, recovery and sampling rates
 
 Assume that a patient becomes uninfectious within 10 days on average. Remember, that sampling an individual also means that this person becomes uninfectious. So, the sum of recovery and sampling rates is 1/10=0.1.
 
-If 1 in 100 cases are sampled, then the recovery rate to sampling rate ratio is 99:1. Hence, the recovery rate is 0.099 and the sampling rate is 0.001.
+If 1 in 100 cases are sampled, then the recovery rate to sampling rate ratio is 99:1. Hence, recovery rate is 0.099 and sampling rate is 0.001.
 
 Now, if in the absence of immune individuals in the population (e.g., in the beginning of the pandemic) an infectious person transmits the disease to 2.5 individuals on average, the birth rate is 2.5/10=0.25 (because if there are 2.5 transmissions in 10 days, hence there are 0.25 transmission in a single day).
 
@@ -47,12 +47,11 @@ Now let us assume that the original virus has haplotype AA. And the haplotype GG
 Mutation rates and substitution probabilities
 ---------------------------------------------
 
-The GG haplotype can appear in the population only through mutations an both sites. For example, for SARS-CoV-2, there is roughly on average one new mutation per three transmissions (the average time between transmissions are 1/0.25=4 days in our model) per approximately 30000bp genome. So, the per-site mutation rate is 1/(3*4*30000)≈0.000003. We also set the substitution probabilities. It might be more convenient sometimes to use unnormalised weights instead. Here we assume that the A->G substitution is twice as likely than A->T or A->C (the A->A substitution is not allowed, so the first entry of the array will be dropped for the corresponding haplotypes). Let’s also assume that having allele G at the first site increases the mutation rate at the second site by three times.
+The GG haplotype can appear in the population only through mutations an both sites. For example, for SARS-CoV-2, there is roughly on average one new mutation per three transmissions (average time between transmissions are 1/0.25=4 days in our model) per approximately 30000bp genome. So, the per-site mutation rate is 1/(3*4*30000)≈0.000003. For demonstration purposes though, we set mutation rate to value of 0.0003 in this example to demonstrate functionality  on a relatively small simulation (otherwise mutations do not appear due to rarity of such an event). We also set the substitution probabilities. In fact, it might be more convenient sometimes to use unnormalised weights instead. Here we assume that the A->G substitution is twice more likely than A->T or A->C (the A->A substitution is not allowed, so the first entry of the array will be dropped for the corresponding haplotypes). Let’s also assume that having allele G at the first site increases the mutation rate at the second site by three times.
 
 .. code-block:: python
 
-	mutation_rate=0.000003
-
+	mutation_rate=0.0003
 	substitution_weights=[1,1,1,2]#ATCG
 	simulator.set_mutation_rate(mutation_rate, substitution_weights)
 	simulator.set_mutation_rate(3*mutation_rate, haplotype="G*", mutation=1)
@@ -152,58 +151,39 @@ And the amount of travels is reduced with population 2
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-Let’s run the simulation for some more iterations, but using the tau-leaping algorithm instead of direct.
-
-.. code-block:: python
-	
-	simulator.simulate(1000, method='tau')
-
-#TODO attach example of picture with output
-
 Visualizing epidemiological trajectories
 ----------------------------------------
 
-#TODO many plots or not
-
-
 Now let us plot how the haplotypes appear and spread in each population.
-Только АА в каждой
 
 .. code-block:: python
 
-	population = 0
-	haplotype = 0
-	simulator.add_plot_infectious(population, haplotype, step_num=100)
-
-Now let’s also plot how haplotype GG spreads in different populations.
-Только GG в каждой
-
-.. code-block:: python
-	
-	susceptibility_type = 0
-	simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
-
-And finally let us look how the susceptible group sizes change.
-И все типы для первой
-
-.. code-block:: python	
-	
-	simulator.add_title(name="Plot")
-
-.. code-block:: python
-	
+	simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
+	simulator.add_title(name="AA haplotype")
 	simulator.add_legend()
-
-.. code-block:: python
-	
 	simulator.plot()
 
-.. image:: plot.png
+.. image:: AA_haplotype.png
+
+And finally let us look how the susceptible group sizes change.
+
+.. code-block:: python
+
+	simulator.add_plot_susceptible(population=0, susceptibility_type=0, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=1, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=2, step_num=100)
+	simulator.add_title(name="Susceptible group sizes")
+	simulator.add_legend()
+	simulator.plot()
+
+.. image:: Susceptible_group_sizes.png
 
 Extracting the genealogy
 ------------------------
 
-Finally, we extract the genealogy of the sampled cases. We write the genealogy and mutations on it into a file in MAT format. These files can be used as phastSim input to add neutral mutations if desired.
+Finally, we extract the genealogy of the sampled cases. We write the genealogy and mutations on it into a file in MAT format. These files can be used as phastSim input to add neutral mutations.
 
 .. code-block:: python
 
@@ -271,7 +251,6 @@ Resulting code
 	simulator.set_population_size(1000000, population=2)
 	simulator.set_sampling_multiplier(3, population=1)
 	simulator.set_sampling_multiplier(0, population=2)
-
 	simulator.set_npi([0.1, 0.01, 0.002])
 	simulator.set_migration_probability(10/365/2)
 
@@ -284,17 +263,19 @@ Resulting code
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
-	.. simulator.simulate(1000, method='tau')
+	simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+	simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
+	simulator.add_title(name="AA haplotype")
+	simulator.add_legend()
+	simulator.plot()
 
-	.. population = 0
-	.. haplotype = 0
-	.. simulator.add_plot_infectious(population, haplotype, step_num=100)
-
-	.. susceptibility_type = 0
-	.. simulator.add_plot_susceptible(population, susceptibility_type, step_num=100)
-	.. simulator.add_title(name="Plot")
-	.. simulator.add_legend()
-	.. simulator.plot()
+	simulator.add_plot_susceptible(population=0, susceptibility_type=0, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=1, step_num=100)
+	simulator.add_plot_susceptible(population=0, susceptibility_type=2, step_num=100)
+	simulator.add_title(name="Susceptible group sizes")
+	simulator.add_legend()
+	simulator.plot()
 
 	simulator.genealogy()
 	file_name = "example"

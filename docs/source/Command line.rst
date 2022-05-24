@@ -1,11 +1,16 @@
 Command line
 ============
 
-Basic information
------------------
+Stopping conditions
+-------------------
 
-We consider Python API to be the main way of working with VGsim. Therefore all the documentation and developement are mainly connected with API, but not command line. We do not garantee, that command line will have the same functionality with the API and encourage you not to use it extensively.
+At present, the user can set three conditions to stop a simulation. The simulation stops when at least one of the conditions is satisfied.
 
+**Maximal number of iterations.** `-it` or `--iterations` sets the maximal number of steps in the exact or tau-leaping algorithm.
+
+**Maximal sample size.** `-s` or `--sampleSize` sets the desired number of sampled infection cases. Genealogy is simulated only for the sampled cases.
+
+**Simulated time** `-t` or `--time` is the simulated time (in the same units as rates, do not confuse with the run time) for how long the epidemics develops.
 
 Setting haplotype (strain) model
 --------------------------------
@@ -88,13 +93,6 @@ The user can specify the rates of direct transitions between susceptibility type
 	0.001 0.0 0.0001
 	0.0 0.0 0.0
 
-Stopping criterion
-------------------
-
-There exists two variants to stop simulation.
-First `-it` or `--iterations` defined lenght of the chain of events. Second `-s` or `--sampleSize` additionally defined stopping criterion by the number of sample. If this parameter is not defined, then the default value is equal to the number of iterations.
-
-
 Flags
 -----
 
@@ -107,42 +105,42 @@ Flags
      - Meaning
    * - -it or --iterations
      - int
-     - number of iterations (default is 1000)
+     - maximal number of iterations (default is 1000)
    * - -s or --sampleSize
      - int
-     - number of sample (default is None)
+     - maximal number of samples (default is None)
    * - -t or --time
      - float
-     - time for stopping simulation (default is None)
+     - maximal simulated time for epidemics, do not confuse with the run time (default is None)
    * - -seed or --seed
      - float
      - random seed
    * - -pm or --populationModel
-     - str
-     - path to the population model: a file with population sizes etc, and a file with migration rate matrix
+     - two files
+     - population model: a file with population sizes etc, and a file with migration rate matrix
    * - -su or --susceptibility
-     - str
-     - path to the susceptibility file
+     - file
+     - susceptibility file
    * - -st or --suscepTransition
-     - str
-     - path to the susceptibility transition file
+     - file
+     - susceptibility transition file
    * - --sampling_probability
-     - float
-     - used to specify sampling as a share of recovered individuals
+     - float [0.0, 1.0]
+     - the probability that an infection case is sampled
    * - -nwk or --createNewick
      - None
-     - Create a newick file of tree
+     - Create a newick file of tree *.nwk
    * - -tsv or --writeMutations
      - None
-     - Create a mutation file
+     - Create a mutation file *.tsv
    * - --writeMigrations
      - None
-     - Create a migration file
+     - Create a migration file *.txt
    * - -c or -citation
      - None
      - Information for citation
 
-Tree output
------------
+Output
+------
 
 The final genealogical tree can be exported into Newick format with `--createNewick` or `-nwk`, and mutations can be exported in a tsv file with `--writeMutations` or `-tsv`. This format is compatible with phastSim (https://github.com/NicolaDM/phastSim) and Usher (REF).
