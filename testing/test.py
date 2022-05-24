@@ -38,11 +38,12 @@ parser.add_argument('--suscepTransition', '-st', nargs=1, default=None,
 
 parser.add_argument('--sampling_probability', help="#TODO", action="store_true")
 
-parser.add_argument("--createNewick", '-nwk', help="Create a newick file of tree *.nwk ", action="store_true")
-parser.add_argument("--writeMutations", '-tsv',
+parser.add_argument("--createNewick", '-nwk', nargs=1, default=None, 
+                    help="Create a newick file of tree *.nwk ", action="store_true")
+parser.add_argument("--writeMutations", '-tsv', nargs=1, default=None, 
                     help="Create a mutation file *.tsv ",
                     action="store_true")
-parser.add_argument("--writeMigrations",
+parser.add_argument("--writeMigrations", nargs=1, default=None, 
                     help="Create a migration file *.txt ",
                     action="store_true")
 parser.add_argument("--output_chain_events", nargs=1, default=None,
@@ -145,10 +146,10 @@ simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
 simulator.genealogy(int(seed))
 
 if clargs.createNewick:
-    simulator.output_newick()
+    simulator.output_newick(clargs.createNewick)
 if clargs.writeMutations:
-    simulator.output_mutations()
+    simulator.output_mutations(clargs.writeMutations)
 if clargs.writeMigrations:
-    simulator.output_migrations()
+    simulator.output_migrations(clargs.writeMigrations)
 if clargs.output_chain_events:
     simulator.output_chain_events(clargs.output_chain_events)

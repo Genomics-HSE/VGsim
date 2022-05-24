@@ -105,3 +105,27 @@ simulator.set_immunity_transition(0.000002, source=2, target=1)
 simulator.simulate(100000)
 simulator.output_chain_events('reference_' + str(name))
 
+#10 model
+# simulator = VGsim.Simulator(number_of_sites=5, seed=my_seed, memory_optimization=True)
+
+# name = 10
+# simulator.set_mutation_rate(0.01)
+# simulator.simulate(iterations)
+# simulator.output_chain_events('reference_' + str(name))
+
+# #11 model
+# simulator = VGsim.Simulator(number_of_sites=5, seed=my_seed, memory_optimization=20)
+
+# name = 11
+# simulator.set_mutation_rate(0.01)
+# simulator.simulate(iterations)
+# simulator.output_chain_events('reference_' + str(name))
+
+# #12 model
+# simulator = VGsim.Simulator(number_of_sites=5, seed=my_seed, memory_optimization=(20, 2))
+
+# name = 12
+# simulator.set_mutation_rate(0.01)
+# simulator.simulate(iterations)
+# simulator.output_chain_events('reference_' + str(name))
+
