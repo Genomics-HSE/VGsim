@@ -174,7 +174,7 @@ class Simulator:
 
 		if label_samples == None:
 			self.ax.plot(time_points, sample, "--", label='Samples pop:' + str(population) + ' hap:' + self.simulation.calculate_string(haplotype))
-		elif isinstance(label_label_samples, str) == True:
+		elif isinstance(label_samples, str) == True:
 			self.ax.plot(time_points, sample, "--", label=label_samples)
 		else:
 			print("#TODO")

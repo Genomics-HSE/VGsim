@@ -72,32 +72,27 @@ cdef class BirthDeathModel:
         self.popNum = populations_number
 
         #Memory optimization
-        if isinstance(memory_optimization, list) and len(memory_optimization) == 2:
+        if isinstance(memory_optimization, (tuple, list)) and len(memory_optimization) == 2:
             self.memory_optimization = True
             self.maxHapNum = memory_optimization[0]
             self.addMemoryNum = memory_optimization[1]
-            self.currentHapNum = 0
         elif isinstance(memory_optimization, int):
             self.memory_optimization = True
-            self.maxHapNum = memory_optimization
+            if memory_optimization == 1:
+                self.maxHapNum = 4
+            else:
+                self.maxHapNum = memory_optimization
             self.addMemoryNum = 4
-            self.currentHapNum = 0
-        elif memory_optimization == True:
-            self.memory_optimization = True
-            self.maxHapNum = 4
-            self.addMemoryNum = 4
-            self.currentHapNum = 0
         else:
             self.memory_optimization = False
             self.maxHapNum = self.hapNum
             self.addMemoryNum = 0
-            self.currentHapNum = self.hapNum
 
         self.hapToNum = np.zeros(self.hapNum, dtype=np.int64) # from haplotype to program number
         self.numToHap = np.zeros(self.maxHapNum, dtype=np.int64) # from program number to haplotype
 
         if self.memory_optimization:
-            self.currentHapNum = 1
+            self.currentHapNum = 0
         else:
             self.currentHapNum = self.hapNum
             for hn in range(self.hapNum):
@@ -210,7 +205,8 @@ cdef class BirthDeathModel:
         if self.globalInfectious == 0:
             for sn in range(self.susNum):
                 if self.susceptible[0, sn] != 0:
-                    # self.AddHaplotype(0)
+                    if self.memory_optimization:
+                        self.AddHaplotype(0)
                     self.NewInfections(0, sn, 0)
                     return
 
@@ -235,7 +231,9 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddMemory(self):
-        self.hapToNum = np.concatenate((self.hapToNum, np.zeros(self.addMemoryNum, dtype=np.int64)))
+        if self.addMemoryNum + self.maxHapNum > self.hapNum:
+            self.addMemoryNum = self.hapNum - self.maxHapNum
+        self.numToHap = np.concatenate((self.numToHap, np.zeros(self.addMemoryNum, dtype=np.int64)))
         self.infectious = np.concatenate((self.infectious, np.zeros((self.popNum, self.addMemoryNum), dtype=np.int64)), axis=1)
         self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, dtype=float)))
         self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
@@ -319,7 +317,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void AddHaplotype(self, Py_ssize_t nhi): # nhi - haplotype
-        if self.currentHapNum == self.maxHapNum:
+        if self.currentHapNum == self.maxHapNum and self.maxHapNum < self.hapNum:
             self.AddMemory()
         self.hapToNum[nhi] = self.currentHapNum
         self.numToHap[self.currentHapNum] = nhi
@@ -348,14 +346,14 @@ cdef class BirthDeathModel:
         self.CheckSizes()
 
         if self.first_simulation:
-            self.good_attempt = 1
+            self.good_attempt = 0
 
-        for i in range(attempts):
+        for i in range(1, attempts):
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
                 while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<=sample_size) and (time==-1 or self.currentTime<time)):
                     self.SampleTime()
-                    # self.Debug()
                     pi = self.GenerateEvent()
+                    # self.Debug()
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
@@ -363,20 +361,19 @@ cdef class BirthDeathModel:
             if self.events.ptr <= 100 and iterations > 100:
                 self.Restart()
             else:
-                self.good_attempt = i+1
+                self.good_attempt = i
                 break
 
         if self.totalRate == 0.0 or self.globalInfectious == 0:
             print('Simulation finished because no infections individuals remain!')
-        if self.sCounter <= 1:
-            print('\033[41m{}\033[0m'.format('WARNING!'), 'Simulated less 2 samples, so genealogy will not work!')
-            # sys.exit(0)
         if self.events.ptr>=self.events.size:
             print("Achieved maximal number of iterations.")
         if self.sCounter>sample_size and sample_size!=-1:
             print("Achieved sample size.")
         if self.currentTime>time and time != -1:
             print("Achieved internal time limit.")
+        if self.sCounter <= 1:
+            print('\033[41m{}\033[0m'.format('WARNING!'), 'Simulated less 2 samples, so genealogy will not work!')
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -559,8 +556,9 @@ cdef class BirthDeathModel:
             DS += 1
         nhi = ohi + (DS-AS)*digit4 # nhi - haplotype
         check = True
+
         for hn in range(self.currentHapNum+1): # hn - program number
-            if self.hapToNum[hn] == nhi:
+            if self.numToHap[hn] == nhi:
                 check = False
                 break
         if check:
@@ -2355,11 +2353,11 @@ cdef class BirthDeathModel:
         print()
         print()
         print("hapToNum(mutable): ", sep="", end="")
-        for hn in range(self.maxHapNum):
+        for hn in range(self.hapNum):
             print(self.hapToNum[hn], end=" ")
         print()
         print("numToHap(mutable): ", sep="", end="")
-        for hn in range(self.hapNum):
+        for hn in range(self.maxHapNum):
             print(self.numToHap[hn], end=" ")
         print()
         print("sizes(const): ", end="")
