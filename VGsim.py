@@ -1,6 +1,6 @@
 class Simulator():
 	"""
-	This is the most important class which creates and proceeds the simulation.
+	The class which creates and runs simulations.
 	"""
 
 	def __init__(number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=None):
