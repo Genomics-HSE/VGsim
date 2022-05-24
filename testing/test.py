@@ -38,15 +38,13 @@ parser.add_argument('--suscepTransition', '-st', nargs=1, default=None,
 
 parser.add_argument('--sampling_probability', help="#TODO", action="store_true")
 
-parser.add_argument("--createNewick", '-nwk', nargs=1, default=None, 
+parser.add_argument("--createNewick", '-nwk', nargs=1, default=False, 
                     help="Create a newick file of tree *.nwk ")
-parser.add_argument("--writeMutations", '-tsv', nargs=1, default=None, 
-                    help="Create a mutation file *.tsv ",
-                    action="store_true")
-parser.add_argument("--writeMigrations", nargs=1, default=None, 
-                    help="Create a migration file *.txt ",
-                    action="store_true")
-parser.add_argument("--output_chain_events", nargs=1, default=None,
+parser.add_argument("--writeMutations", '-tsv', nargs=1, default=False, 
+                    help="Create a mutation file *.tsv ")
+parser.add_argument("--writeMigrations", nargs=1, default=False, 
+                    help="Create a migration file *.txt ")
+parser.add_argument("--output_chain_events", nargs=1, default=False,
                     help="#TODO")
 
 parser.add_argument("-citation", '-c', help="Information for citation.")
