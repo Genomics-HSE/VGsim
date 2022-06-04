@@ -38,14 +38,13 @@ parser.add_argument('--suscepTransition', '-st', nargs=1, default=None,
 
 parser.add_argument('--sampling_probability', help="#TODO", action="store_true")
 
-parser.add_argument("--createNewick", '-nwk', help="Create a newick file of tree *.nwk ", action="store_true")
-parser.add_argument("--writeMutations", '-tsv',
-                    help="Create a mutation file *.tsv ",
-                    action="store_true")
-parser.add_argument("--writeMigrations",
-                    help="Create a migration file *.txt ",
-                    action="store_true")
-parser.add_argument("--output_chain_events", nargs=1, default=None,
+parser.add_argument("--createNewick", '-nwk', nargs=1, default=False, 
+                    help="Create a newick file of tree *.nwk ")
+parser.add_argument("--writeMutations", '-tsv', nargs=1, default=False, 
+                    help="Create a mutation file *.tsv ")
+parser.add_argument("--writeMigrations", nargs=1, default=False, 
+                    help="Create a migration file *.txt ")
+parser.add_argument("--output_chain_events", nargs=1, default=False,
                     help="#TODO")
 
 parser.add_argument("-citation", '-c', help="Information for citation.")
@@ -108,7 +107,7 @@ if clargs.seed == None:
 else:
 	seed = clargs.seed
 
-simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), memory_optimization=clargs.max_haplotypes_number ,populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
+simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
 
 for i in range(len(bRate)):
 	simulator.set_transmission_rate(bRate[i], i)
@@ -145,10 +144,10 @@ simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
 simulator.genealogy(int(seed))
 
 if clargs.createNewick:
-    simulator.output_newick()
+    simulator.output_newick(clargs.createNewick)
 if clargs.writeMutations:
-    simulator.output_mutations()
+    simulator.output_mutations(clargs.writeMutations)
 if clargs.writeMigrations:
-    simulator.output_migrations()
+    simulator.output_migrations(clargs.writeMigrations)
 if clargs.output_chain_events:
     simulator.output_chain_events(clargs.output_chain_events)
