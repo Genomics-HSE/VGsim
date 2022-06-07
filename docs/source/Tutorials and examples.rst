@@ -151,6 +151,13 @@ And the amount of travels is reduced with population 2
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
 
+
+#TODO
+
+.. code-block:: python
+
+	simulator.simulate(1000, method='tau')
+
 Visualizing epidemiological trajectories
 ----------------------------------------
 
@@ -262,6 +269,8 @@ Resulting code
 	simulator.set_contact_density(0.7, population=1)
 	simulator.set_migration_probability(2/365/2, source=0, target=2)
 	simulator.set_migration_probability(2/365/2, source=1, target=2)
+
+	simulator.simulate(1000, method='tau')
 
 	simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
 	simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)

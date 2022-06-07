@@ -58,14 +58,14 @@ cdef class Events:
             self.populations = np.zeros(self.size, dtype=np.int64)
             self.newHaplotypes = np.zeros(self.size, dtype=np.int64)
             self.newPopulations = np.zeros(self.size, dtype=np.int64)
-        else:
-            self.times = np.concatenate((self.times, np.zeros(iterations + self.ptr - self.size, dtype=float)))
-            self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
-            self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
-            self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
-            self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
-            self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
-            self.size = iterations + self.ptr
+        elif iterations + self.ptr - self.size > 0:
+                self.times = np.concatenate((self.times, np.zeros(iterations + self.ptr - self.size, dtype=float)))
+                self.types = np.concatenate((self.types, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+                self.haplotypes = np.concatenate((self.haplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+                self.populations = np.concatenate((self.populations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+                self.newHaplotypes = np.concatenate((self.newHaplotypes, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+                self.newPopulations = np.concatenate((self.newPopulations, np.zeros(iterations + self.ptr - self.size, dtype=np.int64)))
+                self.size = iterations + self.ptr
 
 cdef class multiEvent:
     cdef:

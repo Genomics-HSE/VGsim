@@ -48,7 +48,7 @@ That's it!
 You may now run simulations:
 
 ```
-$ python testing/test.py -rt example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+$ python ./testing/example.py
 ```
 
 If you prefer not to use ``conda``, the package builds fine with just pip. We recommend using virtual environments, via the standard library ``venv`` package (or a third-party ``virtualenv`` package). For MacOS users: please make sure to use Python with Homebrew. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install. YMMV.

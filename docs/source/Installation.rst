@@ -21,7 +21,7 @@ Get the source code --- here we clone it from GitHub
 
 .. code-block:: bash
 
-	$ git clone git@github.com:Genomics-HSE/VGsim.git
+	$ git clone https://github.com/Genomics-HSE/VGsim.git
 	$ cd VGsim
 
 Then build the package: 
@@ -35,8 +35,7 @@ You may now run simulations:
 
 .. code-block:: bash
 
-	$ cd testing
-	$ python ./test.py -r example/example.rt -it 100000 -pm example/example.pp example/example.mg -seed 2020
+	$ python ./testing/example.py
 
 If you prefer to not use ``conda``, the package builds fine with just pip. We recommend using virtual environments, via the standard library ``venv`` package (or a third-party ``virtualenv`` package). For MacOS users: please make sure to use Python with Homebrew. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install. YMMV.
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS.

@@ -247,7 +247,7 @@ class Simulator:
 
 	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct', attempts=200):
 		if sample_size is None:
-			sample_size = -1
+			sample_size = iterations
 		if time is None:
 			time = -1
 
