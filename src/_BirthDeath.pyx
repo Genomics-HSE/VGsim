@@ -2069,6 +2069,9 @@ cdef class BirthDeathModel:
             elif self.events.types[j] == MIGRATION:
                 suscepDate[self.events.newPopulations[j], self.events.newHaplotypes[j]] -= 1
                 hapDate[self.events.newPopulations[j], self.events.haplotypes[j]] += 1
+            elif self.events.types[j] == MULTITYPE:
+                pass
+                #TODO
             if time_points[point] <= self.events.times[j]:
                 if output_file == True:
                     for i in range(self.popNum):
@@ -2170,33 +2173,27 @@ cdef class BirthDeathModel:
             if self.events.populations[i] == pop and self.events.haplotypes[i] == hap:
                 if self.events.types[i] == BIRTH:
                     Data[point] += 1
-                elif self.events.types[i] == DEATH:
+                elif self.events.types[i] == DEATH or self.events.types[i] == SAMPLING or self.events.types[i] == MUTATION:
                     Data[point] -= 1
-                elif self.events.types[i] == SAMPLING:
-                    Data[point] -= 1
-                    Sample[point] += 1
-                elif self.events.types[i] == MUTATION:
-                    Data[point] -= 1
+                    if self.events.types[i] == SAMPLING:
+                        Sample[point] += 1
             elif self.events.types[i] == MUTATION and self.events.newHaplotypes[i] == hap and self.events.populations[i] == pop:
                 Data[point] += 1
             elif self.events.types[i] == MIGRATION and self.events.newPopulations[i] == pop and self.events.haplotypes[i] == hap:
                 Data[point] += 1
-            # elif self.events.types[i] == MULTITYPE:
-            #     for j in range(self.events.haplotypes[i], self.events.populations[i]):
-            #         if self.multievents.haplotypes[j] == hap and self.multievents.populations[j] == pop:
-            #             if self.multievents.types[j] == BIRTH:
-            #                 Data[point] += self.multievents.num[j]
-            #             elif self.multievents.types[j] == DEATH:
-            #                 Data[point] -= self.multievents.num[j]
-            #             elif self.multievents.types[j] == SAMPLING:
-            #                 Data[point] -= self.multievents.num[j]
-            #                 Sample[point] += self.multievents.num[j]
-            #             elif self.multievents.types[j] == MUTATION:
-            #                 Data[point] -= self.multievents.num[j]
-            #         elif self.multievents.types[j] == MUTATION and self.multievents.newHaplotypes[j] == hap and self.multievents.populations[j] == pop:
-            #             Data[point] += self.multievents.num[j]
-            #         elif self.multievents.types[j] == MIGRATION and self.multievents.newPopulations[j] == pop and self.multievents.haplotypes[j] == hap:
-            #             Data[point] += self.multievents.num[j]
+            elif self.events.types[i] == MULTITYPE:
+                for j in range(self.events.haplotypes[i], self.events.populations[i]):
+                    if self.multievents.haplotypes[j] == hap and self.multievents.populations[j] == pop:
+                        if self.multievents.types[j] == BIRTH:
+                            Data[point] += self.multievents.num[j]
+                        elif self.multievents.types[j] == DEATH or self.multievents.types[j] == SAMPLING or self.multievents.types[j] == MUTATION:
+                            Data[point] -= self.multievents.num[j]
+                            if self.multievents.types[j] == SAMPLING:
+                                Sample[point] += self.multievents.num[j]
+                    elif self.multievents.types[j] == MUTATION and self.multievents.newHaplotypes[j] == hap and self.multievents.populations[j] == pop:
+                        Data[point] += self.multievents.num[j]
+                    elif self.multievents.types[j] == MIGRATION and self.multievents.newPopulations[j] == pop and self.multievents.haplotypes[j] == hap:
+                        Data[point] += self.multievents.num[j]
 
         Lockdowns = []
         for i in range(self.loc.times.size()):
@@ -2211,23 +2208,30 @@ cdef class BirthDeathModel:
         Data[0] = self.initial_susceptible[pop, sus]
 
         point = 0
-        for j in range(self.events.ptr):
-            while point != step_num and time_points[point] < self.events.times[j]:
+        for i in range(self.events.ptr):
+            while point != step_num and time_points[point] < self.events.times[i]:
                 Data[point+1] = Data[point]
                 point += 1
-            if self.events.populations[j] == pop and self.events.newHaplotypes[j] == sus:
-                if self.events.types[j] == BIRTH:
+            if self.events.populations[i] == pop and self.events.newHaplotypes[i] == sus:
+                if self.events.types[i] == BIRTH:
                     Data[point] -= 1
-                elif self.events.types[j] == DEATH:
+                elif self.events.types[i] == DEATH or self.events.types[i] == SAMPLING or self.events.types[i] == MUTATION:
                     Data[point] += 1
-                elif self.events.types[j] == SAMPLING:
-                    Data[point] += 1
-                elif self.events.types[j] == SUSCCHANGE:
-                    Data[point] += 1
-            elif self.events.types[j] == SUSCCHANGE and self.events.haplotypes[j] == sus and self.events.populations[j] == pop:
+            elif self.events.types[i] == SUSCCHANGE and self.events.haplotypes[i] == sus and self.events.populations[i] == pop:
                 Data[point] -= 1
-            elif self.events.types[j] == MIGRATION and self.events.newPopulations[j] == pop and self.events.newHaplotypes[j] == sus:
+            elif self.events.types[i] == MIGRATION and self.events.newPopulations[i] == pop and self.events.newHaplotypes[i] == sus:
                 Data[point] -= 1
+            elif self.events.types[i] == MULTITYPE:
+                for j in range(self.events.haplotypes[i], self.events.populations[i]):
+                    if self.multievents.haplotypes[j] == sus and self.multievents.populations[j] == pop:
+                        if self.multievents.types[j] == BIRTH:
+                            Data[point] -= self.multievents.num[j]
+                        elif self.multievents.types[j] == DEATH or self.multievents.types[j] == SAMPLING or self.multievents.types[j] == MUTATION:
+                            Data[point] += self.multievents.num[j]
+                    elif self.multievents.types[j] == MUTATION and self.multievents.newHaplotypes[j] == sus and self.multievents.populations[j] == pop:
+                        Data[point] -= self.multievents.num[j]
+                    elif self.multievents.types[j] == MIGRATION and self.multievents.newPopulations[j] == pop and self.multievents.haplotypes[j] == sus:
+                        Data[point] -= self.multievents.num[j]
 
         Lockdowns = []
         for i in range(self.loc.times.size()):
@@ -2235,68 +2239,6 @@ cdef class BirthDeathModel:
                 Lockdowns.append([self.loc.states[i], self.loc.times[i]])
 
         return Data, time_points, Lockdowns
-
-    # def get_data_all(self, data, step_num):
-    #     time_points = [i*self.currentTime/step_num for i in range(step_num+1)]
-    #     Data = [[[0 for _ in range(step_num+1)] for _ in range(len(data[0]))], [[0 for _ in range(step_num+1)] for _ in range(len(data[1]))], [[0 for _ in range(step_num+1)] for _ in range(len(data[2]))]]
-    #     lockdowns = []
-    #     pointer = 0
-
-    #     for i in range(len(Data[1])):
-    #         pn, hn = data[1][i]
-    #         Data[1][i][0] = self.initial_infectious[pn, hn]
-    #     for i in range(len(Data[2])):
-    #         pn, sn = data[2][i]
-    #         Data[2][i][0] = self.initial_susceptible[pn, sn]
-
-    #     unique_pop = []
-    #     for i in range(3):
-    #         for j in range(len(data[i])):
-    #             pn = data[i][j][0]
-    #             if pn not in unique_pop: unique_pop.append(pn)
-    #     for i in range(len(unique_pop)):
-    #         lockdowns.append(list())
-    #         for j in range(self.loc.times.size()):
-    #             if self.loc.populationsId[j] == unique_pop[i]:
-    #                 lockdowns[i].append([self.loc.states[i], self.loc.times[i]])
-
-    #     for i in range(self.events.ptr):
-    #         while pointer != step_num and time_points[pointer] < self.events.times[i]:
-    #             for j in range(3):
-    #                 for k in range(len(Data[j])):
-    #                     Data[j][k][pointer+1] = Data[j][k][pointer]
-    #             pointer += 1
-
-    #         for j in range(len(data[0])):
-    #             pn, hn = data[0][j]
-    #             if self.events.types[i] == SAMPLING and self.events.populations[i] == pn and self.events.haplotypes[i] == hn:
-    #                 Data[0][j][pointer] += 1
-
-    #         for j in range(len(data[1])):
-    #             pn, hn = data[1][j]
-    #             if self.events.populations[i] == pn:
-    #                 if self.events.types[i] == BIRTH and self.events.haplotypes[i] == hn or (self.events.types[j] == MUTATION and self.events.newHaplotypes[j] == hn and self.events.populations[j] == pn):
-    #                     Data[1][j][pointer] += 1
-    #                 elif (self.events.types[i] == DEATH or self.events.types[i] == MUTATION) and self.events.haplotypes[i] == hn:
-    #                     Data[1][j][pointer] -= 1
-    #                 elif self.events.types[i] == SAMPLING and self.events.haplotypes[i] == hn:
-    #                     Data[1][j][pointer] -= 1
-    #             elif self.events.newPopulations[i] == pn and self.events.types[j] == MIGRATION and self.events.haplotypes[j] == hn:
-    #                 Data[1][j][pointer] += 1
-
-    #         for j in range(len(data[2])):
-    #             pn, sn = data[2][j]
-    #             if self.events.populations[i] == pn:
-    #                 if self.events.types[i] == BIRTH and self.events.haplotypes[i] == sn or (self.events.types[j] == SUSCCHANGE and self.events.newHaplotypes[j] == sn and self.events.populations[j] == pn):
-    #                     Data[2][j][pointer] -= 1
-    #                 elif (self.events.types[i] == DEATH or self.events.types[i] == SUSCCHANGE) and self.events.haplotypes[i] == sn:
-    #                     Data[2][j][pointer] += 1
-    #                 elif self.events.types[i] == SAMPLING and self.events.haplotypes[i] == sn:
-    #                     Data[2][j][pointer] += 1
-    #             elif self.events.newPopulations[i] == pn and self.events.types[j] == MIGRATION and self.events.haplotypes[j] == sn:
-    #                 Data[2][j][pointer] += 1
-
-    #     return Data, time_points, lockdowns
 
 
     def Stats(self):
