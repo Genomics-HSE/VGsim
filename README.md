@@ -34,7 +34,7 @@ Note that we install python *with conda, inside the conda environment*. Mixing s
 Get the source code --- here we clone it from GitHub
 
 ```
-$ git clone git@github.com:Genomics-HSE/VGsim.git
+$ git clone https://github.com/Genomics-HSE/VGsim.git
 $ cd VGsim
 ```
 
