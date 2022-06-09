@@ -1996,7 +1996,7 @@ cdef class BirthDeathModel:
 
     def output_migrations(self, name_file, file_path):
         if file_path != None:
-            f_mig = open(file_path + '/' + name_file + '.mig', 'w')
+            f_mig = open(file_path + '/' + name_file + '.tsv', 'w')
         else:
             f_mig = open(name_file + '.mig', 'w')
         f_mig.write("Node\tTime\tOld_population\tNew_population\n")

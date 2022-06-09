@@ -43,12 +43,11 @@ simulator.set_migration_probability(2/365/2, source=1, target=2)
 simulator.simulate(1000, method='tau')
 
 simulator.genealogy()
-file_name = "example"
 
 os.chdir('testing')
 os.mkdir('output_example')
 os.chdir('output_example')
 
-simulator.output_newick(file_name)
-simulator.output_mutations(file_name)
-simulator.output_migrations(file_name)
+simulator.output_newick()
+simulator.output_mutations('mutations')
+simulator.output_migrations('migrations')
