@@ -45,7 +45,6 @@ simulator.simulate(1000, method='tau')
 
 simulator.genealogy()
 
-
 os.chdir('testing')
 if os.path.exists('example_output') == False:
 	os.mkdir('example_output')
