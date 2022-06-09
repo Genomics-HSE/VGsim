@@ -1,5 +1,6 @@
 import VGsim
 import os
+import os.path
 
 number_of_sites = 2
 populations_number = 3
@@ -45,8 +46,16 @@ simulator.simulate(1000, method='tau')
 simulator.genealogy()
 
 os.chdir('testing')
-os.mkdir('output_example')
-os.chdir('output_example')
+if os.path.exists('example_output') == False:
+	os.mkdir('example_output')
+os.chdir('example_output')
+
+simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
+simulator.add_title(name="AA haplotype")
+simulator.add_legend()
+simulator.plot('plot')
 
 simulator.output_newick()
 simulator.output_mutations('mutations')

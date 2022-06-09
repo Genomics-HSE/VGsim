@@ -3,18 +3,12 @@
 import argparse
 import sys
 import time
-# from VGsim import BirthDeathModel, PopulationModel, Population, Lockdown
-# from VGsim.IO import ReadRates, ReadPopulations, ReadMigrationRates, ReadSusceptibility, ReadSusceptibilityTransition, writeGenomeNewick, writeMutations
-from VGsim.IO import read_matrix, read_rates, read_populations, read_susceptibility
-from VGsim import Simulator
+import VGsim
 from random import randrange
 import numpy as np
 import math
 
 parser = argparse.ArgumentParser(description='Migration inference from PSMC.')
-
-# parser.add_argument('frate',
-                    # help='file with rates')
 
 parser.add_argument('--iterations', '-it', nargs=1, type=int, default=1000,
                     help='number of iterations (default is 1000)')
@@ -43,7 +37,7 @@ parser.add_argument("--createNewick", '-nwk', nargs=1, default=False,
 parser.add_argument("--writeMutations", '-tsv', nargs=1, default=False, 
                     help="Create a mutation file *.tsv ")
 parser.add_argument("--writeMigrations", nargs=1, default=False, 
-                    help="Create a migration file *.txt ")
+                    help="Create a migration file *.tsv ")
 parser.add_argument("--output_chain_events", nargs=1, default=False,
                     help="#TODO")
 
@@ -77,7 +71,7 @@ if isinstance(clargs.output_chain_events, list):
 if clargs.rates == None:
     bRate, dRate, sRate, mRate = [2], [1], [0.1], [[]]
 else:
-    bRate, dRate, sRate, mRate = read_rates(clargs.rates)
+    bRate, dRate, sRate, mRate = VGsim.IO.read_rates(clargs.rates)
 
 if clargs.sampleSize == None:
     clargs.sampleSize = clargs.iterations
@@ -88,26 +82,26 @@ if clargs.populationModel == None:
     sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier = [1000000], [1], [1], [1], [1], [1]
     migrationRates = [[0.0]]
 else:
-    sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier = read_populations(clargs.populationModel[0])
-    migrationRates = read_matrix(clargs.populationModel[1])
+    sizes, contactDensity, contactAfter, startLD, endLD, samplingMultiplier = VGsim.IO.read_populations(clargs.populationModel[0])
+    migrationRates = VGsim.IO.read_matrix(clargs.populationModel[1])
 
 if clargs.susceptibility == None:
     susceptible = [[1.0] for _ in range(len(bRate))]
     susType = [0 for _ in range(len(bRate))]
 else:
-    susceptible, susType = read_susceptibility(clargs.susceptibility)
+    susceptible, susType = VGsim.IO.read_susceptibility(clargs.susceptibility)
 
 if clargs.suscepTransition == None:
     suscepTransition = [[0.0]]
 else:
-    suscepTransition = read_matrix(clargs.suscepTransition)
+    suscepTransition = VGsim.IO.read_matrix(clargs.suscepTransition)
 
 if clargs.seed == None:
     seed = randrange(sys.maxsize)
 else:
 	seed = clargs.seed
 
-simulator = Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
+simulator = VGsim.Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
 
 for i in range(len(bRate)):
 	simulator.set_transmission_rate(bRate[i], i)
@@ -136,11 +130,7 @@ for i in range(len(suscepTransition)):
         if i != j:
             simulator.set_immunity_transition(suscepTransition[i][j], i, j)
 
-# simulator.print_all()
-# simulator.debug()
 simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
-# simulator.print_all()
-# simulator.debug()
 simulator.genealogy(int(seed))
 
 if clargs.createNewick:
