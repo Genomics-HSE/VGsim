@@ -11,7 +11,7 @@ simulator.set_transmission_rate(0.25)
 simulator.set_recovery_rate(0.099)
 simulator.set_sampling_rate(0.001)
 simulator.set_transmission_rate(0.5, haplotype="GG")
-mutation_rate=0.000003
+mutation_rate=0.00003
 substitution_weights=[1,1,1,2]#ATCG
 simulator.set_mutation_rate(mutation_rate, substitution_weights)
 simulator.set_mutation_rate(3*mutation_rate, haplotype='G*', mutation=1)
