@@ -51,7 +51,7 @@ You may now run simulations:
 $ python ./testing/example.py
 ```
 
-Running this script should create a directory ``testing/output_example`` with five files ``tree.nwk`` (genealogy tree), ``mutations.tsv`` (mutations on the genealogy), ``migrations.tsv`` (migrations of the lineages in the genealogy), ``sample_population.tsv`` (population of each sample), ``plot.png`` (visualization of epidemiological curves).
+Running this script should create a directory ``testing/example_output`` with five files ``tree.nwk`` (genealogy tree), ``mutations.tsv`` (mutations on the genealogy), ``migrations.tsv`` (migrations of the lineages in the genealogy), ``sample_population.tsv`` (population of each sample), ``plot.png`` (visualization of epidemiological curves).
 
 If you prefer not to use ``conda``, the package builds fine with just pip. We recommend using virtual environments, via the standard library ``venv`` package (or a third-party ``virtualenv`` package). For MacOS users: please make sure to use Python with Homebrew. Avoid system Python. Manually installed Python (e.g. downloaded from python.org) currently does not work with meson too. If there are still errors, try to install pkg-config with brew install. YMMV.
 We tested this procedure on python 3.7-3.9 on Ubuntu linux and MacOS.
