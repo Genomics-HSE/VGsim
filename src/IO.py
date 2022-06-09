@@ -170,8 +170,7 @@ def writeMutations(mut, len_prufer, name_file, file_path):
     for i in range(len_prufer):
         if i in mutations_dict:
             f_mut.write(str(i)+'\t'+str(mutations_dict[i])+'\n')
-        else:
-            f_mut.write(str(i)+'\n')
+            print('lol')
     f_mut.close()
 
 class Vertex():
