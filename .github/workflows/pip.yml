@@ -45,12 +45,10 @@ jobs:
         python -m pip install . -v
     - name: Run an test 1
       run: |
-        cd testing
-        python ./test.py -it 100000 -seed 2022
+        python ./VGsim_cmd.py -it 100000 -seed 2022
     - name: Run an test 2
       run: |
-        cd testing
-        python ./test.py -it 100000 -seed 2022 -rt example/example.rt -pm example/example.pp example/example.mg -su example/example.su -st example/example.st
+        python ./VGsim_cmd.py -it 100000 -seed 2022 -rt testing/cmd_example/example.rt -pm testing/cmd_example/example.pp testing/cmd_example/example.mg -su testing/cmd_example/example.su -st testing/cmd_example/example.st
     - name: Run an test 3
       run: |
         cd testing

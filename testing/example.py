@@ -45,8 +45,8 @@ simulator.simulate(1000, method='tau')
 simulator.genealogy()
 
 os.chdir('testing')
-os.mkdir('output_example')
-os.chdir('output_example')
+os.mkdir('example_output')
+os.chdir('example_output')
 
 simulator.output_newick()
 simulator.output_mutations('mutations')
