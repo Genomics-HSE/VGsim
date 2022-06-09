@@ -241,7 +241,8 @@ class Simulator:
 	def plot(self, name_file=None):
 		if name_file:
 			plt.savefig(name_file)
-		plt.show()
+		else:
+			plt.show()
 		self.fig = None
 
 
