@@ -1,4 +1,6 @@
 import VGsim
+import os
+
 number_of_sites = 2
 populations_number = 3
 number_of_susceptible_groups = 3
@@ -42,6 +44,11 @@ simulator.simulate(1000, method='tau')
 
 simulator.genealogy()
 file_name = "example"
+
+os.chdir('testing')
+os.mkdir('output_example')
+os.chdir('output_example')
+
 simulator.output_newick(file_name)
 simulator.output_mutations(file_name)
 simulator.output_migrations(file_name)
