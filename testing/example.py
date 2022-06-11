@@ -47,12 +47,12 @@ simulator.set_npi([0.1, 0.01, 0.002])
 simulator.simulate(10000000, time=110)
 
 #Change some of parameters
-simulator.set_immunity_transition(0.05, source=0, target=1)
-simulator.set_immunity_transition(0.05, source=0, target=2)
-simulator.set_contact_density(0.7, population=0)
-simulator.set_contact_density(0.7, population=1)
-simulator.set_migration_probability(2/365/2, source=0, target=2)
-simulator.set_migration_probability(2/365/2, source=1, target=2)
+##simulator.set_immunity_transition(0.05, source=0, target=1)
+##simulator.set_immunity_transition(0.05, source=0, target=2)
+##simulator.set_contact_density(0.7, population=0)
+##simulator.set_contact_density(0.7, population=1)
+##simulator.set_migration_probability(2/365/2, source=0, target=2)
+##simulator.set_migration_probability(2/365/2, source=1, target=2)
 
 ##print("\nSwitching to tau-leaping algorithm.\n")
 
