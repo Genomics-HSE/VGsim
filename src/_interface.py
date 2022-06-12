@@ -247,18 +247,18 @@ class Simulator:
 		self.fig = None
 
 
-	def simulate(self, iterations=1000, sample_size=None, time=-1, method='direct', attempts=200):
+	def simulate(self, iterations=1000, sample_size=None, epidemic_time=-1, method='direct', attempts=200):
 		if sample_size is None:
 			sample_size = iterations
-		if time is None:
-			time = -1
+		if epidemic_time is None:
+			epidemic_time = -1
 
 		start_time = time.time()
 		if method == 'direct':
-			self.simulation.SimulatePopulation(iterations, sample_size, time, attempts)
+			self.simulation.SimulatePopulation(iterations, sample_size, epidemic_time, attempts)
 			self.simulation.Stats(time.time() - start_time)
 		elif method == 'tau':
-			self.simulation.SimulatePopulation_tau(iterations, sample_size, time)
+			self.simulation.SimulatePopulation_tau(iterations, sample_size, epidemic_time)
 			self.simulation.Stats(time.time() - start_time)
 		else:
 			print("Unknown method. Choose between 'direct' and 'tau'.")

@@ -439,7 +439,7 @@ def plot():
 	Show plot with all the trajectories added by other methods.
 	"""
 
-def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
+def simulate(iterations=1000, sample_size=None, epidemic_time=None, method='direct'):
 	"""
 	This methods performs the simulation. The simulation interrupts when either one of the following conditions is satisfied: the number of iterations equals *iterations*, the number of collected samples equals *sample_size*, ot the total virtual time of the epidemic exceeds *time*
 	It can be called multiple times, changes of most parameters are allowed between simulation runs.
@@ -450,8 +450,8 @@ def simulate(iterations=1000, sample_size=None, time=None, method='direct'):
     :param sample_size: desired sample size.
     :type sample_size: int or None
 
-    :param time: virtual (model) time to be simulated.
-    :type time: float or None
+    :param epidemic_time: virtual (model) time to be simulated.
+    :type epidemic_time: float or None
 
     :param method: 'direct' for the exact algorithm, 'tau' for tau-leaping approximated algorithm.
     :type method: string
