@@ -4,6 +4,7 @@ from random import randrange
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 class Simulator:
 	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False):
@@ -252,12 +253,13 @@ class Simulator:
 		if time is None:
 			time = -1
 
+		start_time = time.time()
 		if method == 'direct':
 			self.simulation.SimulatePopulation(iterations, sample_size, time, attempts)
-			self.simulation.Stats()
+			self.simulation.Stats(time.time() - start_time)
 		elif method == 'tau':
 			self.simulation.SimulatePopulation_tau(iterations, sample_size, time)
-			self.simulation.Stats()
+			self.simulation.Stats(time.time() - start_time)
 		else:
 			print("Unknown method. Choose between 'direct' and 'tau'.")
 

@@ -341,7 +341,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time, Py_ssize_t attempts):
-        cdef Py_ssize_t pi
+        cdef Py_ssize_t pi 
 
         self.PrepareParameters(iterations)
         self.CheckSizes()
@@ -407,11 +407,11 @@ cdef class BirthDeathModel:
                 list_pop.append(str(pn))
         print()
         if check:
-            print('\033[41m{}\033[0m'.format('WARNING!'), 'Actual population size in deme ')
+            print('\033[41m{}\033[0m'.format('WARNING!'), 'Actual population size in deme: ', end='')
             print(", ".join(list_pop) )
-            print("is more than 10% different from the population size. The migration probabilities might be unrealistically high.")
-            print("We recommend to check your model with print_populations() method before proceding to simulation.")
-            print("Check the documentation file:https://vg-sim.readthedocs.io/en/latest/Migration.html for more details.")
+            print("\tis more than 10% different from the population size. The migration probabilities might be unrealistically high.")
+            print("\tWe recommend to check your model with print_populations() method before proceding to simulation.")
+            print("\tCheck the documentation file:https://vg-sim.readthedocs.io/en/latest/Migration.html for more details.")
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -1980,6 +1980,9 @@ cdef class BirthDeathModel:
 
 
     def output_tree_mutations(self):
+        if 'tree' not in globals():
+            print('There are no genealogy!.')
+            sys.exit(1)
         mut = [[], [], [], [], []]
         for i in range(self.mut.nodeId.size()):
             mut[0].append(self.mut.nodeId[i])
@@ -1995,6 +1998,9 @@ cdef class BirthDeathModel:
         return self.tree, self.times, mut, populations
 
     def output_migrations(self, name_file, file_path):
+        if 'tree' not in globals():
+            print('There are no genealogy!.')
+            sys.exit(1)
         if file_path != None:
             f_mig = open(file_path + '/' + name_file + '.tsv', 'w')
         else:
@@ -2156,6 +2162,9 @@ cdef class BirthDeathModel:
         os.chdir('../')
 
     def get_tree(self):
+        if 'tree' not in globals():
+            print('There are no genealogy!.')
+            sys.exit(1)
         return self.tree, self.times
 
     def get_data_infectious(self, pop, hap, step_num):
@@ -2241,12 +2250,13 @@ cdef class BirthDeathModel:
         return Data, time_points, Lockdowns
 
 
-    def Stats(self):
+    def Stats(self, time_simulation):
         # print("Internal seed:", self.internal_seed)
         print("Number of samples:", self.sCounter)
         print("Total number of iterations:", self.events.ptr)
         print('Success number:', self.good_attempt)
         print("Epidemic time:", self.currentTime)
+        print('Simulation time:', time_simulation)
         print('Number of infections:', self.bCounter)
         print('Number of recoveries:', self.dCounter)
         if self.sites >= 1:

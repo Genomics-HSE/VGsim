@@ -228,6 +228,8 @@ Finally, let’s print population information (size, contact density, sampling m
 Resulting code
 --------------
 
+This code can be found `here <https://github.com/Genomics-HSE/VGsim/blob/main/testing/example.ipynb>`_.
+
 .. code-block:: python
 
 	import VGsim
