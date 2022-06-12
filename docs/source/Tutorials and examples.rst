@@ -123,7 +123,7 @@ Let us simulate the first 110 days. The first argument is the maximal number of 
 
 .. code-block:: python
 	
-	simulator.simulate(10000000, time=110)
+	simulator.simulate(10000000, epidemic_time=110)
 
 Example of output
 
@@ -263,7 +263,7 @@ This code can be found `here <https://github.com/Genomics-HSE/VGsim/blob/main/te
 	simulator.set_npi([0.1, 0.01, 0.002])
 	simulator.set_migration_probability(10/365/2)
 
-	simulator.simulate(10000000, time=110)
+	simulator.simulate(10000000, epidemic_time=110)
 
 	simulator.set_immunity_transition(0.05, source=0, target=1)
 	simulator.set_immunity_transition(0.05, source=0, target=2)

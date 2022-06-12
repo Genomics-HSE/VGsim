@@ -44,7 +44,7 @@ simulator.set_sampling_multiplier(0, population=2)
 simulator.set_npi([0.1, 0.01, 0.002])
 
 #Run simulation with the exact algorithm
-simulator.simulate(10000000, time=110)
+simulator.simulate(10000000, epidemic_time=110)
 
 #Change some of parameters
 ##simulator.set_immunity_transition(0.05, source=0, target=1)
@@ -57,7 +57,7 @@ simulator.simulate(10000000, time=110)
 ##print("\nSwitching to tau-leaping algorithm.\n")
 
 #Run simulation with the approximate tau-leaping algorithm
-##simulator.simulate(1000, time=210, method='tau')
+##simulator.simulate(1000, epidemic_time=210, method='tau')
 
 #Simulate genealogy of sampled individuals
 simulator.genealogy()
