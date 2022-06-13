@@ -178,6 +178,8 @@ cdef class BirthDeathModel:
             self.totalSusceptible[pn] = 1000000
             self.susceptible[pn, 0] = 1000000
 
+        self.tree = np.zeros(1, dtype=np.int64)
+
         #Init propensities
         self.PropensitiesMigr = np.zeros((self.popNum, self.popNum, self.susNum, self.hapNum), dtype=float)
         self.PropensitiesSuscep = np.zeros((self.popNum, self.susNum, self.susNum), dtype=float)
@@ -1980,8 +1982,8 @@ cdef class BirthDeathModel:
 
 
     def output_tree_mutations(self):
-        if 'tree' not in globals():
-            print('There are no genealogy!.')
+        if self.tree.shape[0] == 1:
+            print('Genealogy was not simulated. Use VGsim.genealogy() method to simulate it.')
             sys.exit(1)
         mut = [[], [], [], [], []]
         for i in range(self.mut.nodeId.size()):
@@ -1998,8 +2000,8 @@ cdef class BirthDeathModel:
         return self.tree, self.times, mut, populations
 
     def output_migrations(self, name_file, file_path):
-        if 'tree' not in globals():
-            print('There are no genealogy!.')
+        if self.tree.shape[0] == 1:
+            print('Genealogy was not simulated. Use VGsim.genealogy() method to simulate it.')
             sys.exit(1)
         if file_path != None:
             f_mig = open(file_path + '/' + name_file + '.tsv', 'w')
@@ -2162,8 +2164,8 @@ cdef class BirthDeathModel:
         os.chdir('../')
 
     def get_tree(self):
-        if 'tree' not in globals():
-            print('There are no genealogy!.')
+        if self.tree.shape[0] == 1:
+            print('Genealogy was not simulated. Use VGsim.genealogy() method to simulate it.')
             sys.exit(1)
         return self.tree, self.times
 
@@ -2251,7 +2253,6 @@ cdef class BirthDeathModel:
 
 
     def Stats(self, time_simulation):
-        # print("Internal seed:", self.internal_seed)
         print("Number of samples:", self.sCounter)
         print("Total number of iterations:", self.events.ptr)
         print('Success number:', self.good_attempt)
@@ -2279,7 +2280,6 @@ cdef class BirthDeathModel:
         print("sampling_probability(const): ", self.sampling_probability)
         print("memory_optimization(const): ", self.memory_optimization)
         print()
-        # print("internal_seed(const): ", self.internal_seed)
         print("sites(const): ", self.sites)
         print("hapNum(const): ", self.hapNum)
         print("currentHapNum(mutable): ", self.currentHapNum)
