@@ -1,7 +1,7 @@
 API
 ===
 
-.. autoclass:: VGsim.Simulator
+.. autoclass:: sim.Simulator
    :members:
 
    .. automethod:: __init__
