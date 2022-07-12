@@ -258,7 +258,7 @@ class Simulator:
 			self.simulation.SimulatePopulation(iterations, sample_size, epidemic_time, attempts)
 			self.simulation.Stats(time.time() - start_time)
 		elif method == 'tau':
-			self.simulation.SimulatePopulation_tau(iterations, sample_size, epidemic_time)
+			self.simulation.SimulatePopulation_tau(iterations, sample_size, epidemic_time, attempts)
 			self.simulation.Stats(time.time() - start_time)
 		else:
 			print("Unknown method. Choose between 'direct' and 'tau'.")
