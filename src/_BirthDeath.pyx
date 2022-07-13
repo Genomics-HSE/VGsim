@@ -54,6 +54,7 @@ cdef class BirthDeathModel:
         npy_int64[:,:,:,::1] eventsMigr, eventsMutatations
         npy_int64[:,:,::1] eventsSuscep, eventsTransmission
         npy_int64[:,::1] eventsRecovery, eventsSampling
+
         double[:,::1] infectiousAuxTau, susceptibleAuxTau
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
@@ -61,8 +62,6 @@ cdef class BirthDeathModel:
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability):
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
-        # self.internal_seed = int(floor(self.seed.uniform()*1000000))
-        # self.seed = RndmWrapper(seed=(self.internal_seed, 0))
 
         self.first_simulation = False
         self.sampling_probability = sampling_probability
@@ -348,9 +347,6 @@ cdef class BirthDeathModel:
         self.PrepareParameters(iterations)
         self.CheckSizes()
 
-        if self.first_simulation:
-            self.good_attempt = 0 #TODO Maybe useless
-
         for i in range(attempts):
             self.seed = RndmWrapper(seed=(self.user_seed, i))
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
@@ -381,7 +377,7 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void PrepareParameters(self, iterations):
+    cdef void PrepareParameters(self, Py_ssize_t iterations):
         self.events.CreateEvents(iterations)
         if self.first_simulation == False:
             self.FirstInfection()
@@ -552,15 +548,10 @@ cdef class BirthDeathModel:
 
         ohi = self.numToHap[hi] # ohi - haplotype
         mi, self.rn = fastChoose1(self.mRate[ohi], self.tmRate[hi], self.rn)
-        digit4 = 4**(self.sites-mi-1)
-        AS = int(floor(ohi/digit4) % 4)
         DS, self.rn = fastChoose1(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] \
             + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
-        if DS >= AS:
-            DS += 1
-        nhi = ohi + (DS-AS)*digit4 # nhi - haplotype
+        nhi = self.Mutate(ohi, mi, DS)
         check = True
-
         # for hn in range(self.currentHapNum+1): # hn - program number
         #     if self.numToHap[hn] == nhi:
         #         check = False
@@ -619,8 +610,6 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Restart(self):
-        # self.internal_seed = int(floor(self.seed.uniform()*1000000))
-        # self.seed = RndmWrapper(seed=(self.internal_seed, 0))
         self.events.ptr = 0
         self.multievents.ptr = 0
         self.bCounter = 0
@@ -2499,7 +2488,7 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cpdef void SimulatePopulation_tau(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time, Py_ssize_t attempts):
         cdef:
-            Py_ssize_t pn, propNum
+            Py_ssize_t i, pn, propNum
             bint success
 
         self.PrepareParameters(iterations)
@@ -2622,8 +2611,6 @@ cdef class BirthDeathModel:
                     self.infectiousAuxTau[tpn, hn] += self.PropensitiesTransmission[tpn, hn, sn]
                     self.susceptibleAuxTau[tpn, sn] -= self.PropensitiesTransmission[tpn, hn, sn]
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
     @cython.cdivision(True)
     cdef Py_ssize_t Mutate(self, Py_ssize_t hi, Py_ssize_t s, Py_ssize_t DS):
         cdef Py_ssize_t digit4, AS
@@ -2636,6 +2623,7 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    @cython.cdivision(True)
     cdef void ChooseTau(self, float epsilon=0.03):
         cdef:
             Py_ssize_t pn, hn, sn
