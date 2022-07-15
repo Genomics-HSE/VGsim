@@ -30,8 +30,8 @@ cdef class BirthDeathModel:
     cdef:
         RndmWrapper seed
 
-        bint first_simulation, sampling_probability
-        Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, memory_optimization, good_attempt
+        bint first_simulation, sampling_probability, memory_optimization
+        Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, good_attempt
         double currentTime, totalRate, totalMigrationRate, rn, tau_l
 
         Events events
@@ -59,7 +59,8 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
 
-    def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability):
+    # def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability):
+    def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimization):
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
 
@@ -84,20 +85,26 @@ cdef class BirthDeathModel:
         #         self.maxHapNum = memory_optimization
         #     self.addMemoryNum = 4
         # else:
-        self.memory_optimization = False
-        self.maxHapNum = self.hapNum
-        self.addMemoryNum = 0
+
+        if memory_optimization:
+            self.memory_optimization = True
+            self.maxHapNum = memory_optimization
+            self.addMemoryNum = 4
+        else:
+            self.memory_optimization = False
+            self.maxHapNum = self.hapNum
+            self.addMemoryNum = 0
 
         self.hapToNum = np.zeros(self.hapNum, dtype=np.int64) # from haplotype to program number
         self.numToHap = np.zeros(self.maxHapNum, dtype=np.int64) # from program number to haplotype
 
-        # if self.memory_optimization:
-        #     self.currentHapNum = 0
-        # else:
-        self.currentHapNum = self.hapNum
-        for hn in range(self.hapNum):
-            self.hapToNum[hn] = hn
-            self.numToHap[hn] = hn
+        if self.memory_optimization:
+            self.currentHapNum = 0
+        else:
+            self.currentHapNum = self.hapNum
+            for hn in range(self.hapNum):
+                self.hapToNum[hn] = hn
+                self.numToHap[hn] = hn
 
         self.bCounter = 0
         self.dCounter = 0
@@ -207,8 +214,8 @@ cdef class BirthDeathModel:
         if self.globalInfectious == 0:
             for sn in range(self.susNum):
                 if self.susceptible[0, sn] != 0:
-                    # if self.memory_optimization:
-                    #     self.AddHaplotype(0)
+                    if self.memory_optimization:
+                        self.AddHaplotype(0, 0)
                     self.NewInfections(0, sn, 0)
                     return
 
@@ -230,19 +237,19 @@ cdef class BirthDeathModel:
         self.totalInfectious[pi] -= num
         self.globalInfectious -= num
 
-    # @cython.boundscheck(False)
-    # @cython.wraparound(False)
-    # cdef void AddMemory(self):
-    #     if self.addMemoryNum + self.maxHapNum > self.hapNum:
-    #         self.addMemoryNum = self.hapNum - self.maxHapNum
-    #     self.numToHap = np.concatenate((self.numToHap, np.zeros(self.addMemoryNum, dtype=np.int64)))
-    #     self.infectious = np.concatenate((self.infectious, np.zeros((self.popNum, self.addMemoryNum), dtype=np.int64)), axis=1)
-    #     self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, dtype=float)))
-    #     self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
-    #     self.hapPopRate = np.concatenate((self.hapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
-    #     self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, 4), dtype=float)), axis=1)
-    #     self.susceptHapPopRate = np.concatenate((self.susceptHapPopRate, np.zeros((self.popNum, self.addMemoryNum, self.susNum), dtype=float)), axis=1)
-    #     self.maxHapNum += self.addMemoryNum
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void AddMemory(self):
+        if self.addMemoryNum + self.maxHapNum > self.hapNum:
+            self.addMemoryNum = self.hapNum - self.maxHapNum
+        self.numToHap = np.concatenate((self.numToHap, np.zeros(self.addMemoryNum, dtype=np.int64)))
+        self.infectious = np.concatenate((self.infectious, np.zeros((self.popNum, self.addMemoryNum), dtype=np.int64)), axis=1)
+        self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, dtype=float)))
+        self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
+        self.hapPopRate = np.concatenate((self.hapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
+        self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, 4), dtype=float)), axis=1)
+        self.susceptHapPopRate = np.concatenate((self.susceptHapPopRate, np.zeros((self.popNum, self.addMemoryNum, self.susNum), dtype=float)), axis=1)
+        self.maxHapNum += self.addMemoryNum
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -316,15 +323,31 @@ cdef class BirthDeathModel:
             self.migPopRate[pn] = self.maxEffectiveBirthMigration[pn]*self.totalSusceptible[pn]*(self.globalInfectious-self.totalInfectious[pn])
             self.totalMigrationRate += self.migPopRate[pn]
 
-    # @cython.boundscheck(False)
-    # @cython.wraparound(False)
-    # cdef void AddHaplotype(self, Py_ssize_t nhi): # nhi - haplotype
-    #     if self.currentHapNum == self.maxHapNum and self.maxHapNum < self.hapNum:
-    #         self.AddMemory()
-    #     self.hapToNum[nhi] = self.currentHapNum
-    #     self.numToHap[self.currentHapNum] = nhi
-    #     self.currentHapNum += 1
-    #     self.UpdateAllRates()
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void AddHaplotype(self, Py_ssize_t nhi, Py_ssize_t pi): # nhi - haplotype
+        cdef:
+            bint check = False
+            Py_ssize_t mem_h, mem_inf
+
+        if self.currentHapNum == self.maxHapNum and self.maxHapNum < self.hapNum:
+            self.AddMemory()
+
+        for i in range(1, self.currentHapNum+1):
+            if check:
+                self.hapToNum[mem_h] += 1
+                self.infectious[pi, i], mem_inf = mem_inf, self.infectious[pi, i]
+                self.numToHap[i], mem_h = mem_h, self.numToHap[i]
+            if (self.numToHap[i] > nhi or self.numToHap[i] == 0) and self.numToHap[i-1] < nhi:
+                mem_h = self.numToHap[i]
+                check = True
+                self.numToHap[i] = nhi
+                mem_inf = self.infectious[pi, i]
+                self.infectious[pi, i] = 0
+                self.hapToNum[nhi] = i
+
+        self.currentHapNum += 1
+        self.UpdateAllRates()
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -551,13 +574,14 @@ cdef class BirthDeathModel:
         DS, self.rn = fastChoose1(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] \
             + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
         nhi = self.Mutate(ohi, mi, DS)
+
         check = True
-        # for hn in range(self.currentHapNum+1): # hn - program number
-        #     if self.numToHap[hn] == nhi:
-        #         check = False
-        #         break
-        # if check:
-        #     self.AddHaplotype(nhi)
+        for hn in range(self.currentHapNum+1): # hn - program number
+            if self.numToHap[hn] == nhi:
+                check = False
+                break
+        if check:
+            self.AddHaplotype(nhi, pi)
 
         self.infectious[pi, self.hapToNum[nhi]] += 1
         self.infectious[pi, hi] -= 1
@@ -1016,7 +1040,7 @@ cdef class BirthDeathModel:
         field = ["H\\ID"]
         for pn in range(self.popNum):
             field.append(pn)
-        for hn in range(self.currentHapNum):
+        for hn in range(self.hapNum):
             row = [self.calculate_string(hn)]
             for pn in range(self.popNum):
                 row.append(current_infectious[pn][hn])

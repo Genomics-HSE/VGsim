@@ -16,7 +16,7 @@ cdef inline (Py_ssize_t, double) fastChoose1(double[::1] w, double tw, double rn
         i += 1
         total += w[i]
     if w[i] == 0.0:
-        print_err("fastChoose() alert: 0-weight sampled")
+        print_err("fastChoose1() alert: 0-weight sampled")
         for i in range(w.shape[0]):
             print_err(w[i], end=", ")
         print_err()
@@ -40,7 +40,13 @@ cdef inline (Py_ssize_t, double) fastChoose2(npy_int64[::1] w, npy_int64 tw, dou
         i += 1
         total += w[i]
     if w[i] == 0.0:
-        print_err("fastChoose() alert: 0-weight sampled")
+        print_err("fastChoose2() alert: 0-weight sampled")
+        for i in range(w.shape[0]):
+            print_err(w[i], end=", ")
+        print_err()
+        print_err(tw)
+        print_err(rn)
+        sys.exit(1)
     return [ i, ( rn-(total-w[i]) )/w[i] ]
 
 @cython.boundscheck(False)
@@ -64,7 +70,13 @@ cdef inline (Py_ssize_t, double) fastChoose1_skip(double[::1] w, double tw, doub
             i += 1
         total += w[i]
     if w[i] == 0.0:
-        print_err("fastChoose() alert: 0-weight sampled")
+        print_err("fastChoose1_skip() alert: 0-weight sampled")
+        for i in range(w.shape[0]):
+            print_err(w[i], end=", ")
+        print_err()
+        print_err(tw)
+        print_err(rn)
+        sys.exit(1)
     return [ i, ( rn-(total-w[i]) )/w[i] ]
 
 @cython.boundscheck(False)
@@ -88,5 +100,11 @@ cdef inline (Py_ssize_t, double) fastChoose2_skip(npy_int64[::1] w, npy_int64 tw
             i += 1
         total += w[i]
     if w[i] == 0.0:
-        print_err("fastChoose() alert: 0-weight sampled")
+        print_err("fastChoose2_skip() alert: 0-weight sampled")
+        for i in range(w.shape[0]):
+            print_err(w[i], end=", ")
+        print_err()
+        print_err(tw)
+        print_err(rn)
+        sys.exit(1)
     return [ i, ( rn-(total-w[i]) )/w[i] ]
