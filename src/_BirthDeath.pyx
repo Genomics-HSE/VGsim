@@ -59,7 +59,6 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
 
-    # def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability):
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimization):
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
