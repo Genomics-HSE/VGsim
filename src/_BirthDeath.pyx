@@ -207,27 +207,6 @@ cdef class BirthDeathModel:
         self.infectiousDelta = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
         self.susceptibleDelta = np.zeros((self.popNum, self.susNum), dtype=np.int64)
 
-    def print_memory(self):
-        print(self.maxHapNum)
-        print(self.numToHap.shape[0])
-        print(self.currentHapNum)
-
-        print("hapToNum(mutable): ", sep="", end="")
-        for hn in range(self.hapNum):
-            print(self.hapToNum[hn], end=" ")
-        print()
-        print("numToHap(mutable): ", sep="", end="")
-        for hn in range(self.maxHapNum):
-            print(self.numToHap[hn], end=" ")
-        print()
-        print("infectious(mutable)----")
-        for pn in range(self.popNum):
-            for hn in range(self.currentHapNum):
-                print(self.infectious[pn, hn], end=" ")
-            print()
-        print()
-        print()
-
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -467,10 +446,9 @@ cdef class BirthDeathModel:
     @cython.cdivision(True)
     cdef Py_ssize_t GenerateEvent(self):
         cdef:
-            Py_ssize_t pi, hi, ei, event_n
+            Py_ssize_t pi, hi, ei
             double choose
 
-        event_n = 8444
         self.rn = self.seed.uniform()
         choose = self.rn * (self.totalRate + self.totalMigrationRate)
         if self.totalRate > choose:
@@ -483,12 +461,7 @@ cdef class BirthDeathModel:
             else:
                 self.rn = (choose - self.immunePopRate[pi]) / self.infectPopRate[pi]
                 hi, self.rn = fastChoose1(self.hapPopRate[pi], self.infectPopRate[pi], self.rn) # hi - program number
-                # if self.events.ptr == event_n:
-                #     print(hi)
-                #     print(self.numToHap[hi])
                 ei, self.rn = fastChoose1(self.eventHapPopRate[pi, hi], self.tEventHapPopRate[pi, hi], self.rn)
-                # if self.events.ptr == event_n:
-                #     print(ei)
                 if ei == BIRTH:
                     self.Birth(pi, hi)
                 elif ei == DEATH:
@@ -594,30 +567,13 @@ cdef class BirthDeathModel:
     cdef void Mutation(self, Py_ssize_t pi, Py_ssize_t hi): # hi - program number
         cdef:
             bint check
-            Py_ssize_t ohi, mi, digit4, AS, DS, nhi, event_n
-
-        event_n = 8444
+            Py_ssize_t ohi, mi, digit4, AS, DS, nhi
 
         ohi = self.numToHap[hi] # ohi - haplotype
         mi, self.rn = fastChoose1(self.mRate[ohi], self.tmRate[hi], self.rn)
         DS, self.rn = fastChoose1(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] \
             + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
         nhi = self.Mutate(ohi, mi, DS)
-
-        # if self.events.ptr == event_n:
-        #     print(ohi)
-        #     print(mi)
-        #     print(DS)
-        #     print(nhi)
-        #     print("hapToNum(mutable): ", sep="", end="")
-        #     for hn in range(self.hapNum):
-        #         print(self.hapToNum[hn], end=" ")
-        #     print()
-        #     print("numToHap(mutable): ", sep="", end="")
-        #     for hn in range(self.maxHapNum):
-        #         print(self.numToHap[hn], end=" ")
-        #     print()
-
 
         check = True
         for hn in range(self.currentHapNum+1): # hn - program number
@@ -629,40 +585,9 @@ cdef class BirthDeathModel:
             if nhi < ohi:
                 hi += 1
 
-        # if self.events.ptr == event_n:
-        #     print("hapToNum(mutable): ", sep="", end="")
-        #     for hn in range(self.hapNum):
-        #         print(self.hapToNum[hn], end=" ")
-        #     print()
-        #     print("numToHap(mutable): ", sep="", end="")
-        #     for hn in range(self.maxHapNum):
-        #         print(self.numToHap[hn], end=" ")
-        #     print()
-
-        # if self.events.ptr == event_n:
-        #     print("infectious(mutable)----1")
-        #     for pn in range(self.popNum):
-        #         for hn in range(self.currentHapNum):
-        #             print(self.infectious[pn, hn], end=" ")
-        #         print()
-        #     print()
 
         self.infectious[pi, self.hapToNum[nhi]] += 1
-        # if self.events.ptr == event_n:
-        #     print("infectious(mutable)----2")
-        #     for pn in range(self.popNum):
-        #         for hn in range(self.currentHapNum):
-        #             print(self.infectious[pn, hn], end=" ")
-        #         print()
-        #     print()
         self.infectious[pi, hi] -= 1
-        # if self.events.ptr == event_n:
-        #     print("infectious(mutable)----3")
-        #     for pn in range(self.popNum):
-        #         for hn in range(self.currentHapNum):
-        #             print(self.infectious[pn, hn], end=" ")
-        #         print()
-        #     print()
         self.UpdateRates(pi, True, False, False)
 
         self.mCounter += 1
