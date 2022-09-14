@@ -87,8 +87,12 @@ cdef class BirthDeathModel:
 
         if memory_optimization:
             self.memory_optimization = True
-            self.maxHapNum = 4
-            self.addMemoryNum = 4
+            if self.sites > 2:
+                self.maxHapNum = 4**(self.sites-2)
+                self.addMemoryNum = 4**(self.sites-2)
+            else:
+                self.maxHapNum = 4
+                self.addMemoryNum = 4
         else:
             self.memory_optimization = False
             self.maxHapNum = self.hapNum
@@ -1206,6 +1210,22 @@ cdef class BirthDeathModel:
 
     def get_susNum(self):
         return self.susNum
+
+    def set_initial_haplotype(self, percent):
+        if isinstance(percent, (int, float)) == False:
+            raise TypeError("Incorrect type of step haplotype. Type should be int or float.")
+        if percent < 0 or percent > 1:
+            raise ValueError("Incorrect value of step haplotype. Value should be more or equal 0.")
+
+        self.maxHapNum = int(self.sites * percent)
+
+    def set_step_haplotype(self, percent):
+        if isinstance(percent, (int, float)) == False:
+            raise TypeError("Incorrect type of step haplotype. Type should be int or float.")
+        if percent < 0 or percent > 1:
+            raise ValueError("Incorrect value of step haplotype. Value should be more or equal 0.")
+
+        self.addMemoryNum = int(self.sites * percent)
 
 
     def set_transmission_rate(self, rate, haplotype):
