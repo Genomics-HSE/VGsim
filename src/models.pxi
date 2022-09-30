@@ -25,9 +25,8 @@ cdef class Mutations:
         self.site.push_back(int(site))
         self.time.push_back(time)
 
-        def GetData(self):
-            return {'node': self.nodeId, 'AS': self.AS, 'DS': self.DS, 'site': self.site, 'time': self.time}
-            # print("MutType, AS, DS: ", site, self.AS[self.AS.size()-1], self.DS[self.DS.size()-1])
+    def get_mutation(self, id_mut):
+        return self.nodeId[id_mut], self.DS[id_mut], self.AS[id_mut], self.site[id_mut], self.time[id_mut]
 
 
 cdef class Migrations:
@@ -45,6 +44,9 @@ cdef class Migrations:
         self.time.push_back(time)
         self.oldPop.push_back(oldPop)
         self.newPop.push_back(newPop)
+
+    def get_migration(self, id_mig):
+        return self.nodeId[id_mig], self.time[id_mig], self.oldPop[id_mig], self.newPop[id_mig]
 
 cdef class Lockdowns:
     cdef:

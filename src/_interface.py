@@ -142,6 +142,9 @@ class Simulator:
 		self.output_chain_events()
 		self.output_settings()
 
+	def get_tskit_files(self):
+		return self.simulation.get_tskit_files()
+
 	def get_tree(self):
 		return self.simulation.get_tree()
 
