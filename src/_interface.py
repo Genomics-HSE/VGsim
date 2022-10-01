@@ -11,7 +11,7 @@ class Simulator:
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
-		print('User seed:', seed)
+		print('User seed:', seed) #TODO
 
 		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
 			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, memory_optimization=memory_optimization)
@@ -33,6 +33,13 @@ class Simulator:
 			self.simulation.print_populations()
 		if immunity_model:
 			self.simulation.print_immunity_model()
+
+
+	def set_initial_haplotype(self, proportion):
+		self.simulation.set_initial_haplotype(proportion)
+
+	def set_step_haplotype(self, proportion):
+		self.simulation.set_step_haplotype(proportion)
 
 
 	def set_transmission_rate(self, rate, haplotype=None):
