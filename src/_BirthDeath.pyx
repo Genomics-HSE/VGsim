@@ -1402,7 +1402,7 @@ cdef class BirthDeathModel:
                 self.suscType[hn] = susceptibility_type
 
     def set_susceptibility(self, rate, haplotype, susceptibility_type):
-        self.check_rate(rate)
+        self.check_rate(rate, 'rate of susceptibility')
         self.check_haplotype(haplotype)
         self.check_susceptibility_type(susceptibility_type)
 
