@@ -7,14 +7,14 @@ import numpy as np
 import time
 
 class Simulator:
-	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False):
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=False):
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
 		print('User seed:', seed)
 
 		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
-			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability)
+			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, memory_optimization=memory_optimization)
 
 
 	def print_basic_parameters(self):
@@ -258,7 +258,7 @@ class Simulator:
 			self.simulation.SimulatePopulation(iterations, sample_size, epidemic_time, attempts)
 			self.simulation.Stats(time.time() - start_time)
 		elif method == 'tau':
-			self.simulation.SimulatePopulation_tau(iterations, sample_size, epidemic_time)
+			self.simulation.SimulatePopulation_tau(iterations, sample_size, epidemic_time, attempts)
 			self.simulation.Stats(time.time() - start_time)
 		else:
 			print("Unknown method. Choose between 'direct' and 'tau'.")
