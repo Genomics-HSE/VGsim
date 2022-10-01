@@ -33,5 +33,6 @@ requires  = [
     "mc_lib @ git+http://github.com/ev-br/mc_lib.git@v0.4.1",
     "prettytable",
     "matplotlib",
-    "pytest"
+    "pytest",
+    "tskit"
 ]
