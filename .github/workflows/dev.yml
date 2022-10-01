@@ -48,6 +48,6 @@ jobs:
         meson install -C build
     - name: Run an example
       run: |
-        pip install matplotlib prettytable
+        pip install matplotlib prettytable tskit
         export PYTHONPATH=$PWD/installdir/lib/python${{ matrix.python-version }}/site-packages/
         python ./VGsim_cmd.py -it 100000 -seed 2022

@@ -49,6 +49,6 @@ jobs:
 
     - name: Run an example
       run: |
-        pip install matplotlib prettytable
+        pip install matplotlib prettytable tskit
         $env:PYTHONPATH="$PWD\installdir\Lib\site-packages;$PWD\local_mclib\installdir\Lib\site-packages"
         python ./VGsim_cmd.py -it 100000 -seed 2022
