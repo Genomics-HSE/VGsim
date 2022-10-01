@@ -1313,7 +1313,7 @@ cdef class BirthDeathModel:
                     self.sRate[hn] = rate
 
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
-        self.check_rate(rate)
+        self.check_rate(rate, 'mutation rate')
         if isinstance(probabilities, list) == False and probabilities != None:
             raise TypeError('Incorrect type of probabilities list. Type should be list or None.')
         elif isinstance(probabilities, list):
@@ -1431,7 +1431,7 @@ cdef class BirthDeathModel:
                         self.susceptibility[hn, sn] = rate
 
     def set_immunity_transition(self, rate, source, target):
-        self.check_rate(rate)
+        self.check_rate(rate, 'immunity transition rate')
         self.check_susceptibility_type(source)
         self.check_susceptibility_type(target)
 
