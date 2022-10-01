@@ -16,6 +16,7 @@ cimport numpy as np
 import sys
 import os
 import time
+import tskit
 
 from numpy.random.c_distributions cimport random_poisson, random_hypergeometric
 
@@ -40,7 +41,7 @@ cdef class BirthDeathModel:
         Migrations mig
         Lockdowns loc
 
-        npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, tree
+        npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, tree, tree_pop
         npy_int64[:,::1] susceptible, infectious, initial_susceptible, initial_infectious
 
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
@@ -174,6 +175,7 @@ cdef class BirthDeathModel:
             self.susceptible[pn, 0] = 1000000
 
         self.tree = np.zeros(1, dtype=np.int64)
+        self.tree_pop = np.zeros(1, dtype=np.int64)
 
         #Init propensities
         self.PropensitiesMigr = np.zeros((self.popNum, self.popNum, self.susNum, self.hapNum), dtype=float)
@@ -556,7 +558,7 @@ cdef class BirthDeathModel:
     @cython.cdivision(True)
     cdef void Mutation(self, Py_ssize_t pi, Py_ssize_t hi): # hi - program number
         cdef:
-            bint check
+            bint check = True
             Py_ssize_t ohi, mi, digit4, AS, DS, nhi
 
         ohi = self.numToHap[hi] # ohi - haplotype
@@ -565,15 +567,16 @@ cdef class BirthDeathModel:
             + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
         nhi = self.Mutate(ohi, mi, DS)
 
-        check = True
-        for hn in range(self.currentHapNum+1): # hn - program number
-            if self.numToHap[hn] == nhi:
-                check = False
-                break
-        if check:
-            self.AddHaplotype(nhi, pi)
-            if nhi < ohi:
-                hi += 1
+        if self.memory_optimization:
+            #TODO binary search
+            for hn in range(self.currentHapNum+1): # hn - program number
+                if self.numToHap[hn] == nhi:
+                    check = False
+                    break
+            if check:
+                self.AddHaplotype(nhi, pi)
+                if nhi < ohi:
+                    hi += 1
 
 
         self.infectious[pi, self.hapToNum[nhi]] += 1
@@ -681,6 +684,7 @@ cdef class BirthDeathModel:
 
             ptrTreeAndTime = 0
             self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
+            self.tree_pop = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
             self.times = np.zeros(2 * self.sCounter - 1, dtype=float)
 
             for i in range( self.popNum ):
@@ -723,6 +727,7 @@ cdef class BirthDeathModel:
                         self.tree[id1] = id3
                         self.tree[id2] = id3
                         self.tree[ptrTreeAndTime] = -1
+                        self.tree_pop[ptrTreeAndTime] = e_population
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
                     self.infectious[e_population, self.hapToNum[e_haplotype]] -= 1
@@ -732,6 +737,7 @@ cdef class BirthDeathModel:
                     self.infectious[e_population, self.hapToNum[e_haplotype]] += 1
                     liveBranchesS[e_population][e_haplotype].push_back( ptrTreeAndTime )
                     self.tree[ptrTreeAndTime] = -1
+                    self.tree_pop[ptrTreeAndTime] = e_population
                     self.times[ptrTreeAndTime] = e_time
                     ptrTreeAndTime += 1
                 elif e_type_ == MUTATION:
@@ -766,6 +772,7 @@ cdef class BirthDeathModel:
                             self.tree[idt] = id3
                             self.tree[ids] = id3
                             self.tree[ptrTreeAndTime] = -1
+                            self.tree_pop[ptrTreeAndTime] = e_population
                             self.times[ptrTreeAndTime] = e_time
                             ptrTreeAndTime += 1
                             self.mig.AddMigration(idt, e_time, e_population, e_newPopulation)
@@ -817,6 +824,7 @@ cdef class BirthDeathModel:
                                 self.tree[id1] = id3
                                 self.tree[id2] = id3
                                 self.tree[ptrTreeAndTime] = -1
+                                self.tree_pop[ptrTreeAndTime] = me_population
                                 self.times[ptrTreeAndTime] = me_time
                                 ptrTreeAndTime += 1
                                 lbs -= 2
@@ -829,6 +837,7 @@ cdef class BirthDeathModel:
                                 #liveBranchesS[me_population][me_haplotype].push_back( ptrTreeAndTime )
                                 newLineages[me_population][me_haplotype].push_back( ptrTreeAndTime )
                                 self.tree[ptrTreeAndTime] = -1
+                                self.tree_pop[ptrTreeAndTime] = me_population
                                 self.times[ptrTreeAndTime] = me_time
                                 ptrTreeAndTime += 1
                         elif me_type_ == MUTATION:
@@ -877,6 +886,7 @@ cdef class BirthDeathModel:
                                     self.tree[idt] = id3
                                     self.tree[ids] = id3
                                     self.tree[ptrTreeAndTime] = -1
+                                    self.tree_pop[ptrTreeAndTime] = me_population
                                     self.times[ptrTreeAndTime] = me_time
                                     ptrTreeAndTime += 1
                                     self.mig.AddMigration(idt, me_time, me_population, me_newPopulation)
@@ -1497,7 +1507,7 @@ cdef class BirthDeathModel:
         if isinstance(parameters[0], (int, float)) == False:
             self.Error("Incorrect type of first element of parameters. Type should be int or float.")
         if parameters[0]<0:
-            self.Error("Incorrect value of first element of parameters. Value should be more 0.")
+            self.Error("Incorrect value of first element of parameters. Value should be more or equal 0.")
         if isinstance(parameters[1], (int, float)) == False:
             self.Error("Incorrect type of second element of parameters. Type should be int or float.")
         if parameters[1]<0 or parameters[1]>1:
@@ -1918,6 +1928,38 @@ cdef class BirthDeathModel:
         print(comand)
         os.chdir('../')
 
+    def get_tskit_files(self):
+        tc = tskit.TableCollection()
+        tc.sequence_length = self.sites + 1.0
+
+        for i in range(self.mig.nodeId.size()):
+            mig_nodeId, mig_time, mig_oldPop, mig_newPop = self.mig.get_migration(i)
+            tc.migrations.add_row(0.0, 1.0, mig_nodeId, mig_oldPop, mig_newPop, self.times[0] - mig_time)
+
+        for i in range(self.popNum):
+            tc.populations.add_row(None)
+
+        for i in range(2 * self.sCounter - 2):
+            tc.edges.add_row(0.0, self.sites+1.0, self.tree[i], i)
+
+        child_or_parent = [1 for _ in range(2 * self.sCounter - 1)]
+        for i in range(2 * self.sCounter - 2):
+            child_or_parent[self.tree[i]] = 0
+
+        for i in range(2 * self.sCounter - 1):
+            tc.nodes.add_row(child_or_parent[i], self.times[0] - self.times[i], self.tree_pop[i])
+
+        for i in range(self.sites):
+            tc.sites.add_row(i+1, 'A')
+
+        allele = ['A', 'T', 'C', 'G']
+        for i in range(self.mut.nodeId.size()):
+            mut_nodeId, mut_DS, mut_AS, mut_site, mut_time = self.mut.get_mutation(i)
+            tc.mutations.add_row(site=mut_site, node=mut_nodeId, derived_state=allele[mut_DS], time=self.times[0] - mut_time)
+
+        tc.sort()
+        return tc.tree_sequence()
+
     def get_tree(self):
         if self.tree.shape[0] == 1:
             print('Genealogy was not simulated. Use VGsim.genealogy() method to simulate it.')
@@ -2261,6 +2303,7 @@ cdef class BirthDeathModel:
         propNum = self.popNum*((self.popNum-1)*self.hapNum*self.susNum+self.susNum*(self.susNum-1)+self.hapNum*(2+self.sites*3+self.susNum))
         if self.globalInfectious == 0:
             self.FirstInfection()
+        #TODO less memory for multievents
         self.multievents.CreateEvents(iterations*propNum)
         self.events.CreateEvents(iterations)
         self.UpdateAllRates()
@@ -2493,6 +2536,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void UpdateCompartmentCounts_tau(self):
+        #TODO not write events with 0 num
         cdef Py_ssize_t event_num, pn, spn, tpn, hn, sn, ssn, tsn, s, i
 
         #Migrations
