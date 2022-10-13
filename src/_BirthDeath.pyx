@@ -1206,17 +1206,24 @@ cdef class BirthDeathModel:
         return self.susNum
 
 
-    def check_amount(self, amount):
+    def check_amount(self, amount, smth):
         if isinstance(amount, int) == False:
-            raise TypeError('Incorrect type of amount. Type should be int.')
+            raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
         elif amount < 0:
-            raise ValueError('Incorrect value of amount. Value should be more or equal 0.')
+            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
 
     def check_rate_1(self, value, smth):
         if isinstance(value, (int, float)) == False:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
         elif value < 0:
             raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
+
+    def check_rate_none_1(self, value, smth):
+        if isinstance(value, (int, float)) == False and value != None:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
+        elif isinstance(value, (int, float)):
+            if value < 0:
+                raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
 
     def check_haplotype(self, haplotype):
         if isinstance(haplotype, (int, str)) == False and haplotype != None:
@@ -1234,7 +1241,7 @@ cdef class BirthDeathModel:
         elif value < 0 and value > 1:
             raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
 
-    def check_rate_none(self, value, smth):
+    def check_rate_none_2(self, value, smth):
         if isinstance(value, (int, float)) == False and value != None:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
         elif isinstance(value, (int, float)):
@@ -1244,8 +1251,9 @@ cdef class BirthDeathModel:
     def check_list(self, data, smth, lenght):
         if isinstance(data, list) == False and data != None:
             raise TypeError('Incorrect type of ' + smth + '. Type should be list or None.')
-        elif len(data) != lenght:
-            raise ValueError('Incorrect lenght of ' + smth + '. Lenght should be equal ' + str(lenght) + '.')
+        elif isinstance(data, list):
+            if len(data) != lenght:
+                raise ValueError('Incorrect lenght of ' + smth + '. Lenght should be equal ' + str(lenght) + '.')
 
     def check_index(self, value, edge, smth):
         if isinstance(value, int) == False and value != None:
@@ -1362,10 +1370,11 @@ cdef class BirthDeathModel:
                     self.sRate[hn] = rate
 
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
-        self.check_rate_1(rate, 'mutation rate')
+        self.check_rate_none_1(rate, 'mutation rate')
         self.check_list(probabilities, 'probabilities list', 4)
-        for i in range(4):
-            self.check_rate_1(probabilities[i], 'mutation probabilities')
+        if isinstance(probabilities, list):
+            for i in range(4):
+                self.check_rate_1(probabilities[i], 'mutation probabilities')
         self.check_haplotype(haplotype)
         self.check_index(mutation, self.sites, 'mutation site')
 
@@ -1548,9 +1557,10 @@ cdef class BirthDeathModel:
 
     def set_npi(self, parameters, population):
         self.check_list(parameters, 'parameters', 3)
-        self.check_rate_1(parameters[0], 'first element of parameters')
-        self.check_rate_2(parameters[1], 'second element of parameters')
-        self.check_rate_2(parameters[2], 'third element of parameters')
+        if isinstance(parameters, list):
+            self.check_rate_1(parameters[0], 'first element of parameters')
+            self.check_rate_2(parameters[1], 'second element of parameters')
+            self.check_rate_2(parameters[2], 'third element of parameters')
         self.check_index(population, self.popNum, 'population')
 
         if isinstance(population, int):
