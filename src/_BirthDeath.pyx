@@ -1310,6 +1310,9 @@ cdef class BirthDeathModel:
         self.check_rate_1(rate, 'transmission')
         self.check_haplotype(haplotype)
 
+        # for hn in self.get_list_haplotype(haplotype):
+        #     self.bRate[hn] = rate
+
         if isinstance(haplotype, str):
             haplotypes = self.create_list_haplotypes(haplotype)
             for haplotype in haplotypes:
@@ -1584,8 +1587,8 @@ cdef class BirthDeathModel:
                 self.samplingMultiplier[pn] = multiplier
 
     def set_migration_probability(self, probability, total_probability, source, target):
-        self.check_rate_none(probability, 'probability')
-        self.check_rate_none(total_probability, 'total probability')
+        self.check_rate_none_2(probability, 'probability')
+        self.check_rate_none_2(total_probability, 'total probability')
         self.check_index(source, self.popNum, 'population')
         self.check_index(target, self.popNum, 'population')
 
