@@ -11,10 +11,11 @@ class Simulator:
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
-		print('User seed:', seed) #TODO
+		print('User seed:', seed)
 
 		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
-			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, memory_optimization=memory_optimization)
+			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, \
+			memory_optimization=memory_optimization)
 
 
 	def print_basic_parameters(self):
@@ -35,11 +36,11 @@ class Simulator:
 			self.simulation.print_immunity_model()
 
 
-	def set_initial_haplotype(self, proportion):
-		self.simulation.set_initial_haplotype(proportion)
+	def set_initial_haplotype(self, amount):
+		self.simulation.set_initial_haplotype(amount)
 
-	def set_step_haplotype(self, proportion):
-		self.simulation.set_step_haplotype(proportion)
+	def set_step_haplotype(self, amount):
+		self.simulation.set_step_haplotype(amount)
 
 
 	def set_transmission_rate(self, rate, haplotype=None):
@@ -80,19 +81,11 @@ class Simulator:
 	def set_migration_probability(self, probability=None, total_probability=None, source=None, target=None):
 		self.simulation.set_migration_probability(probability, total_probability, source, target)
 
+	def set_susceptible(self, amount, source_type, target_type, population=None):
+		self.simulation.set_susceptible(amount, source_type, target_type, population)
 
-	# Rewrite due to memory optimization
-	# def set_susceptible_individuals(self, amount, source_type, target_type, population=None):
-	# 	self.simulation.set_susceptible_individuals(amount, source_type, target_type, population)
-
-	# def set_infected_individuals(self, amount, source_haplotype, target_haplotype, population=None):
-	# 	self.simulation.set_infected_individuals(amount, source_haplotype, target_haplotype, population)
-
-	# def set_infection(self, amount, source_type, target_haplotype, population=None):
-	# 	self.simulation.set_infection(amount, source_type, target_haplotype, population)
-
-	# def set_recovery(self, amount, source_haplotype, target_type, population=None):
-	# 	self.simulation.set_recovery(amount, source_haplotype, target_type, population)
+	def set_infectious(self, amount, source_type, target_haplotype, population=None):
+		self.simulation.set_infectious(amount, source_type, target_haplotype, population)
 
 
 	def set_chain_events(self, file_name):
@@ -127,7 +120,7 @@ class Simulator:
 			print(hap)
 
 	def output_epidemiology_timelines(self, step=1000, output_file=False):
-		if output_file == True:
+		if output_file:
 			self.simulation.output_epidemiology_timelines(step, output_file)
 		else:
 			return self.simulation.output_epidemiology_timelines(step, output_file)
@@ -142,8 +135,8 @@ class Simulator:
 		self.output_chain_events()
 		self.output_settings()
 
-	def get_tskit_files(self):
-		return self.simulation.get_tskit_files()
+	def get_ts_object(self):
+		return self.simulation.get_ts_object()
 
 	def get_tree(self):
 		return self.simulation.get_tree()
