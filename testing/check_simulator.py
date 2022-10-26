@@ -80,17 +80,17 @@ simulator.output_chain_events('test_' + str(name))
 check_data(name)
 
 #5 model
-simulator = VGsim.Simulator(populations_number=2, seed=my_seed)
+# simulator = VGsim.Simulator(populations_number=2, seed=my_seed)
 
-name = 5
-simulator.set_population_size(2000000)
-simulator.set_contact_density(1.3, population=0)
-simulator.set_contact_density(0.8, population=1)
-simulator.set_migration_probability(0.01, source=0, target=1)
-simulator.set_migration_probability(0.005, source=1, target=0)
-simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
-check_data(name)
+# name = 5
+# simulator.set_population_size(2000000)
+# simulator.set_contact_density(1.3, population=0)
+# simulator.set_contact_density(0.8, population=1)
+# simulator.set_migration_probability(probability=0.01, source=0, target=1)
+# simulator.set_migration_probability(probability=0.005, source=1, target=0)
+# simulator.simulate(iterations)
+# simulator.output_chain_events('test_' + str(name))
+# check_data(name)
 
 #6 model
 simulator = VGsim.Simulator(populations_number=3, seed=my_seed)
