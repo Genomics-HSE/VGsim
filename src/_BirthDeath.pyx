@@ -1491,7 +1491,7 @@ cdef class BirthDeathModel:
     def set_population_size(self, amount, population):
         if self.first_simulation == True:
             raise ValueError('Changing population size is available only before first simulation!')
-        self.check_amount(amount)
+        self.check_amount(amount, 'population size')
         self.check_index(population, self.popNum, 'population')
 
         if isinstance(population, int):
