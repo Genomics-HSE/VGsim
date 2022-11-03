@@ -6,6 +6,7 @@ DEF MUTATION = 3
 DEF SUSCCHANGE = 4
 DEF MIGRATION = 5
 DEF MULTITYPE = 6
+DEF CONDITION = 7
 
 cdef class Event:
     cdef:
@@ -94,6 +95,8 @@ cdef class multiEvent:
             tn = "SUS"
         elif  self.type_ == MIGRATION:
             tn = "MIG"
+        elif  self.type_ == CONDITION:
+            tn = "CON"
         print("num=", self.num,
                       "  time=", self.time,
                       "  type=", tn,
