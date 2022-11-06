@@ -565,7 +565,7 @@ cdef class BirthDeathModel:
         cdef:
             Py_ssize_t ssi, tsi, hsi
 
-        hsi, self.rn = fastChoose1(self.conditionPopHapRate[pi], self.immunePopRate[pi], self.rn)
+        hsi, self.rn = fastChoose1(self.conditionPopHapRate[pi], self.conditionPopRate[pi], self.rn)
         ssi, self.rn = fastChoose1(self.conditionPopHapConRate[pi, hsi], self,conditionPopHapRate[pi, hsi], self.rn)
         tsi, self.rn = fastChoose1(self.conditionPopHapConRate[pi, hsi], self.conditionPopHapRate[pi, hsi], self.rn)
 
