@@ -95,7 +95,7 @@ cdef class multiEvent:
             tn = "SUS"
         elif  self.type_ == MIGRATION:
             tn = "MIG"
-        elif  self.type_ == CONDITION:
+        elif self.type_ == CONDITION:
             tn = "CON"
         print("num=", self.num,
                       "  time=", self.time,
