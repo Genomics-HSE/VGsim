@@ -7,7 +7,8 @@ import numpy as np
 import time
 
 class Simulator:
-	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=False):
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
+		sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0):
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
@@ -15,7 +16,7 @@ class Simulator:
 
 		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
 			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, \
-			memory_optimization=memory_optimization)
+			memory_optimization=memory_optimization, genome_length=genome_length, recombination_probability=recombination_probability)
 
 
 	def print_basic_parameters(self):
@@ -42,6 +43,14 @@ class Simulator:
 	def set_step_haplotype(self, amount):
 		self.simulation.set_step_haplotype(amount)
 
+	def set_genome_length(self, genome_length):
+		self.simulation.set_genome_length(genome_length)
+
+	def set_coinfection_parameters(self, recombination):
+		self.simulation.set_coinfection_parameters(recombination)
+
+	def get_transmission_rate(self):
+		return self.simulation.get_transmission_rate()
 
 	def set_transmission_rate(self, rate, haplotype=None):
 		self.simulation.set_transmission_rate(rate, haplotype)
@@ -54,6 +63,9 @@ class Simulator:
 
 	def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None):
 		self.simulation.set_mutation_rate(rate, probabilities, haplotype, mutation)
+
+	def set_mutation_position(self, mutation, position):
+		self.simulation.set_mutation_position(mutation, position)
 
 
 	def set_susceptibility_type(self, susceptibility_type, haplotype=None):
@@ -86,6 +98,16 @@ class Simulator:
 
 	def set_infectious(self, amount, source_type, target_haplotype, population=None):
 		self.simulation.set_infectious(amount, source_type, target_haplotype, population)
+
+
+	def set_SIS_model(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
+		sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0):
+
+		pass
+
+	def set_SIR_model(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
+		sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0):
+		pass
 
 
 	def set_chain_events(self, file_name):
@@ -268,6 +290,9 @@ class Simulator:
 
 	def genealogy(self, seed=None):
 		self.simulation.GetGenealogy(seed)
+
+	def print_recomb(self, left, right):
+		self.simulation.print_recomb(left, right)
 
 
 	def citation(self):

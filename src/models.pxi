@@ -48,6 +48,7 @@ cdef class Migrations:
     def get_migration(self, id_mig):
         return self.nodeId[id_mig], self.time[id_mig], self.oldPop[id_mig], self.newPop[id_mig]
 
+
 cdef class Lockdowns:
     cdef:
         vector[bint] states
@@ -63,3 +64,33 @@ cdef class Lockdowns:
         self.states.push_back(state)
         self.populationsId.push_back(populationId)
         self.times.push_back(time)
+
+
+cdef class Recombination:
+    cdef:
+        vector[Py_ssize_t] positions
+        # vector[Py_ssize_t] positions, hi1s, hi2s
+        # vector[double] times
+
+        vector[Py_ssize_t] idevents, his, hi2s, nhis, posRecombs
+
+    def __init__(self):
+        pass
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void AddRecombination_forward(self, Py_ssize_t Id, Py_ssize_t hi, Py_ssize_t hi2, Py_ssize_t posRecomb, Py_ssize_t nhi):
+        self.idevents.push_back(Id)
+        self.his.push_back(hi)
+        self.hi2s.push_back(hi2)
+        self.nhis.push_back(nhi)
+        self.posRecombs.push_back(posRecomb)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void AddRecombination(self, Py_ssize_t position):
+    # cdef void AddRecombination(self, Py_ssize_t position, Py_ssize_t hi1, Py_ssize_t hi2, double time):
+        self.positions.push_back(position)
+        # self.hi1s.push_back(hi1)
+        # self.hi2s.push_back(hi2)
+        # self.times.push_back(time)
