@@ -2,10 +2,15 @@ import VGsim
 
 # set_initial_haplotype
 model = VGsim.Simulator(number_of_sites=3, memory_optimization=True)
-model.set_initial_haplotype(0)
 model.set_initial_haplotype(1)
 model.set_initial_haplotype(64)
 model.set_initial_haplotype(65)
+
+try:
+    model = VGsim.Simulator(number_of_sites=3, memory_optimization=True)
+    model.set_initial_haplotype(0)
+except ValueError:
+    pass
 
 try:
     model = VGsim.Simulator(number_of_sites=3, memory_optimization=True)
@@ -22,10 +27,15 @@ except ValueError:
 
 # set_step_haplotype
 model = VGsim.Simulator(number_of_sites=3, memory_optimization=True)
-model.set_step_haplotype(0)
 model.set_step_haplotype(1)
 model.set_step_haplotype(64)
 model.set_step_haplotype(65)
+
+try:
+    model = VGsim.Simulator(number_of_sites=3, memory_optimization=True)
+    model.set_step_haplotype(0)
+except ValueError:
+    pass
 
 try:
     model = VGsim.Simulator(number_of_sites=3, memory_optimization=True)
