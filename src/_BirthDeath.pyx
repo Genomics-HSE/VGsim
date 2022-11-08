@@ -1437,6 +1437,10 @@ cdef class BirthDeathModel:
                  population should be equal or less 1.')
  
 
+    @property
+    def initial_haplotype(self):
+        return self.maxHapNum
+
     def set_initial_haplotype(self, amount):
         if self.memory_optimization == False:
             raise ValueError('Incorrect value of memory optimization. Value should be equal \'True\' for work this function.')
@@ -1447,12 +1451,20 @@ cdef class BirthDeathModel:
         else:
             self.maxHapNum = amount
 
+    @property
+    def step_haplotype(self):
+        return self.addMemoryNum
+
     def set_step_haplotype(self, amount):
         if self.memory_optimization == False:
             raise ValueError('Incorrect value of memory optimization. Value should be equal \'True\' for work this function.')
         self.check_amount(amount, 'amount of step haplotype')
 
         self.addMemoryNum = amount
+
+    @property
+    def genome_length(self):
+        return self.genome_length
 
     def set_genome_length(self, genome_length):
         self.check_amount(genome_length, 'genome lingth')
@@ -1464,17 +1476,21 @@ cdef class BirthDeathModel:
         for s in range(self.sites):
             self.sitesPosition[s] = int(s * self.genome_length / (self.sites - 1))
 
+    @property
+    def coinfection_parameters(self):
+        return self.recombination
+
     def set_coinfection_parameters(self, recombination):
         self.check_rate_2(recombination, 'recombination probability')
         # self.check_value(recombination, 'recombination probability', edge=1)
 
         self.recombination = recombination
 
-    def get_transmission_rate(self):
+    @property
+    def transmission_rate(self):
         return self.bRate
 
     def set_transmission_rate(self, rate, haplotype):
-        # self.check_rate_1(rate, 'transmission')
         self.check_value(rate, 'transmission rate')
         self.check_index_hap(haplotype)
 
@@ -1491,8 +1507,11 @@ cdef class BirthDeathModel:
     #         for cn in conditions:
     #             self.bRate[hn, cn] = rate
 
+    @property
+    def recovery_rate(self):
+        return self.dRate
+
     def set_recovery_rate(self, rate, haplotype):
-        # self.check_rate_1(rate, 'recovery')
         self.check_value(rate, 'recovery rate')
         self.check_index_hap(haplotype)
 
@@ -1500,11 +1519,14 @@ cdef class BirthDeathModel:
         for hn in haplotypes:
             self.dRate[hn] = rate
 
+    @property
+    def sampling_rate(self):
+        return self.sRate
+
     def set_sampling_rate(self, rate, haplotype):
         self.check_index_hap(haplotype)
 
         if self.sampling_probability == True:
-            # self.check_rate_2(rate, 'sampling probability')
             self.check_value(rate, 'sampling probability', edge=1)
             
             haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
@@ -1514,12 +1536,15 @@ cdef class BirthDeathModel:
                 self.sRate[hn] = rate * deathRate
 
         elif self.sampling_probability == False:
-            # self.check_rate_1(rate, 'sampling')
-            self.check_value(rate, 'sampling')
+            self.check_value(rate, 'sampling rate')
 
             haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
             for hn in haplotypes:
                 self.sRate[hn] = rate
+
+    @property
+    def mutation_rate(self):
+        return self.mRate
 
     def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
         # self.check_rate_none_1(rate, 'mutation rate')
@@ -1550,6 +1575,10 @@ cdef class BirthDeathModel:
             self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
             self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
 
+    @property
+    def mutation_position(self):
+        return self.sitesPosition
+
     def set_mutation_position(self, mutation, position):
         self.check_index(mutation, self.sites, 'number of site')
         self.check_index(position, self.genome_length, 'mutation position')
@@ -1560,6 +1589,10 @@ cdef class BirthDeathModel:
 
         self.sitesPosition[mutation] = position
 
+
+    @property
+    def susceptibility_type(self):
+        return self.suscType
 
     def set_susceptibility_type(self, susceptibility_type, haplotype):
         if isinstance(susceptibility_type, int) == False:
@@ -1572,6 +1605,10 @@ cdef class BirthDeathModel:
         for hn in haplotypes:
             self.suscType[hn] = susceptibility_type
 
+    @property
+    def susceptibility(self):
+        return self.susceptibility
+
     def set_susceptibility(self, rate, haplotype, susceptibility_type):
         self.check_rate_1(rate, 'rate of susceptibility')
         # self.check_value(rate, 'rate of susceptibility')
@@ -1583,6 +1620,10 @@ cdef class BirthDeathModel:
         for hn in haplotypes:
             for sn in sus_types:
                 self.susceptibility[hn, sn] = rate
+
+    @property
+    def immunity_transition(self):
+        return self.suscepTransition
 
     def set_immunity_transition(self, rate, source, target):
         self.check_rate_1(rate, 'immunity transition rate')
@@ -1597,6 +1638,9 @@ cdef class BirthDeathModel:
                 if sn1 != sn2:
                     self.suscepTransition[sn1, sn2] = rate
 
+    @property
+    def population_size(self):
+        return self.sizes
 
     def set_population_size(self, amount, population):
         if self.first_simulation == True:
@@ -1610,6 +1654,10 @@ cdef class BirthDeathModel:
             self.initial_susceptible[population, 0] = amount
             for sn in range(1, self.susNum):
                 self.initial_susceptible[population, 0] = 0
+
+    @property
+    def susceptible(self):
+        return self.initial_susceptible
 
     def set_susceptible(self, amount, source_type, target_type, population):
         if self.first_simulation:
@@ -1628,6 +1676,10 @@ cdef class BirthDeathModel:
             self.initial_susceptible[pn, source_type] -= amount
             self.initial_susceptible[pn, target_type] += amount
 
+    @property
+    def infectious(self):
+        return self.initial_infectious
+
     def set_infectious(self, amount, source_type, target_haplotype, population):
         if self.first_simulation:
             raise ValueError('This function is available only before first simulation!')
@@ -1643,6 +1695,10 @@ cdef class BirthDeathModel:
             self.initial_susceptible[pn, source_type] -= amount
             self.initial_infectious[pn, target_haplotype] += amount
 
+    @property
+    def contact_density(self):
+        return self.contactDensity
+
     def set_contact_density(self, value, population):
         self.check_rate_1(value, 'contact density')
         # self.check_value(value, 'contact density')
@@ -1652,6 +1708,10 @@ cdef class BirthDeathModel:
         for pn in populations:
             self.contactDensity[pn] = value
             self.contactDensityBeforeLockdown[pn] = value
+
+    @property
+    def npi(self):
+        return self.contactDensity, self.contactDensityAfterLockdown, self.startLD, self.endLD
 
     def set_npi(self, parameters, population):
         self.check_list(parameters, 'parameters', 3)
@@ -1670,6 +1730,10 @@ cdef class BirthDeathModel:
             self.startLD[pn] = parameters[1]
             self.endLD[pn] = parameters[2]
 
+    @property
+    def sampling_multiplier(self):
+        return self.samplingMultiplier
+
     def set_sampling_multiplier(self, multiplier, population):
         self.check_rate_1(multiplier, 'sampling multiplier')
         # self.check_value(multiplier, 'sampling multiplier')
@@ -1678,6 +1742,10 @@ cdef class BirthDeathModel:
         populations = self.create_list_for_cycles(population, self.popNum)
         for pn in populations:
             self.samplingMultiplier[pn] = multiplier
+
+    @property
+    def migration_probability(self):
+        return self.migrationRates
 
     def set_migration_probability(self, probability, total_probability, source, target):
         self.check_rate_none_2(probability, 'probability')
@@ -1948,6 +2016,18 @@ cdef class BirthDeathModel:
             print('Genealogy was not simulated. Use VGsim.genealogy() method to simulate it.')
             sys.exit(1)
         return self.tree, self.times
+
+    def get_tree_mutations(self):
+        pass
+
+    def get_tree_migrations(self):
+        pass
+
+    def get_tree_npis(self):
+        pass
+
+    def get_tree_recombinations(self):
+        pass
 
     def get_data_infectious(self, pop, hap, step_num):
         time_points = [i*self.currentTime/step_num for i in range(step_num+1)]

@@ -37,64 +37,137 @@ class Simulator:
 			self.simulation.print_immunity_model()
 
 
+	@property
+	def initial_haplotype(self):
+		self.simulation.initial_haplotype
+
 	def set_initial_haplotype(self, amount):
 		self.simulation.set_initial_haplotype(amount)
+
+	@property
+	def step_haplotype(self):
+		self.simulation.step_haplotype
 
 	def set_step_haplotype(self, amount):
 		self.simulation.set_step_haplotype(amount)
 
+	@property
+	def genome_length(self):
+		self.simulation.genome_length
+
 	def set_genome_length(self, genome_length):
 		self.simulation.set_genome_length(genome_length)
+
+	@property
+	def coinfection_parameters(self):
+		self.simulation.coinfection_parameters
 
 	def set_coinfection_parameters(self, recombination):
 		self.simulation.set_coinfection_parameters(recombination)
 
-	def get_transmission_rate(self):
-		return self.simulation.get_transmission_rate()
+	@property
+	def transmission_rate(self):
+		return self.simulation.transmission_rate
 
 	def set_transmission_rate(self, rate, haplotype=None):
 		self.simulation.set_transmission_rate(rate, haplotype)
 
+	@property
+	def recovery_rate(self):
+		return self.simulation.recovery_rate
+
 	def set_recovery_rate(self, rate, haplotype=None):
 		self.simulation.set_recovery_rate(rate, haplotype)
+
+	@property
+	def sampling_rate(self):
+		return self.simulation.sampling_rate
 
 	def set_sampling_rate(self, rate, haplotype=None):
 		self.simulation.set_sampling_rate(rate, haplotype)
 
+	@property
+	def mutation_rate(self):
+		return self.simulation.mutation_rate
+
 	def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None):
 		self.simulation.set_mutation_rate(rate, probabilities, haplotype, mutation)
+
+	@property
+	def mutation_position(self):
+		return self.simulation.mutation_position
 
 	def set_mutation_position(self, mutation, position):
 		self.simulation.set_mutation_position(mutation, position)
 
 
+	@property
+	def susceptibility_type(self):
+		return self.simulation.susceptibility_type
+
 	def set_susceptibility_type(self, susceptibility_type, haplotype=None):
 		self.simulation.set_susceptibility_type(susceptibility_type, haplotype)
 
+	@property
+	def susceptibility(self):
+		return self.simulation.susceptibility
+
 	def set_susceptibility(self, rate, haplotype=None, susceptibility_type=None):
 		self.simulation.set_susceptibility(rate, haplotype, susceptibility_type)
+
+	@property
+	def immunity_transition(self):
+		return self.simulation.immunity_transition
 
 	def set_immunity_transition(self, rate, source=None, target=None):
 		self.simulation.set_immunity_transition(rate, source, target)
 
 
+	@property
+	def population_size(self):
+		return self.simulation.population_size
+
 	def set_population_size(self, size, population=None):
 		self.simulation.set_population_size(size, population)
+
+	@property
+	def contact_density(self):
+		return self.simulation.contact_density
 
 	def set_contact_density(self, value, population=None):
 		self.simulation.set_contact_density(value, population)
 
+	@property
+	def npi(self):
+		return self.simulation.npi
+
 	def set_npi(self, parameters, population=None):
 		self.simulation.set_npi(parameters, population)
+
+	@property
+	def sampling_multiplier(self):
+		return self.simulation.sampling_multiplier
 
 	def set_sampling_multiplier(self, multiplier, population=None):
 		self.simulation.set_sampling_multiplier(multiplier, population)
 
+	@property
+	def migration_probability(self):
+		return self.simulation.migration_probability
+
 	def set_migration_probability(self, probability=None, total_probability=None, source=None, target=None):
 		self.simulation.set_migration_probability(probability, total_probability, source, target)
 
+	@property
+	def susceptible(self):
+		return self.simulation.susceptible
+
 	def set_susceptible(self, amount, source_type, target_type, population=None):
 		self.simulation.set_susceptible(amount, source_type, target_type, population)
+
+	@property
+	def infectious(self):
+		return self.simulation.infectious
 
 	def set_infectious(self, amount, source_type, target_haplotype, population=None):
 		self.simulation.set_infectious(amount, source_type, target_haplotype, population)
@@ -102,7 +175,6 @@ class Simulator:
 
 	def set_SIS_model(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
 		sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0):
-
 		pass
 
 	def set_SIR_model(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
