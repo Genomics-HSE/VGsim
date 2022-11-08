@@ -28,6 +28,12 @@ class Simulator:
 	def print_immunity_model(self):
 		self.simulation.print_immunity_model()
 
+	def print_mutations(self):
+		self.simulation.print_mutations()
+
+	def print_migrations(self):
+		self.simulation.print_migrations()
+
 	def print_all(self, basic_parameters=True, populations=True, immunity_model=True):
 		if basic_parameters:
 			self.simulation.print_basic_parameters()
@@ -36,6 +42,9 @@ class Simulator:
 		if immunity_model:
 			self.simulation.print_immunity_model()
 
+
+	def get_indexes_from_haplotype(self, haplotype):
+		return np.array(self.simulation.create_list_for_cycles(haplotype, self.simulation.hapNum))
 
 	@property
 	def initial_haplotype(self):
@@ -192,7 +201,7 @@ class Simulator:
 		self.set_chain_events(file_template)
 		self.set_settings(file_template)
 
-
+	# def export_newick всё что в файлы это export
 	def output_newick(self, file_template=None, file_path = None):
 		pruferSeq, times, mut, populations = self.simulation.output_tree_mutations()
 		writeGenomeNewick(pruferSeq, times, populations, file_template, file_path)

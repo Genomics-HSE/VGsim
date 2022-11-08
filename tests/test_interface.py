@@ -15,6 +15,8 @@ import pytest
 def test_set_transmisstion_rate(rate, haplotype, answer):
 	model = Simulator(number_of_sites=2)
 	model.set_transmission_rate(rate=rate, haplotype=haplotype)
+	# print(type(model.get_indexes_from_haplotype(haplotype)[0]))
+	# model.transmission_rate[model.get_indexes_from_haplotype(haplotype)] = rate  #(rate=rate, haplotype=haplotype)
 	# assert_allclose(model.get_transmission_rate(), np.asarray(answer), atol=1e-14)
 	assert_allclose(model.transmission_rate, np.asarray(answer), atol=1e-14)
 
