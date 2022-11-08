@@ -682,6 +682,7 @@ cdef class BirthDeathModel:
         self.mCounter += 1
         self.events.AddEvent(self.currentTime, MUTATION, ohi, pi, nhi, 0)
 
+
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
@@ -837,31 +838,31 @@ cdef class BirthDeathModel:
                     self.infectious[e_population, self.hapToNum[e_haplotype]] -= 1
 
                     #TODO
-                    if e_newPopulation != self.hapNum:
-                        lbs1 = liveBranchesS[e_population][e_newPopulation].size()
-                        lbs1_e = self.infectious[e_population, self.hapToNum[e_newPopulation]]
-                        p = float(lbs1) * (float(lbs1) - 1.0)/ float(lbs1_e) / (float(lbs1_e) - 1.0)
-                        if self.seed.uniform() < p:
-                            n1 = int(floor( lbs1 * self.seed.uniform() ))
-                            n2 = int(floor( (lbs1 - 1) * self.seed.uniform() ))
-                            if n2 >= n1:
-                                n2 += 1
-                            id1 = liveBranchesS[e_population][e_newPopulation][n1]
-                            id2 = liveBranchesS[e_population][e_newPopulation][n2]
-                            id3 = ptrTreeAndTime
-                            liveBranchesS[e_population][e_newPopulation][n1] = id3
-                            liveBranchesS[e_population][e_newPopulation][n2] = liveBranchesS[e_population][e_newPopulation][lbs-1]
-                            liveBranchesS[e_population][e_newPopulation].pop_back()
-                            # self.tree[id1] = id3
-                            # self.tree[id2] = id3
-                            # self.tree[ptrTreeAndTime] = -1
-                            # self.tree_pop[ptrTreeAndTime] = e_population
-                            self.tree[id1, 1] = id3
-                            self.tree[id2, 1] = id3
-                            self.tree[ptrTreeAndTime, 1] = -1
-                            self.tree_pop[ptrTreeAndTime, 1] = e_population
-                        # self.rec.AddRecombination(posRecomb)
-                        self.infectious[e_population, self.hapToNum[e_newPopulation]] -= 1
+                    # if e_newPopulation != self.hapNum:
+                    #     lbs1 = liveBranchesS[e_population][e_newPopulation].size()
+                    #     lbs1_e = self.infectious[e_population, self.hapToNum[e_newPopulation]]
+                    #     p = float(lbs1) * (float(lbs1) - 1.0)/ float(lbs1_e) / (float(lbs1_e) - 1.0)
+                    #     if self.seed.uniform() < p:
+                    #         n1 = int(floor( lbs1 * self.seed.uniform() ))
+                    #         n2 = int(floor( (lbs1 - 1) * self.seed.uniform() ))
+                    #         if n2 >= n1:
+                    #             n2 += 1
+                    #         id1 = liveBranchesS[e_population][e_newPopulation][n1]
+                    #         id2 = liveBranchesS[e_population][e_newPopulation][n2]
+                    #         id3 = ptrTreeAndTime
+                    #         liveBranchesS[e_population][e_newPopulation][n1] = id3
+                    #         liveBranchesS[e_population][e_newPopulation][n2] = liveBranchesS[e_population][e_newPopulation][lbs-1]
+                    #         liveBranchesS[e_population][e_newPopulation].pop_back()
+                    #         # self.tree[id1] = id3
+                    #         # self.tree[id2] = id3
+                    #         # self.tree[ptrTreeAndTime] = -1
+                    #         # self.tree_pop[ptrTreeAndTime] = e_population
+                    #         self.tree[id1, 1] = id3
+                    #         self.tree[id2, 1] = id3
+                    #         self.tree[ptrTreeAndTime, 1] = -1
+                    #         self.tree_pop[ptrTreeAndTime, 1] = e_population
+                    #     # self.rec.AddRecombination(posRecomb)
+                    #     self.infectious[e_population, self.hapToNum[e_newPopulation]] -= 1
 
                 elif e_type_ == DEATH:
                     self.infectious[e_population, self.hapToNum[e_haplotype]] += 1
