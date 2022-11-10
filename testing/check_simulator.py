@@ -42,7 +42,7 @@ simulator.set_transmission_rate(4.0)
 simulator.set_recovery_rate(1.5)
 simulator.set_sampling_rate(0.3)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 #2 model
@@ -51,7 +51,7 @@ simulator = VGsim.Simulator(number_of_sites=1, seed=my_seed)
 name = 2
 simulator.set_transmission_rate(4, haplotype=3)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 #3 model
@@ -60,7 +60,7 @@ simulator = VGsim.Simulator(number_of_susceptible_groups=2, seed=my_seed)
 name = 3
 simulator.set_susceptibility_type(1)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 # #4 model
@@ -76,7 +76,7 @@ simulator.set_immunity_transition(0.01, source=0, target=1)
 simulator.set_immunity_transition(0.01, source=1, target=2)
 simulator.set_immunity_transition(0.02, source=2, target=1)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 #5 model
@@ -99,7 +99,7 @@ name = 6
 simulator.set_migration_probability(0.01, source=0, target=1)
 simulator.set_migration_probability(0.005, source=2, target=1)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 #7 model
@@ -112,7 +112,7 @@ simulator.set_sampling_multiplier(2.5, population=1)
 simulator.set_sampling_multiplier(2, population=2)
 simulator.set_npi([0.5, 0.30, 0.15], population=0)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 #8 model
@@ -121,7 +121,7 @@ simulator = VGsim.Simulator(number_of_sites=2, seed=my_seed)
 name = 8
 simulator.set_mutation_rate(0.01, probabilities=[1, 0, 0, 1])
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 #9 model
@@ -145,7 +145,7 @@ simulator.set_immunity_transition(0.000001, source=0, target=1)
 simulator.set_immunity_transition(0.000001, source=1, target=2)
 simulator.set_immunity_transition(0.000002, source=2, target=1)
 simulator.simulate(iterations)
-simulator.output_chain_events('test_' + str(name))
+simulator.export_chain_events('test_' + str(name))
 check_data(name)
 
 # #10 model
