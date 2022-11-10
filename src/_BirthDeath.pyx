@@ -1283,7 +1283,7 @@ cdef class BirthDeathModel:
             print(self.mut.get_mutation(i))
 
     def print_migrations(self):
-        print('nodeId\ttime\toldPop\tnewPop')
+        print('nodeId\ttime\tsource population\ttarget population')
         for i in range(self.mig.nodeId.size()):
             print(self.mig.get_migration(i))
 
@@ -1859,7 +1859,7 @@ cdef class BirthDeathModel:
 
         return self.tree, self.times, mut, populations
 
-    def output_migrations(self, name_file, file_path):
+    def export_migrations(self, name_file, file_path):
         if self.tree.shape[0] == 1:
             print('Genealogy was not simulated. Use VGsim.genealogy() method to simulate it.')
             sys.exit(1)
@@ -1965,11 +1965,11 @@ cdef class BirthDeathModel:
         else:
             return log
 
-    def output_chain_events(self, name_file):
+    def export_chain_events(self, name_file):
         np.save(name_file, [self.events.times, self.events.types, self.events.haplotypes, self.events.populations, \
             self.events.newHaplotypes, self.events.newPopulations])
 
-    def output_settings(self, file_template):
+    def export_settings(self, file_template):
         if isinstance(file_template, str) == False:
             pass
             #TODO
@@ -2025,33 +2025,26 @@ cdef class BirthDeathModel:
         print(comand)
         os.chdir('../')
 
-    def get_ts_object(self):
+    def export_ts(self):
         tc = tskit.TableCollection()
         tc.sequence_length = self.genome_length
 
         for i in range(self.mig.nodeId.size()):
             mig_nodeId, mig_time, mig_oldPop, mig_newPop = self.mig.get_migration(i)
             tc.migrations.add_row(0.0, 1.0, mig_nodeId, mig_oldPop, mig_newPop, self.times[0] - mig_time)
-        print(tc.migrations)
 
         for i in range(self.popNum):
             tc.populations.add_row(None)
-        print(tc.populations)
 
         for i in range(2 * self.sCounter - 2):
-            # tc.edges.add_row(0.0, self.genome_length, self.tree[i], i)
             tc.edges.add_row(0.0, self.genome_length, self.tree[i, 0], i)
-        print(tc.edges)
 
         child_or_parent = [1 for _ in range(2 * self.sCounter - 1)]
         for i in range(2 * self.sCounter - 2):
-            # child_or_parent[self.tree[i]] = 0
             child_or_parent[self.tree[i, 0]] = 0
 
         for i in range(2 * self.sCounter - 1):
-            # tc.nodes.add_row(child_or_parent[i], self.times[0] - self.times[i], self.tree_pop[i])
             tc.nodes.add_row(child_or_parent[i], self.times[0] - self.times[i], self.tree_pop[i, 0])
-        print(tc.nodes)
 
         for i in range(self.sites):
             if self.sitesPosition[i] == 0:
@@ -2060,13 +2053,11 @@ cdef class BirthDeathModel:
                 tc.sites.add_row(self.sitesPosition[i] - 1, 'A')
             else:
                 tc.sites.add_row(self.sitesPosition[i], 'A')
-        print(tc.sites)
 
         allele = ['A', 'T', 'C', 'G']
         for i in range(self.mut.nodeId.size()):
             mut_nodeId, mut_DS, mut_AS, mut_site, mut_time = self.mut.get_mutation(i)
             tc.mutations.add_row(site=mut_site, node=mut_nodeId, derived_state=allele[mut_DS], time=self.times[0] - mut_time)
-        print(tc.mutations)
 
         tc.sort()
         return tc.tree_sequence()

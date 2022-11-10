@@ -202,16 +202,16 @@ class Simulator:
 		self.set_settings(file_template)
 
 	# def export_newick всё что в файлы это export
-	def output_newick(self, file_template=None, file_path = None):
+	def export_newick(self, file_template=None, file_path = None):
 		pruferSeq, times, mut, populations = self.simulation.output_tree_mutations()
 		writeGenomeNewick(pruferSeq, times, populations, file_template, file_path)
 
-	def output_mutations(self, file_template=None, file_path = None):
+	def export_mutations(self, file_template=None, file_path = None):
 		pruferSeq, times, mut, populations = self.simulation.output_tree_mutations()
 		writeMutations(mut, len(pruferSeq), file_template, file_path)
 
-	def output_migrations(self, file_template=None, file_path = None):
-		self.simulation.output_migrations(file_template, file_path)
+	def export_migrations(self, file_template=None, file_path = None):
+		self.simulation.export_migrations(file_template, file_path)
 
 	def output_sample_data(self, output_print=False):
 		time, pop, hap = self.simulation.output_sample_data()
@@ -228,18 +228,18 @@ class Simulator:
 		else:
 			return self.simulation.output_epidemiology_timelines(step, output_file)
 
-	def output_chain_events(self, file_name="chain_events"):
-		self.simulation.output_chain_events(file_name)
+	def export_chain_events(self, file_name="chain_events"):
+		self.simulation.export_chain_events(file_name)
 
-	def output_settings(self, file_template="parameters"):
-		self.simulation.output_settings(file_template)
+	def export_settings(self, file_template="parameters"):
+		self.simulation.export_settings(file_template)
 
-	def output_state(self):
+	def export_state(self):
 		self.output_chain_events()
 		self.output_settings()
 
-	def get_ts_object(self):
-		return self.simulation.get_ts_object()
+	def export_ts(self):
+		return self.simulation.export_ts()
 
 	def get_tree(self):
 		return self.simulation.get_tree()
