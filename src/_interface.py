@@ -44,32 +44,60 @@ class Simulator:
 
 
 	def get_indexes_from_haplotype(self, haplotype):
-		return np.array(self.simulation.create_list_for_cycles(haplotype, self.simulation.hapNum))
+		return np.array(self.simulation.create_list_for_cycles(haplotype, self.simulation.haplotype_number))
+
+	@property
+	def seed(self):
+		return self.simulation.seed
+
+	@property
+	def sampling_probability(self):
+		return self.simulation.sampling_probability
+
+	@property
+	def memory_optimization(self):
+		return self.simulation.memory_optimization
+
+	@property
+	def number_of_sites(self):
+		return self.simulation.number_of_sites
+
+	@property
+	def haplotype_number(self):
+		return self.simulation.haplotype_number
+
+	@property
+	def populations_number(self):
+		return self.simulation.populations_number
+
+	@property
+	def number_of_susceptible_groups(self):
+		return self.simulation.number_of_susceptible_groups
 
 	@property
 	def initial_haplotype(self):
-		self.simulation.initial_haplotype
+		return self.simulation.initial_haplotype
 
 	def set_initial_haplotype(self, amount):
 		self.simulation.set_initial_haplotype(amount)
 
 	@property
 	def step_haplotype(self):
-		self.simulation.step_haplotype
+		return self.simulation.step_haplotype
 
 	def set_step_haplotype(self, amount):
 		self.simulation.set_step_haplotype(amount)
 
 	@property
 	def genome_length(self):
-		self.simulation.genome_length
+		return self.simulation.genome_length
 
 	def set_genome_length(self, genome_length):
 		self.simulation.set_genome_length(genome_length)
 
 	@property
 	def coinfection_parameters(self):
-		self.simulation.coinfection_parameters
+		return self.simulation.coinfection_parameters
 
 	def set_coinfection_parameters(self, recombination):
 		self.simulation.set_coinfection_parameters(recombination)
@@ -98,9 +126,16 @@ class Simulator:
 	@property
 	def mutation_rate(self):
 		return self.simulation.mutation_rate
+	
+	def set_mutation_rate(self, rate, haplotype=None, mutation=None):
+		self.simulation.set_mutation_rate(rate, haplotype, mutation)
 
-	def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None):
-		self.simulation.set_mutation_rate(rate, probabilities, haplotype, mutation)
+	@property
+	def mutation_probabilities(self):
+		return self.simulation.mutation_probabilities
+
+	def set_mutation_probabilities(self, probabilities, haplotype=None, mutation=None):
+		self.simulation.set_mutation_probabilities(probabilities, haplotype, mutation)
 
 	@property
 	def mutation_position(self):
@@ -164,8 +199,11 @@ class Simulator:
 	def migration_probability(self):
 		return self.simulation.migration_probability
 
-	def set_migration_probability(self, probability=None, total_probability=None, source=None, target=None):
-		self.simulation.set_migration_probability(probability, total_probability, source, target)
+	def set_migration_probability(self, probability, source=None, target=None):
+		self.simulation.set_migration_probability(probability, source, target)
+
+	def set_total_migration_probability(self, total_probability):
+		self.simulation.set_total_migration_probability(total_probability)
 
 	@property
 	def susceptible(self):
