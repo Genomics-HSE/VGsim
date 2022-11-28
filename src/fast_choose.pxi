@@ -4,7 +4,6 @@ def print_err(*args, **kwargs):
 ctypedef fused double_or_npy_int64:
     double
     npy_int64
-    vector<double>
 
 cdef inline void print_error(double_or_npy_int64[::1] w, double_or_npy_int64 tw, double rn):
     cdef Py_ssize_t i

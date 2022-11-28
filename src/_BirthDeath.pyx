@@ -48,7 +48,7 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] susceptible, infectious, initial_susceptible, initial_infectious
         npy_int64[:,::1] tree, tree_pop
 
-        double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
+        double[::1] bRate, dRate, sRate, tmRate, superRate,maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
         samplingMultiplier, times, birthInf
         double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, \
@@ -65,6 +65,8 @@ cdef class BirthDeathModel:
 
         double[:,::1] infectiousAuxTau, susceptibleAuxTau
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
+
+        vector[Py_ssize_t] vec_super_spread_rate,vec_super_spread_left, vec_super_spread_right, vec_super_spread_pop
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
@@ -681,38 +683,6 @@ cdef class BirthDeathModel:
 
         self.mCounter += 1
         self.events.AddEvent(self.currentTime, MUTATION, ohi, pi, nhi, 0)
-
-    cdef Py_ssize_t SuperSpreadEvent(self):
-        ei, self.rn = fastChoose(self.SuperSpreadRate, sum(self.SuperSpreadRate), self.rn)
-        pn = self.SuperSpreadLeft[ei] + int(self.rn * (self.SuperSpreadRight[ei] - SelfSuperLeft[ei]))
-        pi = self.SuperSpreadPop[ei]
-        self.sus_inf = np.zeros(self.susNum + self.hapNum)
-        self.SuperSpreadGroup = np.zeros(self.susNum + self.hapNum)
-        for i in range(self.susNum):
-            self.sus_inf[i] = self.susceptible[pi, i]
-        for i in range(self.hapNum):
-            self.sus_inf[i + self.susNum] = self.infectious[pi, i]
-        for i in range(pn):
-            rn = self.seed.uniform()
-            sii, rn = fastChoose(self.sus_inf, self.sizes[pi] - i, rn)
-            self.sus_inf[sii] -= 1
-            self.SuperSpreadGroup[sii] += 1
-        no_inf = True
-        for i in range(self.susNum, self.susNum + self.hapNum):
-            if self.SuperSpreadGroup[i] > 0:
-                no_inf = False
-                break
-        if no_inf:
-            return pi
-        for i in range(self.susNum):
-            self.SusHap = np.zeros[hapNum]
-            for j in range(self.hapNum):
-                self.SusHap[j] = self.susceptibility[j, i] * bRate[j] * self.SuperSpreadGroup[j + susNum]
-            for j in range(self.SuperSpreadGroup[i]):
-                rn = self.seed.uniform()
-                hi, rn = fastChoose(self.SusHap, sum(self.SusHap), rn)
-                self.NewInfections(pi, i, hi)
-                self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, i, 0)
 
 
     @cython.boundscheck(False)
@@ -1596,6 +1566,27 @@ cdef class BirthDeathModel:
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
         for hn in haplotypes:
             self.dRate[hn] = rate
+    @property
+    def super_spread_event(self):
+        return self.vec_super_spread_rate, self.vec_super_spread_left, self.vec_super_spread_right, self.vec_super_spread_pop
+
+    def set_super_spread_event(self, rate,left,right, population):
+        self.check_value(rate, 'super_spread rate')
+        self.check_index(population, self.popNum, 'population')
+        self.check_amount(left,'Right Point')
+        self.check_amount(right, 'Left Point')
+        if right < left:
+            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be more then min value.')
+        elif right<self.sizes[population]:
+            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be less then population size value.')
+        populations = self.create_list_for_cycles(population, self.popNum)
+        for pn in populations:
+            self.vec_super_spread_rate.push_back(rate)
+            self.vec_super_spread_left.push_back(left)
+            self.vec_super_spread_right.push_back(right)
+            self.vec_super_spread_pop.push_back(pn)
+
+
 
     @property
     def sampling_rate(self):
@@ -1619,6 +1610,7 @@ cdef class BirthDeathModel:
             haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
             for hn in haplotypes:
                 self.sRate[hn] = rate
+
 
     @property
     def mutation_rate(self):
