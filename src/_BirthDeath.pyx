@@ -48,7 +48,7 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] susceptible, infectious, initial_susceptible, initial_infectious
         npy_int64[:,::1] tree, tree_pop
 
-        double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
+        double[::1] bRate, dRate, sRate, tmRate, superRate,maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
         samplingMultiplier, times, birthInf
         double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, \
@@ -65,6 +65,8 @@ cdef class BirthDeathModel:
 
         double[:,::1] infectiousAuxTau, susceptibleAuxTau
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
+
+        vector[Py_ssize_t] vec_super_spread_rate,vec_super_spread_left, vec_super_spread_rate, vec_super_spread_pop
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
@@ -1564,6 +1566,24 @@ cdef class BirthDeathModel:
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
         for hn in haplotypes:
             self.dRate[hn] = rate
+    @property
+    def set_super_spread_rate(self):
+        return self.vec_super_spread
+
+    def set_super_spread_rate(self, population, rate,left,right):
+        self.check_value(rate, 'super_spread rate')
+        self.check_index(population, self.popNum, 'population')
+        if isinstance(left, int) == False:
+            raise TypeError('Incorrect type of ' + 'min value ' + '. Type should be int.')
+        elif left <= 0:
+            raise ValueError('Incorrect value of ' +'min valuse '+ '. Value should be more 0.')
+        elif isinstance(right, int) == False:
+            raise TypeError('Incorrect type of ' + 'max value ' + '. Type should be int.')
+        elif right <= 0:
+            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be more 0.')
+        elif right < left:
+            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be more then min value.')
+
 
     @property
     def sampling_rate(self):
@@ -1587,6 +1607,7 @@ cdef class BirthDeathModel:
             haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
             for hn in haplotypes:
                 self.sRate[hn] = rate
+
 
     @property
     def mutation_rate(self):
