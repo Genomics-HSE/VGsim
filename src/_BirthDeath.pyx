@@ -1568,18 +1568,28 @@ cdef class BirthDeathModel:
             self.dRate[hn] = rate
     @property
     def super_spread_event(self):
-        return self.vec_super_spread_rate, self.vec_super_spread_left, self.vec_super_spread_right, self.vec_super_spread_pop
+        cdef np.ndarray arr_rate = np.ascontiguousarray(self.vec_super_spread_rate, dtype=np.float)
+
+        cdef np.ndarray arr_left = np.ascontiguousarray(self.vec_super_spread_left, dtype=np.float)
+
+        cdef np.ndarray arr_right = np.ascontiguousarray(self.vec_super_spread_right, dtype=np.float)
+
+        cdef np.ndarray arr_pop = np.ascontiguousarray(self.vec_super_spread_pop, dtype=np.float)
+
+        return arr_rate, arr_left, arr_right , arr_pop
 
     def set_super_spread_event(self, rate,left,right, population):
         self.check_value(rate, 'super_spread rate')
         self.check_index(population, self.popNum, 'population')
-        self.check_amount(left,'Right Point')
-        self.check_amount(right, 'Left Point')
+        self.check_amount(left,'Left Point')
+        self.check_amount(right, 'Right Point')
         if right < left:
             raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be more then min value.')
-        elif right<self.sizes[population]:
-            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be less then population size value.')
         populations = self.create_list_for_cycles(population, self.popNum)
+        for pn in populations:
+            if right>self.sizes[pn]:
+                raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be less then population size value.')
+
         for pn in populations:
             self.vec_super_spread_rate.push_back(rate)
             self.vec_super_spread_left.push_back(left)

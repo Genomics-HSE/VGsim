@@ -89,7 +89,7 @@ class Simulator:
 		self.simulation.set_recovery_rate(rate, haplotype)
 	@property
 	def super_spread_event(self):
-		return self.simulation.super_spread_event
+		return self.simulation.set_super_spread_event
 	def set_super_spread_event(self, rate, left, right, population=None):
 		self.simulation.set_super_spread_event(rate, left, right, population)
 
