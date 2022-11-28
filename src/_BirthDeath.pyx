@@ -69,18 +69,29 @@ cdef class BirthDeathModel:
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
         memory_optimization, genome_length, recombination_probability):
+        self.check_amount(seed, 'seed', zero=False)
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
 
         self.first_simulation = False
+        if sampling_probability != True and sampling_probability != False:
+            raise ValueError('Incorrect value of sampling probability. Value of sampling probability should be True or False.')
         self.sampling_probability = sampling_probability
+        if memory_optimization != True and memory_optimization != False:
+            raise ValueError('Incorrect value of memory optimization. Value of memory optimization should be True or False.')
+        self.memory_optimization = memory_optimization
 
+        self.check_amount(number_of_sites, 'number of sites', zero=False)
         self.sites = number_of_sites
         self.hapNum = 4**self.sites
+        self.check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         self.susNum = number_of_susceptible_groups
+        self.check_amount(populations_number, 'populations number')
         self.popNum = populations_number
 
+        self.check_value(recombination_probability, 'recombination probability', edge=1)
         self.recombination = recombination_probability
+        self.check_amount(genome_length, 'genome length')
         self.genome_length = genome_length
         self.sitesPosition = np.zeros(self.sites, dtype=np.int64)
         if self.sites > self.genome_length:
@@ -90,8 +101,8 @@ cdef class BirthDeathModel:
                 self.sitesPosition[s] = int(s * self.genome_length / (self.sites - 1))
             self.birthInf = np.zeros(self.hapNum, dtype=float)
 
-        if memory_optimization:
-            self.memory_optimization = True
+
+        if self.memory_optimization:
             if self.sites > 2:
                 self.maxHapNum = 4**(self.sites-2)
                 self.addMemoryNum = 4**(self.sites-2)
@@ -99,7 +110,6 @@ cdef class BirthDeathModel:
                 self.maxHapNum = 4
                 self.addMemoryNum = 4
         else:
-            self.memory_optimization = False
             self.maxHapNum = self.hapNum
             self.addMemoryNum = 0
 
@@ -1366,28 +1376,41 @@ cdef class BirthDeathModel:
         return allele
 
     @property
-    def sites(self):
+    def seed(self):
+        return self.user_seed
+
+    @property
+    def sampling_probability(self):
+        return self.sampling_probability
+
+    @property
+    def memory_optimization(self):
+        return self.memory_optimization
+
+    @property
+    def number_of_sites(self):
         return self.sites
 
     @property
-    def hapNum(self):
+    def haplotype_number(self):
         return self.hapNum
 
     @property
-    def popNum(self):
+    def populations_number(self):
         return self.popNum
 
     @property
-    def susNum(self):
+    def number_of_susceptible_groups(self):
         return self.susNum
 
 
-    def check_amount(self, amount, smth):
+    def check_amount(self, amount, smth, zero=True):
         if isinstance(amount, int) == False:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
-        elif amount <= 0:
+        elif amount <= 0 and zero:
             raise ValueError('Incorrect value of ' + smth + '. Value should be more 0.')
-
+        elif amount < 0 and zero == False:
+            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
 
     def check_value(self, value, smth, edge=None, none=False):
         if none:
@@ -1402,61 +1425,31 @@ cdef class BirthDeathModel:
                     raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
         else:
             if isinstance(value, (int, float)):
-                if value < 0 and value > edge:
+                if value < 0 or value > edge:
                     raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less ' + str(edge) + '.')
 
-    #TODO four checks to one check
-    def check_rate_1(self, value, smth):
-        if isinstance(value, (int, float)) == False:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
-        elif value < 0:
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
-
-    def check_rate_none_1(self, value, smth):
-        if isinstance(value, (int, float)) == False and value != None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
-        elif isinstance(value, (int, float)):
-            if value < 0:
-                raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
-
-    def check_rate_2(self, value, smth):
-        if isinstance(value, (int, float)) == False:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
-        elif value < 0 and value > 1:
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less 1.')
-
-    def check_rate_none_2(self, value, smth):
-        if isinstance(value, (int, float)) == False and value != None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
-        elif isinstance(value, (int, float)):
-            if value < 0 and value > 1:
-                raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less 1.')
-
-
-    def check_index(self, index, edge, smth):
-        if isinstance(index, int):
+    def check_index(self, index, edge, smth, hap=False, none=True):
+        if none == False and index == None:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
+        elif isinstance(index, int):
             if index < 0 or index >= edge:
                 raise IndexError('There are no such ' + smth + '!')
-        elif index != None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or None.')
-
-    def check_index_hap(self, index):
-        if isinstance(index, int):
-            if index < 0 or index >= self.hapNum:
-                raise IndexError('There are no such haplotype!')
-        elif isinstance(index, str):
+        elif isinstance(index, str) and hap:
             if index.count("A") + index.count("T") + index.count("C") + index.count("G") + index.count("*") \
             != self.sites:
                 raise ValueError('Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"*\" and length of haplotype should be equal number of mutations sites.')
         elif index != None:
-            raise TypeError('Incorrect type of haplotype. Type should be int or str or None.')
+            if hap:
+                raise TypeError('Incorrect type of haplotype. Type should be int or str or None.')
+            else:
+                raise TypeError('Incorrect type of ' + smth + '. Type should be int or None.')
 
     def check_list(self, data, smth, length):
         if isinstance(data, list):
             if len(data) != length:
                 raise ValueError('Incorrect length of ' + smth + '. Length should be equal ' + str(length) + '.')
-        elif data != None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be list or None.')
+        else:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be list.')
 
     def check_amount_sus(self, amount, source_type, target_type, population):
         if self.initial_susceptible[population, source_type] - amount < 0:
@@ -1479,8 +1472,11 @@ cdef class BirthDeathModel:
                     summa += self.migrationRates[pn1, pn2]
                     self.migrationRates[pn1, pn1] -= self.migrationRates[pn1, pn2]
             if summa > 1:
-                raise ValueError('Incorrect the sum of migration probabilities. The sum of migration probabilities from each\
-                 population should be equal or less 1.')
+                raise ValueError('Incorrect the sum of migration probabilities. The sum of migration probabilities from each population should be equal or less 1.')
+        for pn in range(self.popNum):
+            if self.migrationRates[pn, pn] <= 1e-15:
+                raise ValueError('Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.')
+            
  
 
     @property
@@ -1492,7 +1488,7 @@ cdef class BirthDeathModel:
             raise ValueError('Incorrect value of memory optimization. Value should be equal \'True\' for work this function.')
         self.check_amount(amount, 'amount of initial haplotype')
 
-        if amount > self.hapNum:
+        if amount >= self.hapNum:
             self.maxHapNum = self.hapNum
         else:
             self.maxHapNum = amount
@@ -1513,10 +1509,9 @@ cdef class BirthDeathModel:
         return self.genome_length
 
     def set_genome_length(self, genome_length):
-        self.check_amount(genome_length, 'genome lingth')
-        if self.sites > self.genome_length:
-            raise ValueError('Incorrect value of number of sites or genome length. Genome length should be more or equal number \
-                of sites.')
+        self.check_amount(genome_length, 'genome length')
+        if self.sites > genome_length:
+            raise ValueError('Incorrect value of number of sites or genome length. Genome length should be more or equal number of sites.')
 
         self.genome_length = genome_length
         for s in range(self.sites):
@@ -1527,8 +1522,7 @@ cdef class BirthDeathModel:
         return self.recombination
 
     def set_coinfection_parameters(self, recombination):
-        self.check_rate_2(recombination, 'recombination probability')
-        # self.check_value(recombination, 'recombination probability', edge=1)
+        self.check_value(recombination, 'recombination probability', edge=1)
 
         self.recombination = recombination
 
@@ -1538,7 +1532,7 @@ cdef class BirthDeathModel:
 
     def set_transmission_rate(self, rate, haplotype):
         self.check_value(rate, 'transmission rate')
-        self.check_index_hap(haplotype)
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
 
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
         for hn in haplotypes:
@@ -1559,7 +1553,7 @@ cdef class BirthDeathModel:
 
     def set_recovery_rate(self, rate, haplotype):
         self.check_value(rate, 'recovery rate')
-        self.check_index_hap(haplotype)
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
 
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
         for hn in haplotypes:
@@ -1570,7 +1564,7 @@ cdef class BirthDeathModel:
         return self.sRate
 
     def set_sampling_rate(self, rate, haplotype):
-        self.check_index_hap(haplotype)
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
 
         if self.sampling_probability == True:
             self.check_value(rate, 'sampling probability', edge=1)
@@ -1592,43 +1586,48 @@ cdef class BirthDeathModel:
     def mutation_rate(self):
         return self.mRate
 
-    def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
-        # self.check_rate_none_1(rate, 'mutation rate')
-        self.check_value(rate, 'mutation rate', none=True)
-        self.check_list(probabilities, 'probabilities list', 4)
-        if isinstance(probabilities, list):
-            for i in range(4):
-                # self.check_rate_1(probabilities[i], 'mutation probabilities')
-                self.check_value(probabilities[i], 'mutation probabilities')
-        self.check_index_hap(haplotype)
+    def set_mutation_rate(self, rate, haplotype, mutation):
+        self.check_value(rate, 'mutation rate')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
         self.check_index(mutation, self.sites, 'mutation site')
         
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
         sites = self.create_list_for_cycles(mutation, self.sites)
         for hn in haplotypes:
             for s in sites:
-                self.set_probabilities(hn, s, rate, probabilities)     
+                self.mRate[hn, s] = rate  
 
-    def set_probabilities(self, haplotype, mutation, rate, probabilities):
-        if isinstance(rate, (int, float)):
-            self.mRate[haplotype, mutation] = rate
+    @property
+    def mutation_probabilities(self):
+        return self.hapMutType 
+
+    def set_mutation_probabilities(self, probabilities, haplotype, mutation):
+        self.check_list(probabilities, 'probabilities list', 4)
         if isinstance(probabilities, list):
-            probabilities_allele = list(probabilities)
-            del probabilities_allele[self.calculate_allele(haplotype, mutation)]
-            if sum(probabilities_allele) == 0:
-                raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
-            self.hapMutType[haplotype, mutation, 0] = probabilities_allele[0]
-            self.hapMutType[haplotype, mutation, 1] = probabilities_allele[1]
-            self.hapMutType[haplotype, mutation, 2] = probabilities_allele[2]
+            for i in range(4):
+                self.check_value(probabilities[i], 'mutation probabilities')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
+        self.check_index(mutation, self.sites, 'mutation site')
+
+        haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
+        sites = self.create_list_for_cycles(mutation, self.sites)
+        for hn in haplotypes:
+            for s in sites:
+                probabilities_allele = list(probabilities)
+                del probabilities_allele[self.calculate_allele(hn, s)]
+                if sum(probabilities_allele) == 0:
+                    raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
+                self.hapMutType[hn, s, 0] = probabilities_allele[0]
+                self.hapMutType[hn, s, 1] = probabilities_allele[1]
+                self.hapMutType[hn, s, 2] = probabilities_allele[2]
 
     @property
     def mutation_position(self):
         return self.sitesPosition
 
     def set_mutation_position(self, mutation, position):
-        self.check_index(mutation, self.sites, 'number of site')
-        # self.check_index(position, self.genome_length, 'mutation position')
-        self.check_value(position, 'mutation position', edge=self.genome_length)
+        self.check_index(mutation, self.sites, 'number of site', none=False)
+        self.check_index(position, self.genome_length, 'mutation position', none=False)
         for s in range(self.sites):
             if self.sitesPosition[s] == position and s != mutation:
                 raise IndexError('Incorrect value of position. Two mutations can\'t have the same position.')
@@ -1645,7 +1644,7 @@ cdef class BirthDeathModel:
             raise TypeError('Incorrect type of susceptibility type. Type should be int.')
         elif susceptibility_type < 0 or susceptibility_type >= self.susNum:
             raise IndexError('There are no such susceptibility type!')
-        self.check_index(haplotype, self.hapNum, 'haplotype')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
 
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
         for hn in haplotypes:
@@ -1656,9 +1655,8 @@ cdef class BirthDeathModel:
         return self.susceptibility
 
     def set_susceptibility(self, rate, haplotype, susceptibility_type):
-        self.check_rate_1(rate, 'rate of susceptibility')
-        # self.check_value(rate, 'rate of susceptibility')
-        self.check_index(haplotype, self.hapNum, 'haplotype')
+        self.check_value(rate, 'susceptibility rate')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
         self.check_index(susceptibility_type, self.susNum, 'susceptibility type')
 
         haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
@@ -1672,8 +1670,7 @@ cdef class BirthDeathModel:
         return self.suscepTransition
 
     def set_immunity_transition(self, rate, source, target):
-        self.check_rate_1(rate, 'immunity transition rate')
-        # self.check_value(rate, 'immunity transition rate')
+        self.check_value(rate, 'immunity transition rate')
         self.check_index(source, self.susNum, 'susceptibility type')
         self.check_index(target, self.susNum, 'susceptibility type')
 
@@ -1696,10 +1693,10 @@ cdef class BirthDeathModel:
 
         populations = self.create_list_for_cycles(population, self.popNum)
         for pn in populations:
-            self.sizes[population] = amount
-            self.initial_susceptible[population, 0] = amount
+            self.sizes[pn] = amount
+            self.initial_susceptible[pn, 0] = amount
             for sn in range(1, self.susNum):
-                self.initial_susceptible[population, 0] = 0
+                self.initial_susceptible[pn, 0] = 0
 
     @property
     def susceptible(self):
@@ -1746,8 +1743,7 @@ cdef class BirthDeathModel:
         return self.contactDensity
 
     def set_contact_density(self, value, population):
-        self.check_rate_1(value, 'contact density')
-        # self.check_value(value, 'contact density')
+        self.check_value(value, 'contact density')
         self.check_index(population, self.popNum, 'population')
 
         populations = self.create_list_for_cycles(population, self.popNum)
@@ -1757,17 +1753,14 @@ cdef class BirthDeathModel:
 
     @property
     def npi(self):
-        return self.contactDensity, self.contactDensityAfterLockdown, self.startLD, self.endLD
+        return [self.contactDensityAfterLockdown, self.startLD, self.endLD]
 
     def set_npi(self, parameters, population):
-        self.check_list(parameters, 'parameters', 3)
+        self.check_list(parameters, 'npi parameters', 3)
         if isinstance(parameters, list):
-            self.check_rate_1(parameters[0], 'first element of parameters')
-            self.check_rate_2(parameters[1], 'second element of parameters')
-            self.check_rate_2(parameters[2], 'third element of parameters')
-            # self.check_value(parameters[0], 'first npi parameter')
-            # self.check_value(parameters[1], 'second npi parameter', edge=1)
-            # self.check_value(parameters[2], 'third npi parameter', edge=1)
+            self.check_value(parameters[0], 'first npi parameter')
+            self.check_value(parameters[1], 'second npi parameter', edge=1)
+            self.check_value(parameters[2], 'third npi parameter', edge=1)
         self.check_index(population, self.popNum, 'population')
 
         populations = self.create_list_for_cycles(population, self.popNum)
@@ -1781,8 +1774,7 @@ cdef class BirthDeathModel:
         return self.samplingMultiplier
 
     def set_sampling_multiplier(self, multiplier, population):
-        self.check_rate_1(multiplier, 'sampling multiplier')
-        # self.check_value(multiplier, 'sampling multiplier')
+        self.check_value(multiplier, 'sampling multiplier')
         self.check_index(population, self.popNum, 'population')
 
         populations = self.create_list_for_cycles(population, self.popNum)
@@ -1793,30 +1785,31 @@ cdef class BirthDeathModel:
     def migration_probability(self):
         return self.migrationRates
 
-    def set_migration_probability(self, probability, total_probability, source, target):
-        self.check_rate_none_2(probability, 'probability')
-        self.check_rate_none_2(total_probability, 'total probability')
-        # self.check_value(probability, 'migration probability', edge=1, none=True)
-        # self.check_value(total_probability, 'total migration probability', edge=1, none=True)
+    def set_migration_probability(self, probability, source, target):
+        self.check_value(probability, 'migration probability', edge=1)
         self.check_index(source, self.popNum, 'population')
         self.check_index(target, self.popNum, 'population')
 
-        if isinstance(probability, float):
-            populations_1 = self.create_list_for_cycles(source, self.popNum)
-            populations_2 = self.create_list_for_cycles(target, self.popNum)
-            for pn1 in populations_1:
-                for pn2 in populations_2:
-                    if pn1 != pn2:
-                        self.migrationRates[pn1, pn2] = probability
+        populations_1 = self.create_list_for_cycles(source, self.popNum)
+        populations_2 = self.create_list_for_cycles(target, self.popNum)
+        for pn1 in populations_1:
+            for pn2 in populations_2:
+                if pn1 != pn2:
+                    self.migrationRates[pn1, pn2] = probability
 
-        elif isinstance(total_probability, float):
-            for pn1 in range(self.popNum):
-                for pn2 in range(self.popNum):
-                    if pn1 != pn2:
-                        self.migrationRates[pn1, pn2] = total_probability/(self.popNum-1)
+        self.check_mig_rate()
 
-        else:
-            raise TypeError('Incorrect type of probability or total_probability. Type should be float.')
+    def set_total_migration_probability(self, total_probability):
+        self.check_value(total_probability, 'total migration probability', edge=1)
+
+        source_rate = 1.0 - total_probability
+        target_rate = total_probability/(self.popNum-1)
+        for pn1 in range(self.popNum):
+            for pn2 in range(self.popNum):
+                if pn1 != pn2:
+                    self.migrationRates[pn1, pn2] = target_rate
+                else:
+                    self.migrationRates[pn1, pn2] = source_rate
 
         self.check_mig_rate()
 
