@@ -87,11 +87,17 @@ class Simulator:
 
 	def set_recovery_rate(self, rate, haplotype=None):
 		self.simulation.set_recovery_rate(rate, haplotype)
-
-	def set_super_spread_rate(self, population=None, rate=None, left=None, right=None):
-		self.simulation.set_super_spread_rate(self, population, rate,left,right)
-
 	@property
+	def super_spread_rate(self):
+		return self.simulation.super_spread_rate
+	def set_super_spread_rate(self, rate, left, right, population=None):
+		self.simulation.set_super_spread_rate(rate, left, right, population)
+
+
+
+
+
+
 	def sampling_rate(self):
 		return self.simulation.sampling_rate
 

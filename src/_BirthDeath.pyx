@@ -66,7 +66,7 @@ cdef class BirthDeathModel:
         double[:,::1] infectiousAuxTau, susceptibleAuxTau
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
-        vector[Py_ssize_t] vec_super_spread_rate,vec_super_spread_left, vec_super_spread_rate, vec_super_spread_pop
+        vector[Py_ssize_t] vec_super_spread_rate,vec_super_spread_left, vec_super_spread_right, vec_super_spread_pop
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
@@ -1567,22 +1567,22 @@ cdef class BirthDeathModel:
         for hn in haplotypes:
             self.dRate[hn] = rate
     @property
-    def set_super_spread_rate(self):
-        return self.vec_super_spread
+    def super_spread_rate(self):
+        return self.vec_super_spread_rate, self.vec_super_spread_left, self.vec_super_spread_right, self.vec_super_spread_pop
 
-    def set_super_spread_rate(self, population, rate,left,right):
+    def set_super_spread_rate(self, rate,left,right, population):
         self.check_value(rate, 'super_spread rate')
         self.check_index(population, self.popNum, 'population')
-        if isinstance(left, int) == False:
-            raise TypeError('Incorrect type of ' + 'min value ' + '. Type should be int.')
-        elif left <= 0:
-            raise ValueError('Incorrect value of ' +'min valuse '+ '. Value should be more 0.')
-        elif isinstance(right, int) == False:
-            raise TypeError('Incorrect type of ' + 'max value ' + '. Type should be int.')
-        elif right <= 0:
-            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be more 0.')
-        elif right < left:
+        self.check_amount(self.left,'Right Point')
+        self.check_amount(self.left, 'Left Point')
+        if right < left:
             raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be more then min value.')
+        elif right<self.sizes[population]:
+            raise ValueError('Incorrect value of ' + 'max value ' + '. Value should be less then population size value.')
+        self.vec_super_spread_rate.push_back(rate)
+        self.vec_super_spread_left.push_back(left)
+        self.vec_super_spread_right.push_back(right)
+        self.vec_super_spread_pop.push_back(population)
 
 
     @property
