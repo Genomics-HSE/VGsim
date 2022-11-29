@@ -99,16 +99,17 @@ else:
 if clargs.seed == None:
     seed = randrange(sys.maxsize)
 else:
-	seed = clargs.seed
+    seed = clargs.seed
 
 simulator = VGsim.Simulator(number_of_sites=int(math.log(len(bRate), 4)), populations_number=len(sizes), number_of_susceptible_groups=len(susceptible[0]), seed=int(seed), sampling_probability=clargs.sampling_probability)
 
 for i in range(len(bRate)):
-	simulator.set_transmission_rate(bRate[i], i)
-	simulator.set_recovery_rate(dRate[i], i)
-	simulator.set_sampling_rate(sRate[i], i)
-	for j in range(len(mRate[0])):
-		simulator.set_mutation_rate(mRate[i][j][0], [mRate[i][j][1], mRate[i][j][2], mRate[i][j][3], mRate[i][j][4]], i, j)
+    simulator.set_transmission_rate(bRate[i], i)
+    simulator.set_recovery_rate(dRate[i], i)
+    simulator.set_sampling_rate(sRate[i], i)
+    for j in range(len(mRate[0])):
+        simulator.set_mutation_rate(mRate[i][j][0], i, j)
+        simulator.set_mutation_probabilities([mRate[i][j][1], mRate[i][j][2], mRate[i][j][3], mRate[i][j][4]], i, j)
 
 for i in range(len(sizes)):
     simulator.set_population_size(sizes[i], i)
