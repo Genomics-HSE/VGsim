@@ -66,6 +66,9 @@ cdef class BirthDeathModel:
         double[:,::1] infectiousAuxTau, susceptibleAuxTau
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
+        vector[double] super_spread_rate
+        vector[Py_ssize_t] super_spread_left, super_spread_right, super_spread_pop
+
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
         memory_optimization, genome_length, recombination_probability):
@@ -485,7 +488,8 @@ cdef class BirthDeathModel:
             double choose
 
         self.rn = self.seed.uniform()
-        choose = self.rn * (self.totalRate + self.totalMigrationRate)
+        # choose = self.rn * (self.totalRate + self.totalMigrationRate)
+        choose = self.rn * (self.totalRate + self.totalMigrationRate + self.SuperSpreadRate)
         if self.totalRate > choose:
             self.rn = choose / self.totalRate
             pi, self.rn = fastChoose(self.popRate, self.totalRate, self.rn)
@@ -505,9 +509,12 @@ cdef class BirthDeathModel:
                     self.Sampling(pi, hi)
                 else:
                     self.Mutation(pi, hi)
-        else:
+        elif self.totalMigrationRate + self.totalRate > choose:
             self.rn = (choose - self.totalRate) / self.totalMigrationRate
             pi = self.GenerateMigration()
+        else:
+            self.rn = (choose - self.totalRate - self.totalMigrationRate) / self.SuperSpreadRate
+            pi = self.SuperSpreadEvent()
         return pi
 
     # @cython.boundscheck(False)
@@ -692,6 +699,49 @@ cdef class BirthDeathModel:
         self.mCounter += 1
         self.events.AddEvent(self.currentTime, MUTATION, ohi, pi, nhi, 0)
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef Py_ssize_t SuperSpreadEvent(self):
+        cdef:
+            bint is_any_inf
+            Py_ssize_t ei, pn, pi, sii, sn, hn
+            npy_int64 i
+            npy_int64[::1] sus_inf, SuperSpreadGroup
+            double cumulSusHap
+            double[::1] SusHap
+
+        ei, self.rn = fastChoose_vec(self.super_spread_rate, sum(self.super_spread_rate), self.rn)
+        pn = self.super_spread_left[ei] + int(self.rn * (self.super_spread_right[ei] - self.super_spread_left[ei]))
+        pi = self.super_spread_pop[ei]
+        sus_inf = np.zeros(self.susNum + self.hapNum, dtype=np.int64)
+        SuperSpreadGroup = np.zeros(self.susNum + self.hapNum, dtype=np.int64)
+        for sn in range(self.susNum):
+            sus_inf[sn] = self.susceptible[pi, sn]
+        for hn in range(self.hapNum):
+            sus_inf[hn + self.susNum] = self.infectious[pi, hn]
+        for i in range(pn):
+            rn = self.seed.uniform()
+            sii, rn = fastChoose(sus_inf, self.sizes[pi] - i, rn)
+            sus_inf[sii] -= 1
+            SuperSpreadGroup[sii] += 1
+        is_any_inf = False
+        for i in range(self.hapNum):
+            if SuperSpreadGroup[i] != 0:
+                is_any_inf = True
+                break
+        if is_any_inf:
+            for sn in range(self.susNum):
+                SusHap = np.zeros(self.hapNum, dtype=float)
+                cumulSusHap = 0
+                for hn in range(self.hapNum):
+                    SusHap[hn] = self.susceptibility[hn, sn] * self.bRate[hn] * SuperSpreadGroup[hn]
+                    cumulSusHap += SusHap[hn]
+                for _ in range(self.SuperSpreadGroup[sn]):
+                    rn = self.seed.uniform()
+                    hi, rn = fastChoose(SusHap, cumulSusHap, rn)
+                    self.NewInfections(pi, sn, hi)
+                    self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, sn, 0)
+        return pi
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -1525,6 +1575,31 @@ cdef class BirthDeathModel:
         self.check_value(recombination, 'recombination probability', edge=1)
 
         self.recombination = recombination
+
+    @property
+    def super_spread_rate(self):
+        return [np.asarray(<double [:self.super_spread_rate.size()]>self.super_spread_rate.data()),
+        np.asarray(<Py_ssize_t [:self.super_spread_left.size()]>self.super_spread_left.data()),
+        np.asarray(<Py_ssize_t [:self.super_spread_right.size()]>self.super_spread_right.data()),
+        np.asarray(<Py_ssize_t [:self.super_spread_pop.size()]>self.super_spread_pop.data())]
+
+    def set_super_spread_rate(self, rate,left,right, population):
+        self.check_value(rate, 'super spread rate')
+        self.check_index(population, self.popNum, 'population')
+        self.check_amount(left,'left point')
+        self.check_amount(right, 'right point')
+        if right < left:
+            raise ValueError('Incorrect value of max value. Value should be more then min value.')
+        populations = self.create_list_for_cycles(population, self.popNum)
+        for pn in populations:
+            if right > self.sizes[pn]:
+                raise ValueError('Incorrect value of max value. Value should be less then population size value.')
+
+        for pn in populations:
+            self.super_spread_rate.push_back(rate)
+            self.super_spread_left.push_back(left)
+            self.super_spread_right.push_back(right)
+            self.super_spread_pop.push_back(pn)
 
     @property
     def transmission_rate(self):

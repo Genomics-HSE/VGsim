@@ -103,6 +103,13 @@ class Simulator:
 		self.simulation.set_coinfection_parameters(recombination)
 
 	@property
+	def super_spread_rate(self):
+		return self.simulation.super_spread_rate
+		
+	def set_super_spread_rate(self, rate, left, right, population=None):
+		self.simulation.set_super_spread_rate(rate, left, right, population)
+
+	@property
 	def transmission_rate(self):
 		return self.simulation.transmission_rate
 
