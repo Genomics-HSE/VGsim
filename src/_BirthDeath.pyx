@@ -34,7 +34,7 @@ cdef class BirthDeathModel:
         bint first_simulation, sampling_probability, memory_optimization
         Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, \
         mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length
-        double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination
+        double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination, SuperSpreadRate
 
         Events events
         multiEvents multievents
@@ -115,6 +115,8 @@ cdef class BirthDeathModel:
         else:
             self.maxHapNum = self.hapNum
             self.addMemoryNum = 0
+
+        self.SuperSpreadRate = 0
 
         self.hapToNum = np.zeros(self.hapNum, dtype=np.int64) # from haplotype to program number
         self.numToHap = np.zeros(self.maxHapNum, dtype=np.int64) # from program number to haplotype
@@ -1596,6 +1598,7 @@ cdef class BirthDeathModel:
                 raise ValueError('Incorrect value of max value. Value should be less then population size value.')
 
         for pn in populations:
+            self.SuperSpreadRate += rate
             self.super_spread_rate.push_back(rate)
             self.super_spread_left.push_back(left)
             self.super_spread_right.push_back(right)

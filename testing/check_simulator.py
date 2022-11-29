@@ -89,7 +89,7 @@ check_data(name)
 # simulator.set_migration_probability(probability=0.01, source=0, target=1)
 # simulator.set_migration_probability(probability=0.005, source=1, target=0)
 # simulator.simulate(iterations)
-# simulator.output_chain_events('test_' + str(name))
+# simulator.export_chain_events('test_' + str(name))
 # check_data(name)
 
 #6 model

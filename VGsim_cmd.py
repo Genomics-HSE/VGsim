@@ -108,7 +108,8 @@ for i in range(len(bRate)):
 	simulator.set_recovery_rate(dRate[i], i)
 	simulator.set_sampling_rate(sRate[i], i)
 	for j in range(len(mRate[0])):
-		simulator.set_mutation_rate(mRate[i][j][0], [mRate[i][j][1], mRate[i][j][2], mRate[i][j][3], mRate[i][j][4]], i, j)
+		simulator.set_mutation_rate(mRate[i][j][0], i, j)
+        simulator.set_mutation_probabilities([mRate[i][j][1], mRate[i][j][2], mRate[i][j][3], mRate[i][j][4]], i, j)
 
 for i in range(len(sizes)):
     simulator.set_population_size(sizes[i], i)
