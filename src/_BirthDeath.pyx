@@ -45,10 +45,10 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] susceptible, initial_susceptible, initial_infectious,  infectious
         npy_int64[:,:,::1] infectByCondition
 
-        double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
-        double[::1] cumuConditionRate, conditionPopRate
-        double[:,::1] mRate, susceptibility, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
-        double[:,::1] conditionRate, massivForThree, conditionPopHapRate
+        double[::1] maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
+        double[::1] cumuConditionRate, conditionPopRate, bRate, dRate, sRate, tmRate
+        double[:,::1] susceptibility, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
+        double[:,::1] conditionRate, massivForThree, conditionPopHapRate, mRate
         double[:,:,::1] hapMutType,  susceptHapPopRate, tEventHapPopRate, 
         double[:,:,::1] conditionPopHapConRate, tEventConHapPopRate
         double[:,:,:,::1] eventHapPopRate
@@ -134,10 +134,10 @@ cdef class BirthDeathModel:
         self.susceptHapPopRate = np.zeros((self.popNum, self.maxHapNum, self.susNum), dtype=float)
 
         self.suscType = np.zeros(self.hapNum, dtype=np.int64)
-        self.bRate = np.zeros(self.hapNum, dtype=float)
-        self.dRate = np.zeros(self.hapNum, dtype=float)
-        self.sRate = np.zeros(self.hapNum, dtype=float)
-        self.mRate = np.zeros((self.hapNum, self.sites), dtype=float)
+        self.bRate = np.zeros(self.hapNum, self.conditionNum, dtype=float)
+        self.dRate = np.zeros(self.hapNum, self.conditionNum, dtype=float)
+        self.sRate = np.zeros(self.hapNum, self.conditionNUm, dtype=float)
+        self.mRate = np.zeros((self.hapNum, self.conditionNum, self.sites), dtype=float)
         self.conditionRate = np.zeros((self.conditionNum, self.conditionNum), dtype=float)
         self.cumuConditionRate = np.zeros(self.conditionNum, dtype=float)
         self.conditionPopHapRate = np.zeros((self.popNum, self.maxHapNum), dtype=float)
@@ -266,7 +266,7 @@ cdef class BirthDeathModel:
             self.addMemoryNum = self.hapNum - self.maxHapNum
         self.numToHap = np.concatenate((self.numToHap, np.zeros(self.addMemoryNum, dtype=np.int64)))
         self.infectious = np.concatenate((self.infectious, np.zeros((self.popNum, self.addMemoryNum, self.conditionNum), dtype=np.int64)), axis=1)
-        self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, dtype=float)))
+        self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, self.conditionNum, dtype=float)))
         self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, self.conditionNum), dtype=float)), axis=1)
         self.hapPopRate = np.concatenate((self.hapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
         self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, self.conditionNum ,4), dtype=float)), axis=1)
@@ -307,12 +307,13 @@ cdef class BirthDeathModel:
             self.popRate[pn] = 0.
         for pn in range(self.popNum):
             for hn in range(self.currentHapNum): # hn - program number
-                self.tmRate[hn] = 0
+                for cn in range(self.conditionNum):
+                    self.tmRate[hn, cn] = 0
                 
 
                 for cn in range(self.conditionNum):
                     for s in range(self.sites):
-                        self.tmRate[hn] += self.mRate[self.numToHap[hn], cn, s]
+                        self.tmRate[hn, cn] += self.mRate[self.numToHap[hn], cn, s]
                     self.eventHapPopRate[pn, hn, cn, 0] = self.BirthRate(pn, hn, cn)
                     self.eventHapPopRate[pn, hn, cn, 1] = self.dRate[self.numToHap[hn], cn]
                     self.eventHapPopRate[pn, hn, cn, 2] = self.sRate[self.numToHap[hn], cn]*self.samplingMultiplier[pn]
