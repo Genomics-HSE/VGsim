@@ -42,8 +42,8 @@ cdef class BirthDeathModel:
         Lockdowns loc
 
         npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, tree, tree_pop
-        npy_int64[:,::1] susceptible, initial_susceptible, initial_infectious,  infectious
-        npy_int64[:,:,::1] infectByCondition
+        npy_int64[:,::1] susceptible, initial_susceptible,   infectious
+        npy_int64[:,:,::1] infectByCondition, initial_infectious
 
         double[::1] maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
         double[::1] cumuConditionRate, conditionPopRate, bRate, dRate, sRate, tmRate
@@ -65,7 +65,7 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
 
-    def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimization):
+    def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimizationm, conditionNum):
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
 
@@ -125,7 +125,7 @@ cdef class BirthDeathModel:
 
         # memory_optimization
         self.infectious = np.zeros((self.popNum, self.maxHapNum), dtype=np.int64)
-        self.tmRate = np.zeros(self.maxHapNum, dtype=float)
+        self.tmRate = np.zeros((self.maxHapNum, self.conditionNum), dtype=float)
         self.massivForThree = np.zeros((self.popNum, 3), dtype=float)
         self.conditionPopRate = np.zeros(self.popNum, dtype=float)
         self.tEventHapPopRate = np.zeros((self.popNum, self.maxHapNum, self.conditionNum), dtype=float)
@@ -136,7 +136,7 @@ cdef class BirthDeathModel:
         self.suscType = np.zeros(self.hapNum, dtype=np.int64)
         self.bRate = np.zeros(self.hapNum, self.conditionNum, dtype=float)
         self.dRate = np.zeros(self.hapNum, self.conditionNum, dtype=float)
-        self.sRate = np.zeros(self.hapNum, self.conditionNUm, dtype=float)
+        self.sRate = np.zeros(self.hapNum, self.conditionNum, dtype=float)
         self.mRate = np.zeros((self.hapNum, self.conditionNum, self.sites), dtype=float)
         self.conditionRate = np.zeros((self.conditionNum, self.conditionNum), dtype=float)
         self.cumuConditionRate = np.zeros(self.conditionNum, dtype=float)
@@ -176,7 +176,7 @@ cdef class BirthDeathModel:
 
         self.susceptible = np.zeros((self.popNum, self.susNum), dtype=np.int64)
         self.initial_susceptible = np.zeros((self.popNum, self.susNum), dtype=np.int64)
-        self.initial_infectious = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        self.initial_infectious = np.zeros((self.popNum, self.hapNum, self.conditionNum), dtype=np.int64)
 
         self.maxEffectiveBirthMigration = np.zeros(self.popNum, dtype=float)
         self.suscepCumulTransition = np.zeros(self.susNum, dtype=float)
@@ -353,9 +353,10 @@ cdef class BirthDeathModel:
 
         maxEffectiveBirth = 0.0
         for hn in range(self.currentHapNum):
-            for sn in range(self.susNum):
-                if self.bRate[self.numToHap[hn]]*self.susceptibility[self.numToHap[hn], sn] > maxEffectiveBirth:
-                    maxEffectiveBirth = self.bRate[self.numToHap[hn]]*self.susceptibility[self.numToHap[hn], sn]
+            for cn in range(self.conditionNum):
+                for sn in range(self.susNum):
+                    if self.bRate[self.numToHap[hn], cn]*self.susceptibility[self.numToHap[hn], sn] > maxEffectiveBirth:
+                        maxEffectiveBirth = self.bRate[self.numToHap[hn], cn]*self.susceptibility[self.numToHap[hn], sn]
 
         self.totalMigrationRate = 0.0
         for pn in range(self.popNum):
@@ -448,7 +449,8 @@ cdef class BirthDeathModel:
                 for sn in range(self.susNum):
                     self.initial_susceptible[pn, sn] = self.susceptible[pn, sn]
                 for hn in range(self.hapNum):
-                    self.initial_infectious[pn, hn] = self.infectious[pn, hn]
+                    for cn in range(self.conditionNum):
+                        self.initial_infectious[pn, hn, cn] = self.infectByCondition[pn, hn, cn]
             self.first_simulation = True
         for pn in range(self.popNum):
             self.CheckLockdown(pn)
@@ -583,7 +585,7 @@ cdef class BirthDeathModel:
 
         hsi, self.rn = fastChoose1(self.conditionPopHapRate[pi], self.conditionPopRate[pi], self.rn)
         ssi, self.rn = fastChoose1(self.conditionPopHapConRate[pi, hsi], self,conditionPopHapRate[pi, hsi], self.rn)
-        tsi, self.rn = fastChoose1(self.conditionPopHapConRate[pi, hsi], self.conditionPopHapRate[pi, hsi], self.rn)
+        tsi, self.rn = fastChoose2_skip(self.conditionRate[ssi], self.cumuConditionRate[ssi], self.rn)
 
         self.infectByCondition[pi, hsi, ssi] -= 1
         self.infectByCondition[pi, hsi, tsi] += 1
@@ -604,8 +606,7 @@ cdef class BirthDeathModel:
         si, self.rn = fastChoose1(self.susceptHapPopRate[pi, hi], ws, self.rn)
 
         self.NewInfections(pi, si, hi, 0)
-        #self.immuneSourcePopRate[pi, si] = self.suscepCumulTransition[si]*self.susceptible[pi, si]
-        self.immuneSourcePopRate[pi, 0] = self.suscepCumulTransition[0]*self.susceptible[pi, 0]
+        self.immuneSourcePopRate[pi, si] = self.suscepCumulTransition[si]*self.susceptible[pi, si]
         self.UpdateRates(pi, True, True, True)
 
         self.bCounter += 1
@@ -633,13 +634,13 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void Mutation(self, Py_ssize_t pi, Py_ssize_t hi): # hi - program number
+    cdef void Mutation(self, Py_ssize_t pi, Py_ssize_t hi, Py_ssize_t ci): # hi - program number
         cdef:
             bint check = True
             Py_ssize_t ohi, mi, digit4, AS, DS, nhi
 
         ohi = self.numToHap[hi] # ohi - haplotype
-        mi, self.rn = fastChoose1(self.mRate[ohi], self.tmRate[hi], self.rn)
+        mi, self.rn = fastChoose1(self.mRate[ohi, ci], self.tmRate[hi, ci], self.rn)
         DS, self.rn = fastChoose1(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] \
             + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
         nhi = self.Mutate(ohi, mi, DS)
@@ -673,9 +674,10 @@ cdef class BirthDeathModel:
         tpi, self.rn = fastChoose1(self.migPopRate, self.totalMigrationRate, self.rn)
         spi, self.rn = fastChoose2_skip(self.totalInfectious, self.globalInfectious-self.totalInfectious[tpi], self.rn, skip=tpi)
         hi, self.rn = fastChoose2(self.infectious[spi], self.totalInfectious[spi], self.rn) # hi - program number
+        ci, self.rn = fastChoose1(self.conditionRate[ssi], self.cumuConditionRate[ssi], self.rn)
         si, self.rn = fastChoose2(self.susceptible[tpi], self.totalSusceptible[tpi], self.rn)
 
-        p_accept = self.effectiveMigration[spi, tpi]*self.bRate[self.numToHap[hi]]*self.susceptibility[self.numToHap[hi], si]/self.maxEffectiveBirthMigration[tpi]
+        p_accept = self.effectiveMigration[spi, tpi]*self.bRate[self.numToHap[hi], ci]*self.susceptibility[self.numToHap[hi], si]/self.maxEffectiveBirthMigration[tpi]
         if self.rn < p_accept:
             self.NewInfections(tpi, si, hi)
             self.UpdateRates(tpi, True, True, True)
@@ -1383,104 +1385,74 @@ cdef class BirthDeathModel:
         else:
             self.addMemoryNum = amount
 
-    def set_transmission_rate(self, rate, haplotype):
-        self.check_rate_1(rate, 'transmission')
-        self.check_haplotype(haplotype)
+    def set_transmission_rate(self, rate, haplotype, condition):
+        self.check_value(rate, 'transmission rate')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
+        self.check_index(condition, self.conditionNum, 'number of states')
+        haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
+        conditions = self.create_list_for_cycles(condition, self.conditionNum)
 
-        # for hn in self.get_list_haplotype(haplotype):
-        #     self.bRate[hn] = rate
+        for hn in haplotypes:
+            for cn in conditions:
+                self.bRate[hn, cn] = rate
 
-        if isinstance(haplotype, str):
-            haplotypes = self.create_list_haplotypes(haplotype)
-            for haplotype in haplotypes:
-                self.bRate[haplotype] = rate
-        elif isinstance(haplotype, int):
-            self.bRate[haplotype] = rate
-        elif haplotype == None:
-            for hn in range(self.hapNum):
-                self.bRate[hn] = rate
 
-    def set_recovery_rate(self, rate, haplotype):
-        self.check_rate_1(rate, 'recovery')
-        self.check_haplotype(haplotype)
+    def set_recovery_rate(self, rate, haplotype, condition):
+        self.check_value(rate, 'recovery rate')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
+        self.check_index(condition. self.conditionNum, 'number of states')
 
-        if isinstance(haplotype, str):
-            haplotypes = self.create_list_haplotypes(haplotype)
-            for haplotype in haplotypes:
-                self.dRate[haplotype] = rate
-        elif isinstance(haplotype, int):
-            self.dRate[haplotype] = rate
-        elif haplotype == None:
-            for hn in range(self.hapNum):
-                self.dRate[hn] = rate
+        haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
+        conditions = self.create_list_for_cycles(condition, self.conditionNum)
 
-    def set_sampling_rate(self, rate, haplotype):
-        self.check_haplotype(haplotype)
+        for hn in haplotypes:
+            for cn in conditions:
+                self.dRate[hn, cn] = rate
+
+    def set_sampling_rate(self, rate, haplotype, condition):
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
+        self.check_value(condition, self.conditionNum, 'number of states')
+        conditions = self.create_list_for_cycles(condition, self.conditionNum)
 
         if self.sampling_probability == True:
-            self.check_rate_2(rate, 'sampling probability')
+            self.check_value(rate, 'sampling probability', edge=1)
             
-            if isinstance(haplotype, str):
-                haplotypes = self.create_list_haplotypes(haplotype)
-                for haplotype in haplotypes:
-                    deathRate = self.dRate[haplotype] + self.sRate[haplotype]
-                    self.dRate[haplotype] = (1 - rate) * deathRate
-                    self.sRate[haplotype] = rate * deathRate
-            elif isinstance(haplotype, int):
-                deathRate = self.dRate[haplotype] + self.sRate[haplotype]
-                self.dRate[haplotype] = (1 - rate) * deathRate
-                self.sRate[haplotype] = rate * deathRate
-            elif haplotype == None:
-                for hn in range(self.hapNum):
-                    deathRate = self.dRate[hn] + self.sRate[hn]
-                    self.dRate[hn] = (1 - rate) * deathRate
-                    self.sRate[hn] = rate * deathRate
+            haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
+            for hn in haplotypes:
+                for cn in conditions:
+                    deathRate = self.dRate[hn, cn] + self.sRate[hn, cn]
+                    self.dRate[hn, cn] = (1 - rate) * deathRate
+                    self.sRate[hn, cn] = rate * deathRate
 
         elif self.sampling_probability == False:
-            self.check_rate_1(rate, 'sampling')
+            self.check_value(rate, 'sampling rate')
 
-            if isinstance(haplotype, str):
-                haplotypes = self.create_list_haplotypes(haplotype)
-                for haplotype in haplotypes:
-                    self.sRate[haplotype] = rate
-            elif isinstance(haplotype, int):
-                self.sRate[haplotype] = rate
-            elif haplotype == None:
-                for hn in range(self.hapNum):
-                    self.sRate[hn] = rate
+            haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
+            for hn in haplotypes:
+                for cn in conditions:
+                    self.sRate[hn, cn] = rate
 
-    def set_mutation_rate(self, rate, probabilities, haplotype, mutation):
-        self.check_rate_none_1(rate, 'mutation rate')
-        self.check_list(probabilities, 'probabilities list', 4)
-        if isinstance(probabilities, list):
-            for i in range(4):
-                self.check_rate_1(probabilities[i], 'mutation probabilities')
-        self.check_haplotype(haplotype)
+    def set_mutation_rate(self, rate, haplotype, mutation, condition):
+        self.check_value(rate, 'mutation rate')
+        self.check_index(haplotype, self.hapNum, 'haplotype', True)
         self.check_index(mutation, self.sites, 'mutation site')
+        self.check_value(condition, self.conditionNum, 'number of states')
+        
+        haplotypes = self.create_list_for_cycles(haplotype, self.hapNum)
+        conditions = self.create_list_for_cycles(condition, self.conditionNum)
+        sites = self.create_list_for_cycles(mutation, self.sites)
+        for hn in haplotypes:
+            for cn in conditions:
+                for s in sites:
+                    self.mRate[hn, cn, s] = rate  
 
-        if isinstance(haplotype, str):
-            haplotypes = self.create_list_haplotypes(haplotype)
-            if isinstance(mutation, int):
-                for hn in haplotypes:
-                    self.set_probabilities(hn, mutation, rate, probabilities)
-            elif mutation == None:
-                for hn in haplotypes:
-                    for s in range(self.sites):
-                        self.set_probabilities(hn, s, rate, probabilities)
-        elif isinstance(haplotype, int):
-            if isinstance(mutation, int):
-                self.set_probabilities(haplotype, mutation, rate, probabilities)
-            elif mutation == None:
-                for s in range(self.sites):
-                    self.set_probabilities(haplotype, s, rate, probabilities)
-        elif haplotype == None:
-            if isinstance(mutation, int):
-                for hn in range(self.hapNum):
-                    self.set_probabilities(hn, mutation, rate, probabilities)
-            elif mutation == None:
-                for hn in range(self.hapNum):
-                    for s in range(self.sites):
-                        self.set_probabilities(hn, s, rate, probabilities)
+    @property
+    def condition_rate(self):
+        return self.conditionRate
+    
+    def set_condition_rate(self, rate, c1, c2):
+        self.check_value(rate, 'condition_rate')
+        self.conditionRate[c1, c2] = rate
 
     def set_probabilities(self, haplotype, mutation, rate, probabilities):
         if isinstance(rate, (int, float)):

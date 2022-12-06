@@ -7,7 +7,7 @@ import numpy as np
 import time
 
 class Simulator:
-	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=False):
+	def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False, memory_optimization=False, conditionNum=1):
 		self.fig = None
 		if seed == None:
 			seed = int(randrange(sys.maxsize))
@@ -15,7 +15,7 @@ class Simulator:
 
 		self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
 			number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, \
-			memory_optimization=memory_optimization)
+			memory_optimization=memory_optimization, conditionNum=conditionNum)
 
 
 	def print_basic_parameters(self):
@@ -43,17 +43,24 @@ class Simulator:
 		self.simulation.set_step_haplotype(amount)
 
 
-	def set_transmission_rate(self, rate, haplotype=None):
-		self.simulation.set_transmission_rate(rate, haplotype)
+	def set_transmission_rate(self, rate, haplotype=None, condition=None):
+		self.simulation.set_transmission_rate(rate, haplotype, condition)
 
-	def set_recovery_rate(self, rate, haplotype=None):
-		self.simulation.set_recovery_rate(rate, haplotype)
+	def set_recovery_rate(self, rate, haplotype=None, condition=None):
+		self.simulation.set_recovery_rate(rate, haplotype, condition)
 
-	def set_sampling_rate(self, rate, haplotype=None):
-		self.simulation.set_sampling_rate(rate, haplotype)
+	def set_sampling_rate(self, rate, haplotype=None, condition=None):
+		self.simulation.set_sampling_rate(rate, haplotype, condition)
 
-	def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None):
-		self.simulation.set_mutation_rate(rate, probabilities, haplotype, mutation)
+	def set_mutation_rate(self, rate=None, probabilities=None, haplotype=None, mutation=None, condition=None):
+		self.simulation.set_mutation_rate(rate, probabilities, haplotype, mutation, condition)
+
+	@property
+	def condition_rate(self):
+		return self.simulation.condition_rate
+
+	def set_condition_rate(self, rate, c1=0, c2=0):
+		self.simulation.set_condition_rate(rate, c1, c2)
 
 
 	def set_susceptibility_type(self, susceptibility_type, haplotype=None):
