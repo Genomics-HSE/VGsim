@@ -1452,6 +1452,8 @@ cdef class BirthDeathModel:
     
     def set_condition_rate(self, rate, c1, c2):
         self.check_value(rate, 'condition_rate')
+        self.check_index(c1, self.conditionNum, 'first_state')
+        self.check_index(c2, self.conditionNum, 'second_state')
         self.conditionRate[c1, c2] = rate
 
     def set_probabilities(self, haplotype, mutation, rate, probabilities):
