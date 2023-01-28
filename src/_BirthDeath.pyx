@@ -413,6 +413,7 @@ cdef class BirthDeathModel:
         for i in range(attempts):
             self.seed = RndmWrapper(seed=(self.user_seed, i))
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
+                general_sampling_was_not = True
                 while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<=sample_size) and (time==-1 or self.currentTime<time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()
@@ -420,6 +421,19 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
+                    if self.currentTime > self.sampling_time and general_sampling_was_not:
+                        general_sampling_was_not = False
+                        for pi in range(self.popNum):
+                            sampling_size = int(self.sizes[pi] * self.sampling_proportion)
+                            for i in range(sampling_size):
+                                self.rn = self.seed.uniform()
+                                hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                                self.Sampling(pi, hi)
+
+
+
+
+
 
             if self.events.ptr <= 100 and iterations > 100:
                 self.Restart()
@@ -1910,7 +1924,14 @@ cdef class BirthDeathModel:
 
     def set_settings(self, file_template):
         pass
+        pass
 
+    def set_general_sampling(self, sampling_time, sampling_proportion):
+        self.check_value(sampling_time, "general sampling time")
+        self.check_value(sampling_proportion, "general sampling proportion")
+        self.check_value(sampling_proportion, 1, "general sampling proportion")
+        self.sampling_time = sampling_time
+        self.sampling_proportion = sampling_proportion
 
     def output_tree_mutations(self):
         if self.tree.shape[0] == 1:
