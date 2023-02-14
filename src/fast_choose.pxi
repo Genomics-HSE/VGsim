@@ -5,6 +5,7 @@ ctypedef fused double_or_npy_int64:
     double
     npy_int64
 
+
 cdef inline void print_error(double_or_npy_int64[::1] w, double_or_npy_int64 tw, double rn):
     cdef Py_ssize_t i
     for i in range(w.shape[0]):
@@ -47,8 +48,8 @@ cdef inline (Py_ssize_t, double) fastChoose_vec(vector[double] w, double tw, dou
     while total < rn and i < w.size() - 1:
         i += 1
         total += w[i]
-    if w[i] == 0.0:
-        print("fastChoose_vec() alert: 0-weight sampled")
+    #if w[i] == 0.0:
+       # print("fastChoose_vec() alert: 0-weight sampled")
         # print_error(w, tw, rn)
     return [ i, ( rn-(total-w[i]) )/w[i] ]
 
