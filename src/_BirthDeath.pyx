@@ -413,7 +413,8 @@ cdef class BirthDeathModel:
         for i in range(attempts):
             self.seed = RndmWrapper(seed=(self.user_seed, i))
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
-                general_sampling_was_not = True
+                gs_index = 0
+                gs_time = self.general_sampling_times[gs_index]
                 while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<=sample_size) and (time==-1 or self.currentTime<time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()
@@ -421,14 +422,11 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
-                    if self.currentTime > self.sampling_time and general_sampling_was_not:
-                        general_sampling_was_not = False
-                        for pi in range(self.popNum):
-                            sampling_size = int(self.sizes[pi] * self.sampling_proportion)
-                            for i in range(sampling_size):
-                                self.rn = self.seed.uniform()
-                                hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
-                                self.Sampling(pi, hi)
+                    if gs_index < self.sampling_event_number and self.currentTime > gs_time:
+                        gs_index += 1
+                        gs_time = self.general_sampling_times[gs_index]
+                        self.general_sampling()
+
 
 
 
@@ -1441,6 +1439,14 @@ cdef class BirthDeathModel:
             haplotype = haplotype // 4
         return allele
 
+    def general_sampling(self):
+        for pi in range(self.popNum):
+            sampling_size = int(self.sizes[pi] * self.sampling_proportion)
+            for i in range(sampling_size):
+                self.rn = self.seed.uniform()
+                hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                self.Sampling(pi, hi)
+
     @property
     def seed(self):
         return self.user_seed
@@ -1926,12 +1932,16 @@ cdef class BirthDeathModel:
         pass
         pass
 
-    def set_general_sampling(self, sampling_time, sampling_proportion):
-        self.check_value(sampling_time, "general sampling time")
+    def set_general_sampling(self, sampling_proportion, sampling_events_number, sampling_times):
         self.check_value(sampling_proportion, "general sampling proportion")
-        self.check_value(sampling_proportion, 1, "general sampling proportion")
-        self.sampling_time = sampling_time
+        self.check_index(sampling_proportion, 1, "general sampling proportion")
+        self.check_value(sampling_events_number, "general sampling events number")
+        for sampling_time in sampling_times:
+            self.check_value(sampling_time, "general sampling time")
         self.sampling_proportion = sampling_proportion
+        self.sampling_events_number = sampling_events_number
+        self.sampling_times = sampling_times
+
 
     def output_tree_mutations(self):
         if self.tree.shape[0] == 1:
