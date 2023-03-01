@@ -15,8 +15,10 @@ import numpy as np
 cimport numpy as np
 import sys
 import os
+import scipy
 import time
 import tskit
+from scipy.special import binom
 
 from numpy.random.c_distributions cimport random_poisson, random_hypergeometric
 
@@ -68,6 +70,8 @@ cdef class BirthDeathModel:
 
         vector[double] super_spread_rate
         vector[Py_ssize_t] super_spread_left, super_spread_right, super_spread_pop
+        vector[bint] set_distribution
+
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
@@ -706,13 +710,21 @@ cdef class BirthDeathModel:
     cdef Py_ssize_t SuperSpreadEvent(self):
         cdef:
             bint is_any_inf
-            Py_ssize_t ei, pn, pi, sii, sn, hn
-            npy_int64 i
+            Py_ssize_t ei, pn, pi, sii, sn, hn, qn
+            npy_int64 i,super_spread_size
             npy_int64[::1] sus_inf, SuperSpreadGroup
             double cumulSusHap
-            double[::1] SusHap
+            double[::1] SusHap, super_spread_size_weight
 
-        ei, self.rn = fastChoose_vec(self.super_spread_rate, sum(self.super_spread_rate), self.rn)
+
+
+        ei, self.rn = fastChoose_vec(self.super_spread_rate,self.SuperSpreadRate, self.rn)
+        super_spread_size = self.super_spread_right[ei] - self.super_spread_left[ei]
+        if (self.set_distribution[ei]):
+            for j in range(self.super_spread_size):
+                super_spread_size_weight[j] = binom(super_spread_size, i)
+            ei, self.rn = fastChoose_vec(self.super_spread_size_weight, 2**self.super_spread_size, self.rn)
+
         pn = self.super_spread_left[ei] + int(self.rn * (self.super_spread_right[ei] - self.super_spread_left[ei]))
         pi = self.super_spread_pop[ei]
         sus_inf = np.zeros(self.susNum + self.hapNum, dtype=np.int64)
@@ -1583,9 +1595,10 @@ cdef class BirthDeathModel:
         return [np.asarray(<double [:self.super_spread_rate.size()]>self.super_spread_rate.data()),
         np.asarray(<Py_ssize_t [:self.super_spread_left.size()]>self.super_spread_left.data()),
         np.asarray(<Py_ssize_t [:self.super_spread_right.size()]>self.super_spread_right.data()),
+        np.asarray(<bint [:self.set_distribution.size()]>self.set_distribution.data()),
         np.asarray(<Py_ssize_t [:self.super_spread_pop.size()]>self.super_spread_pop.data())]
 
-    def set_super_spread_rate(self, rate,left,right, population):
+    def set_super_spread_rate(self, rate,left,right, distribution, population):
         self.check_value(rate, 'super spread rate')
         self.check_index(population, self.popNum, 'population')
         self.check_amount(left,'left point')
@@ -1596,12 +1609,17 @@ cdef class BirthDeathModel:
         for pn in populations:
             if right > self.sizes[pn]:
                 raise ValueError('Incorrect value of max value. Value should be less then population size.')
-        if type(right) is not int:
+        if isinstance(right, str) :
             raise TypeError('Incorrect type of right point. Type should be int.')
-        if type(left) is not int:
+        if isinstance(left, str) :
             raise TypeError('Incorrect type of left point. Type should be int.')
-        if type(population) is not int:
-            raise TypeError('object cannot be interpreted as an integer')
+        if isinstance(distribution, int):
+            raise TypeError('Incorrect type of distribution. Distribution should be str, not int.')
+        if ((distribution != 'normal') and (distribution != 'binomial')):
+            raise ValueError('Incorrect value of distribution .Distribution should be "normal" or "binomial", not other string .')
+        if isinstance(population, str) :
+            raise TypeError('object cannot be interpreted as an integer.')
+
 
 
 
@@ -1609,6 +1627,10 @@ cdef class BirthDeathModel:
 
         for pn in populations:
             self.SuperSpreadRate += rate
+            if distribution=="normal":
+                self.set_distribution.push_back(False)
+            elif distribution=="binomial":
+                self.set_distribution.push_back(True)
             self.super_spread_rate.push_back(rate)
             self.super_spread_left.push_back(left)
             self.super_spread_right.push_back(right)

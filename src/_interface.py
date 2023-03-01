@@ -106,8 +106,8 @@ class Simulator:
 	def super_spread_rate(self):
 		return self.simulation.super_spread_rate
 		
-	def set_super_spread_rate(self, rate, left, right, population=None):
-		self.simulation.set_super_spread_rate(rate, left, right, population)
+	def set_super_spread_rate(self, rate, left, right, distribution="normal", population=None,):
+		self.simulation.set_super_spread_rate(rate, left, right, distribution, population)
 
 	@property
 	def transmission_rate(self):

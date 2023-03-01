@@ -1,3 +1,4 @@
+import numpy as np
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -33,6 +34,7 @@ cdef inline (Py_ssize_t, double) fastChoose(double_or_npy_int64[::1] w, double_o
         print("fastChoose() alert: 0-weight sampled")
         print_error(w, tw, rn)
     return [ i, ( rn-(total-w[i]) )/w[i] ]
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
