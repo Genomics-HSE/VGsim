@@ -264,26 +264,32 @@ def test_set_sampling_rate_err(rate, haplotype, error, text):
 		model.set_sampling_rate(rate=rate, haplotype=haplotype)
 
         #SUPER SPREAD
-@pytest.mark.parametrize('rate, left, right, population, answer', [(2, 1, 10, 0, [[2], [1], [10], [0]])])
-def test_set_super_spread_event(rate, left, right, population, answer):
-    model = Simulator(number_of_sites=2, populations_number=4)
-    model.set_super_spread_rate(rate=rate, left=left, right=right, population=population)
-    assert_allclose(model.super_spread_rate, np.asarray(answer), atol=1e-14)
 
 
-@pytest.mark.parametrize('rate, left, right, population, error, text', [
-    (-1, 1, 10, 2, ValueError, 'Incorrect value of super spread rate. Value should be more or equal 0'),
-    (1, 5, 4, 0, ValueError, 'Incorrect value of max value. Value should be more then min value.'),
-    (1, 'str', 6, 1, TypeError, 'Incorrect type of left point. Type should be int.'),
-    (1, 5, 'str', 1, TypeError, 'Incorrect type of right point. Type should be int.'),
-    (1, 5, 6, 'str', TypeError, 'Incorrect type of population. Type should be int or None.'),
-    (1, None, 6, 1, TypeError, 'Incorrect type of left point. Type should be int.'),
-    (1, 5, None, 1, TypeError, 'Incorrect type of right point. Type should be int.'),
-    (1, 5, 6, None, TypeError, 'object cannot be interpreted as an integer')])
-def test_set_super_spread_event_err(rate, left, right, population, error, text):
+@pytest.mark.parametrize('rate, left, right, distribution, population, answer',
+						 [(2, 1, 10, 'binomial', 0, [[2], [1], [10], [1], [0]])])
+def test_set_super_spread_event(rate, left, right, distribution, population, answer):
+	model = Simulator(number_of_sites=2, populations_number=4)
+	model.set_super_spread_rate(rate=rate, left=left, right=right, distribution=distribution, population=population)
+	print(model.super_spread_rate)
+	print(answer)
+	assert_allclose(model.super_spread_rate, np.asarray(answer), atol=1e-14)
+
+
+@pytest.mark.parametrize('rate, left, right,distribution, population, error, text', [
+    (-1, 1, 10, 'binomial', 2,  ValueError, 'Incorrect value of super spread rate. Value should be more or equal 0'),
+    (1, 5, 4, 'binomial', 0,  ValueError, 'Incorrect value of max value. Value should be more then min value.'),
+    (1, 'str', 6, 'binomial', 1, TypeError, 'Incorrect type of left point. Type should be int.'),
+    (1, 5, 'str', ' binomial', 1, TypeError, 'Incorrect type of right point. Type should be int.'),
+    (1, 5, 6, 'binomial', 'str', TypeError, 'Incorrect type of population. Type should be int or None.'),
+    (1, None, 6, 'binomial', 1, TypeError, 'Incorrect type of left point. Type should be int.'),
+    (1, 5, None, 'binomial', 1,  TypeError, 'Incorrect type of right point. Type should be int.'),
+	(1, 5, 6, 1, 2, TypeError, 'Incorrect type of distribution. Distribution should be str, not int.'),
+	(1, 5, 6, 'str', 0, ValueError, 'Incorrect value of distribution .Distribution should be "normal" or "binomial", not other string .')])
+def test_set_super_spread_event_err(rate, left, right, distribution, population, error, text):
     model = Simulator(number_of_sites=2, populations_number=4)
     with pytest.raises(error, match=text):
-        model.set_super_spread_rate(rate=rate, left=left, right=right, population=population)
+        model.set_super_spread_rate(rate=rate, left=left, right=right,distribution=distribution, population=population)
 
 # #MUTATION RATE
 @pytest.mark.parametrize('rate, haplotype, mutation, answer', [(0.001, None, None, [[0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001]]),
