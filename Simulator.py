@@ -120,7 +120,25 @@ def set_immunity_transition(rate, source=None, target=None):
 	:param target: target immunity group id (None means that the new value will be set to all immunity groups as source).
 	:type target: int or None
 	"""
+def set_super_spread_rate(rate, left, right,distribution,population=None):
+	"""
+	The change of immunity without infection (e.g. due to vaccination or immunity loss with time).#todo
 
+	:param rate: SuperSpread rate value.
+	:type rate: float
+
+	:param right: Right means the right boundary of the interval, which formed as normalized segment from (left) till (right) as possible number of people.
+	:type right: int
+
+	:param left: Left means the left boundary of the interval, which formed as normalized segment from (left) till (right) as possible number of people.
+	:type left: int
+
+	:param distribution: way by which the number of people will be selected, it can be (normal) or (binomial).
+	:type distribution: str
+
+	:param population: population for which the new population size is being set (in case of None the value will be updated for all populations).
+	:type population: int or None
+	"""
 
 def set_population_size(size, population=None):
 	"""
