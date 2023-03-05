@@ -1938,7 +1938,7 @@ cdef class BirthDeathModel:
         self.check_value(sampling_events_number, "general sampling events number")
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
-        self.sampling_proportion = sampling_proportion
+        self.sampling_proportion = sampling_proportion.sort()
         self.sampling_events_number = sampling_events_number
         self.sampling_times = sampling_times
 
