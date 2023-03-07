@@ -44,9 +44,9 @@ cdef class BirthDeathModel:
         Recombination rec
 
         npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, sitesPosition
-        # npy_int64[::1] tree, tree_pop
+        npy_int64[::1] tree, tree_pop
         npy_int64[:,::1] susceptible, infectious, initial_susceptible, initial_infectious
-        npy_int64[:,::1] tree, tree_pop
+        # npy_int64[:,::1] tree, tree_pop
 
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
@@ -208,10 +208,10 @@ cdef class BirthDeathModel:
             self.totalSusceptible[pn] = 1000000
             self.susceptible[pn, 0] = 1000000
 
-        # self.tree = np.zeros(1, dtype=np.int64)
-        # self.tree_pop = np.zeros(1, dtype=np.int64)
-        self.tree = np.zeros((1, 1), dtype=np.int64)
-        self.tree_pop = np.zeros((1, 1), dtype=np.int64)
+        self.tree = np.zeros(1, dtype=np.int64)
+        self.tree_pop = np.zeros(1, dtype=np.int64)
+        # self.tree = np.zeros((1, 1), dtype=np.int64)
+        # self.tree_pop = np.zeros((1, 1), dtype=np.int64)
 
         #Init propensities
         self.PropensitiesMigr = np.zeros((self.popNum, self.popNum, self.susNum, self.hapNum), dtype=float)
@@ -844,10 +844,10 @@ cdef class BirthDeathModel:
                 self.seed = RndmWrapper(seed=(seed, 0))
 
             ptrTreeAndTime = 0
-            # self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
-            # self.tree_pop = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
-            self.tree = np.zeros((2 * self.sCounter - 1, 2), dtype=np.int64)
-            self.tree_pop = np.zeros((2 * self.sCounter - 1, 2), dtype=np.int64)
+            self.tree = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
+            self.tree_pop = np.zeros(2 * self.sCounter - 1, dtype=np.int64)
+            # self.tree = np.zeros((2 * self.sCounter - 1, 2), dtype=np.int64)
+            # self.tree_pop = np.zeros((2 * self.sCounter - 1, 2), dtype=np.int64)
             self.times = np.zeros(2 * self.sCounter - 1, dtype=float)
 
             for i in range( self.popNum ):
@@ -887,14 +887,14 @@ cdef class BirthDeathModel:
                         liveBranchesS[e_population][e_haplotype][n1] = id3
                         liveBranchesS[e_population][e_haplotype][n2] = liveBranchesS[e_population][e_haplotype][lbs-1]
                         liveBranchesS[e_population][e_haplotype].pop_back()
-                        # self.tree[id1] = id3
-                        # self.tree[id2] = id3
-                        # self.tree[ptrTreeAndTime] = -1
-                        # self.tree_pop[ptrTreeAndTime] = e_population
-                        self.tree[id1, 0] = id3
-                        self.tree[id2, 0] = id3
-                        self.tree[ptrTreeAndTime, 0] = -1
-                        self.tree_pop[ptrTreeAndTime, 0] = e_population
+                        self.tree[id1] = id3
+                        self.tree[id2] = id3
+                        self.tree[ptrTreeAndTime] = -1
+                        self.tree_pop[ptrTreeAndTime] = e_population
+                        # self.tree[id1, 0] = id3
+                        # self.tree[id2, 0] = id3
+                        # self.tree[ptrTreeAndTime, 0] = -1
+                        # self.tree_pop[ptrTreeAndTime, 0] = e_population
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
                     self.infectious[e_population, self.hapToNum[e_haplotype]] -= 1
@@ -931,10 +931,10 @@ cdef class BirthDeathModel:
                 elif e_type_ == SAMPLING:
                     self.infectious[e_population, self.hapToNum[e_haplotype]] += 1
                     liveBranchesS[e_population][e_haplotype].push_back( ptrTreeAndTime )
-                    # self.tree[ptrTreeAndTime] = -1
-                    # self.tree_pop[ptrTreeAndTime] = e_population
-                    self.tree[ptrTreeAndTime, 0] = -1
-                    self.tree_pop[ptrTreeAndTime, 0] = e_population
+                    self.tree[ptrTreeAndTime] = -1
+                    self.tree_pop[ptrTreeAndTime] = e_population
+                    # self.tree[ptrTreeAndTime, 0] = -1
+                    # self.tree_pop[ptrTreeAndTime, 0] = e_population
                     self.times[ptrTreeAndTime] = e_time
                     ptrTreeAndTime += 1
                 elif e_type_ == MUTATION:
@@ -966,14 +966,14 @@ cdef class BirthDeathModel:
                             liveBranchesS[e_population][e_haplotype][ns] = id3
                             liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
                             liveBranchesS[e_newPopulation][e_haplotype].pop_back()
-                            # self.tree[idt] = id3
-                            # self.tree[ids] = id3
-                            # self.tree[ptrTreeAndTime] = -1
-                            # self.tree_pop[ptrTreeAndTime] = e_population
-                            self.tree[idt, 0] = id3
-                            self.tree[ids, 0] = id3
-                            self.tree[ptrTreeAndTime, 0] = -1
-                            self.tree_pop[ptrTreeAndTime, 0] = e_population
+                            self.tree[idt] = id3
+                            self.tree[ids] = id3
+                            self.tree[ptrTreeAndTime] = -1
+                            self.tree_pop[ptrTreeAndTime] = e_population
+                            # self.tree[idt, 0] = id3
+                            # self.tree[ids, 0] = id3
+                            # self.tree[ptrTreeAndTime, 0] = -1
+                            # self.tree_pop[ptrTreeAndTime, 0] = e_population
                             self.times[ptrTreeAndTime] = e_time
                             ptrTreeAndTime += 1
                             self.mig.AddMigration(idt, e_time, e_population, e_newPopulation)
@@ -1022,14 +1022,14 @@ cdef class BirthDeathModel:
                                     liveBranchesS[me_population][me_haplotype].pop_back()
                                     liveBranchesS[me_population][me_haplotype][n2] = liveBranchesS[me_population][me_haplotype][lbs-2]
                                     liveBranchesS[me_population][me_haplotype].pop_back()
-                                # self.tree[id1] = id3
-                                # self.tree[id2] = id3
-                                # self.tree[ptrTreeAndTime] = -1
-                                # self.tree_pop[ptrTreeAndTime] = me_population
-                                self.tree[id1, 0] = id3
-                                self.tree[id2, 0] = id3
-                                self.tree[ptrTreeAndTime, 0] = -1
-                                self.tree_pop[ptrTreeAndTime, 0] = me_population
+                                self.tree[id1] = id3
+                                self.tree[id2] = id3
+                                self.tree[ptrTreeAndTime] = -1
+                                self.tree_pop[ptrTreeAndTime] = me_population
+                                # self.tree[id1, 0] = id3
+                                # self.tree[id2, 0] = id3
+                                # self.tree[ptrTreeAndTime, 0] = -1
+                                # self.tree_pop[ptrTreeAndTime, 0] = me_population
                                 self.times[ptrTreeAndTime] = me_time
                                 ptrTreeAndTime += 1
                                 lbs -= 2
@@ -1041,10 +1041,10 @@ cdef class BirthDeathModel:
                             for i in range(me_num):
                                 #liveBranchesS[me_population][me_haplotype].push_back( ptrTreeAndTime )
                                 newLineages[me_population][me_haplotype].push_back( ptrTreeAndTime )
-                                # self.tree[ptrTreeAndTime] = -1
-                                # self.tree_pop[ptrTreeAndTime] = me_population
-                                self.tree[ptrTreeAndTime, 0] = -1
-                                self.tree_pop[ptrTreeAndTime, 0] = me_population
+                                self.tree[ptrTreeAndTime] = -1
+                                self.tree_pop[ptrTreeAndTime] = me_population
+                                # self.tree[ptrTreeAndTime, 0] = -1
+                                # self.tree_pop[ptrTreeAndTime, 0] = me_population
                                 self.times[ptrTreeAndTime] = me_time
                                 ptrTreeAndTime += 1
                         elif me_type_ == MUTATION:
@@ -1090,14 +1090,14 @@ cdef class BirthDeathModel:
                                     liveBranchesS[me_newPopulation][me_haplotype][nt] = liveBranchesS[me_newPopulation][me_haplotype][lbs-1]
                                     liveBranchesS[me_newPopulation][me_haplotype].pop_back()
                                     newLineages[me_population][me_haplotype].push_back( id3 )
-                                    # self.tree[idt] = id3
-                                    # self.tree[ids] = id3
-                                    # self.tree[ptrTreeAndTime] = -1
-                                    # self.tree_pop[ptrTreeAndTime] = me_population
-                                    self.tree[idt, 0] = id3
-                                    self.tree[ids, 0] = id3
-                                    self.tree[ptrTreeAndTime, 0] = -1
-                                    self.tree_pop[ptrTreeAndTime, 0] = me_population
+                                    self.tree[idt] = id3
+                                    self.tree[ids] = id3
+                                    self.tree[ptrTreeAndTime] = -1
+                                    self.tree_pop[ptrTreeAndTime] = me_population
+                                    # self.tree[idt, 0] = id3
+                                    # self.tree[ids, 0] = id3
+                                    # self.tree[ptrTreeAndTime, 0] = -1
+                                    # self.tree_pop[ptrTreeAndTime, 0] = me_population
                                     self.times[ptrTreeAndTime] = me_time
                                     ptrTreeAndTime += 1
                                     self.mig.AddMigration(idt, me_time, me_population, me_newPopulation)
@@ -1129,11 +1129,11 @@ cdef class BirthDeathModel:
                     print("_________________________________")
                     sys.exit(0)
             for i in range(self.sCounter * 2 - 2):
-                # if self.tree_pop[self.tree[i]] != self.tree_pop[i]:
-                #     self.mig.AddMigration(i, self.times[i], self.tree_pop[self.tree[i]], self.tree_pop[i])
+                if self.tree_pop[self.tree[i]] != self.tree_pop[i]:
+                    self.mig.AddMigration(i, self.times[i], self.tree_pop[self.tree[i]], self.tree_pop[i])
 
-                if self.tree_pop[self.tree[i, 0], 0] != self.tree_pop[i, 0]:
-                    self.mig.AddMigration(i, self.times[i], self.tree_pop[self.tree[i, 0], 0], self.tree_pop[i, 0])
+                # if self.tree_pop[self.tree[i, 0], 0] != self.tree_pop[i, 0]:
+                #     self.mig.AddMigration(i, self.times[i], self.tree_pop[self.tree[i, 0], 0], self.tree_pop[i, 0])
 
             #for i in range(self.sCounter * 2 - 1):
             #    print(self.tree[i], end=" ")
@@ -2108,14 +2108,17 @@ cdef class BirthDeathModel:
             tc.populations.add_row(None)
 
         for i in range(2 * self.sCounter - 2):
-            tc.edges.add_row(0.0, self.genome_length, self.tree[i, 0], i)
+            tc.edges.add_row(0.0, self.genome_length, self.tree[i], i)
+            # tc.edges.add_row(0.0, self.genome_length, self.tree[i, 0], i)
 
         child_or_parent = [1 for _ in range(2 * self.sCounter - 1)]
         for i in range(2 * self.sCounter - 2):
-            child_or_parent[self.tree[i, 0]] = 0
+            child_or_parent[self.tree[i]] = 0
+            # child_or_parent[self.tree[i, 0]] = 0
 
         for i in range(2 * self.sCounter - 1):
-            tc.nodes.add_row(child_or_parent[i], self.times[0] - self.times[i], self.tree_pop[i, 0])
+            tc.nodes.add_row(child_or_parent[i], self.times[0] - self.times[i], self.tree_pop[i])
+            # tc.nodes.add_row(child_or_parent[i], self.times[0] - self.times[i], self.tree_pop[i, 0])
 
         for i in range(self.sites):
             if self.sitesPosition[i] == 0:

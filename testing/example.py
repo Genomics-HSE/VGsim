@@ -16,7 +16,8 @@ simulator.set_sampling_rate(0.001)
 #Set mutation rates
 mutation_rate=0.00003
 substitution_weights=[1,1,1,2]#ATCG
-simulator.set_mutation_rate(mutation_rate, substitution_weights)
+simulator.set_mutation_rate(mutation_rate)
+simulator.set_mutation_probabilities(substitution_weights)
 simulator.set_mutation_rate(3*mutation_rate, haplotype='G*', mutation=1)
 
 #Set host immunity types triggered by infection
@@ -77,6 +78,6 @@ simulator.add_legend()
 simulator.plot('plot')
 
 #Save the genealogy with mutations and migrations
-simulator.output_newick()
-simulator.output_mutations('mutations')
-simulator.output_migrations('migrations')
+simulator.export_newick()
+simulator.export_mutations('mutations')
+simulator.export_migrations('migrations')
