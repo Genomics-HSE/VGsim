@@ -37,7 +37,7 @@ def set_transmission_rate(rate, haplotype=None):
 	:type rate: float
 
 	:param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
-	:type haplotype: int or string or None
+	:type haplotype: int(0, 4) or string('T*') or int and string list([0, 4, 'T*']) or None
 	"""
 
 

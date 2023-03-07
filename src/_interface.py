@@ -63,8 +63,8 @@ class Simulator:
 		return self.simulation.number_of_sites
 
 	@property
-	def haplotype_number(self):
-		return self.simulation.haplotype_number
+	def haplotypes_number(self):
+		return self.simulation.haplotypes_number
 
 	@property
 	def populations_number(self):
@@ -415,7 +415,9 @@ class Simulator:
 			print("Unknown method. Choose between 'direct' and 'tau'.")
 
 	def genealogy(self, seed=None):
+		start_time = time.time()
 		self.simulation.GetGenealogy(seed)
+		print("Getting genealogy time:", time.time() - start_time)
 
 	def print_recomb(self, left, right):
 		self.simulation.print_recomb(left, right)
