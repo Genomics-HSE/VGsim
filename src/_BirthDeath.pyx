@@ -42,14 +42,14 @@ cdef class BirthDeathModel:
         Lockdowns loc
 
         npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, tree, tree_pop
-        npy_int64[:,::1] susceptible, initial_susceptible,   infectious
+        npy_int64[:,::1] susceptible, initial_susceptible,  infectious, 
         npy_int64[:,:,::1] infectByCondition, initial_infectious
 
         double[::1] maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, samplingMultiplier, times
-        double[::1] cumuConditionRate, conditionPopRate, bRate, dRate, sRate, tmRate
+        double[::1] conditionPopRate, cumuConditionRate
         double[:,::1] susceptibility, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
-        double[:,::1] conditionRate, massivForThree, conditionPopHapRate, mRate
-        double[:,:,::1] hapMutType,  susceptHapPopRate, tEventHapPopRate, 
+        double[:,::1]  conditionRate,massivForThree, conditionPopHapRate, bRate, dRate, sRate, tmRate
+        double[:,:,::1] hapMutType,  susceptHapPopRate, tEventHapPopRate, mRate
         double[:,:,::1] conditionPopHapConRate, tEventConHapPopRate
         double[:,:,:,::1] eventHapPopRate
 
@@ -65,7 +65,7 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
 
-    def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimizationm, conditionNum):
+    def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, memory_optimization, conditionNum):
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
 
@@ -159,9 +159,9 @@ cdef class BirthDeathModel:
         for cn1 in range(self.conditionNum):
             for cn2 in range(self.conditionNum):
                 if cn1 != cn2:
-                    conditionRate[cn1, cn2] = 2
+                    self.conditionRate[cn1, cn2] = 2
                 else:
-                    conditionRate[cn1, cn2] = 0
+                    self.conditionRate[cn1, cn2] = 0
         
         for cn1 in range(self.conditionNum):
             self.cumuConditionRate[cn1] = 0
@@ -322,7 +322,7 @@ cdef class BirthDeathModel:
                     for i in range(4):
                         self.tEventHapPopRate[pn, hn, cn] += self.eventHapPopRate[pn, hn, cn, i]
                     self.tEventConHapPopRate[pn, hn, cn] = self.tEventHapPopRate[pn, hn, cn] * self.infectByCondition[pn, hn, cn]
-                    self.hapPopRate[pn, hn] += tEventConHapPopRate[pn, hn, cn]
+                    self.hapPopRate[pn, hn] += self.tEventConHapPopRate[pn, hn, cn]
                 self.infectPopRate[pn] += self.hapPopRate[pn, hn]
             for sn in range(self.susNum):
                 self.immuneSourcePopRate[pn, sn] = self.suscepCumulTransition[sn]*self.susceptible[pn, sn]
@@ -401,7 +401,12 @@ cdef class BirthDeathModel:
             for pn in range(self.popNum):
                 ps += self.susceptHapPopRate[pi, hi, sn]*self.migrationRates[pi, pn]*self.migrationRates[pi, pn]*self.contactDensity[pn]/self.actualSizes[pn]
 
-        return self.bRate[self.numToHap[hi]]*ps
+        for cn in range(self.conditionNum):
+            self.bRate[self.numToHap[hi], cn] = self.bRate[self.numToHap[hi], cn] * ps
+        cdef double hi_ps = 0.0
+        for cn in range(self.conditionNum):
+            hi_ps += self.bRate[self.numToHap[hi], cn]
+        return hi_ps
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -497,7 +502,7 @@ cdef class BirthDeathModel:
             self.rn = choose / self.totalRate
             pi, self.rn = fastChoose1(self.popRate, self.totalRate, self.rn)
             #choose = self.rn * self.popRate[pi]
-            ei, self.rn = fastChoose1(self.massivForThree[pn], self.totalRate, self.rn)
+            ei, self.rn = fastChoose1(self.massivForThree[pi], self.totalRate, self.rn)
             if ei == 1:
                 #self.rn = choose / self.immunePopRate[pi]
                 self.ImmunityTransition(pi)
@@ -507,7 +512,7 @@ cdef class BirthDeathModel:
                 self.rn = (choose - self.immunePopRate[pi]) / self.infectPopRate[pi]
                 hi, self.rn = fastChoose1(self.hapPopRate[pi], self.infectPopRate[pi], self.rn) # hi - program number
                 ci, self.rn = fastChoose1(self.tEventConHapPopRate[pi, hi], self.hapPopRate[pi, hi], self.rn)
-                ei, self.rn = fastChoose1(self.tEventHapPopRate[pi, hi, ci], self.tEvenContHapPopRate[pi, hi, ci], self.rn)
+                ei, self.rn = fastChoose1(self.tEventHapPopRate[pi, hi], self.tEvenContHapPopRate[pi, hi, ci], self.rn)
                 if ei == BIRTH:
                     self.Birth(pi, hi, ci)
                 elif ei == DEATH:
@@ -515,7 +520,7 @@ cdef class BirthDeathModel:
                 elif ei == SAMPLING:
                     self.Sampling(pi, hi, ci)
                 else:
-                    self.Mutation(pi, hi)
+                    self.Mutation(pi, hi, ci)
         else:
             pi = self.GenerateMigration()
         return pi
@@ -528,14 +533,14 @@ cdef class BirthDeathModel:
             self.infectPopRate[pi] = 0.0
             for hn in range(self.currentHapNum):
                 for cn in range(self.conditionNum):
-                    self.eventHapPopRate[pi, hn, cn, 0] = self.BirthRate(pi, hn)
+                    self.eventHapPopRate[pi, hn, cn, 0] = self.BirthRate(pi, hn, cn)
                     tmp = (self.eventHapPopRate[pi, hn, cn, 0] +
                            self.eventHapPopRate[pi, hn, cn, 1] +
                           self.eventHapPopRate[pi, hn, cn, 2] +
                           self.eventHapPopRate[pi, hn, cn, 3] )
                     self.tEventHapPopRate[pi, hn, cn] = tmp
-                    self.tEventConHapPopRate[pn, hn, cn] = self.tEventHapPopRate[pn, hn, cn] * self.infectious[pn, hn, cn]
-                    self.hapPopRate[pn, hn] += tEventConHapPopRate[pn, hn, cn]
+                    self.tEventConHapPopRate[pi, hn, cn] = self.tEventHapPopRate[pi, hn, cn] * self.infectByCondition[pi, hn, cn]
+                    self.hapPopRate[pi, hn] += self.tEventConHapPopRate[pi, hn, cn]
                 self.infectPopRate[pi] += self.hapPopRate[pi, hn]
 
         if immune:
@@ -545,10 +550,10 @@ cdef class BirthDeathModel:
 
         if infect or immune:
             self.popRate[pi] = 0
-            self.popRate[pi] = self.infectPopRate[pi] + self.immunePopRate[pi]+ self.conditionPopRate[pn]
-            self.massivForThree[0] = self.infectPopRate[pn]
-            self.massivForThree[1] = self.immunePopRate[pn]
-            self.massivForThree[2] = self.conditionPopRate[pn]
+            self.popRate[pi] = self.infectPopRate[pi] + self.immunePopRate[pi]+ self.conditionPopRate[pi]
+            self.massivForThree[0] = self.infectPopRate[pi]
+            self.massivForThree[1] = self.immunePopRate[pi]
+            self.massivForThree[2] = self.conditionPopRate[pi]
             self.totalRate = 0.0
             for pn in range(self.popNum):
                 self.totalRate += self.popRate[pn]
@@ -584,8 +589,8 @@ cdef class BirthDeathModel:
             Py_ssize_t ssi, tsi, hsi
 
         hsi, self.rn = fastChoose1(self.conditionPopHapRate[pi], self.conditionPopRate[pi], self.rn)
-        ssi, self.rn = fastChoose1(self.conditionPopHapConRate[pi, hsi], self,conditionPopHapRate[pi, hsi], self.rn)
-        tsi, self.rn = fastChoose2_skip(self.conditionRate[ssi], self.cumuConditionRate[ssi], self.rn)
+        ssi, self.rn = fastChoose1(self.conditionPopHapConRate[pi, hsi], self.conditionPopHapRate[pi, hsi], self.rn)
+        tsi, self.rn = fastChoose1_skip(self.conditionRate[ssi], self.cumuConditionRate[ssi], self.rn, ssi)
 
         self.infectByCondition[pi, hsi, ssi] -= 1
         self.infectByCondition[pi, hsi, tsi] += 1
@@ -674,12 +679,12 @@ cdef class BirthDeathModel:
         tpi, self.rn = fastChoose1(self.migPopRate, self.totalMigrationRate, self.rn)
         spi, self.rn = fastChoose2_skip(self.totalInfectious, self.globalInfectious-self.totalInfectious[tpi], self.rn, skip=tpi)
         hi, self.rn = fastChoose2(self.infectious[spi], self.totalInfectious[spi], self.rn) # hi - program number
-        ci, self.rn = fastChoose1(self.conditionRate[ssi], self.cumuConditionRate[ssi], self.rn)
+        ci, self.rn = fastChoose1(self.conditionRate[spi], self.cumuConditionRate[spi], self.rn)
         si, self.rn = fastChoose2(self.susceptible[tpi], self.totalSusceptible[tpi], self.rn)
 
         p_accept = self.effectiveMigration[spi, tpi]*self.bRate[self.numToHap[hi], ci]*self.susceptibility[self.numToHap[hi], si]/self.maxEffectiveBirthMigration[tpi]
         if self.rn < p_accept:
-            self.NewInfections(tpi, si, hi)
+            self.NewInfections(tpi, si, hi, ci)
             self.UpdateRates(tpi, True, True, True)
 
             self.migPlus += 1
@@ -726,9 +731,10 @@ cdef class BirthDeathModel:
                 self.susceptible[pn, sn] = self.initial_susceptible[pn, sn]
                 self.totalSusceptible[pn] += self.initial_susceptible[pn, sn]
             for hn in range(self.hapNum):
-                self.infectious[pn, hn] = self.initial_infectious[pn, hn]
-                self.totalInfectious[pn] += self.initial_infectious[pn, hn]
-                self.globalInfectious += self.initial_infectious[pn, hn]
+                for cn in range(self.conditionNum):
+                    self.infectious[pn, hn] += self.initial_infectious[pn, hn, cn]
+                    self.totalInfectious[pn] += self.initial_infectious[pn, hn, cn]
+                    self.globalInfectious += self.initial_infectious[pn, hn, cn]
         for pn in range(self.popNum):
             self.CheckLockdown(pn)
         self.UpdateAllRates()
@@ -1577,7 +1583,7 @@ cdef class BirthDeathModel:
                 self.initial_susceptible[pn, source_type] -= amount
                 self.initial_susceptible[pn, target_type] += amount
 
-    def set_infectious(self, amount, source_type, target_haplotype, population):
+    def set_infectious(self, amount, source_type, target_haplotype, population, condition):
         if self.first_simulation:
             raise ValueError('This function is available only before first simulation!')
         self.check_amount(amount)
@@ -1589,13 +1595,14 @@ cdef class BirthDeathModel:
             self.check_amount_inf(amount, source_type, target_haplotype, population)
 
             self.initial_susceptible[population, source_type] -= amount
-            self.initial_infectious[population, target_haplotype] += amount
+            
+            self.initial_infectious[population, target_haplotype, condition] += amount
         elif population == None:
             for pn in range(self.popNum):
                 self.check_amount_inf(amount, source_type, target_haplotype, pn)
 
                 self.initial_susceptible[pn, source_type] -= amount
-                self.initial_infectious[pn, target_haplotype] += amount
+                self.initial_infectious[pn, target_haplotype, condition] += amount
 
     def set_contact_density(self, value, population):
         self.check_rate_1(value, 'contact density')
@@ -2315,11 +2322,12 @@ cdef class BirthDeathModel:
                     continue
                 for sn in range(self.susNum):
                     for hn in range(self.hapNum):
-                        self.PropensitiesMigr[spn, tpn, sn, hn] = self.effectiveMigration[tpn, spn]*self.susceptible[tpn, sn]*\
-                        self.infectious[spn, hn]*self.bRate[hn]*self.susceptibility[hn, sn]*self.migrationRates[spn, spn]
+                        for cn in range(self.conditionNum):
+                            self.PropensitiesMigr[spn, tpn, sn, hn] = self.effectiveMigration[tpn, spn]*self.susceptible[tpn, sn]*\
+                            self.infectious[spn, hn]*self.bRate[hn, cn]*self.susceptibility[hn, sn]*self.migrationRates[spn, spn]
 
-                        self.infectiousAuxTau[tpn, hn] += self.PropensitiesMigr[spn, tpn, sn, hn]
-                        self.susceptibleAuxTau[tpn, sn] -= self.PropensitiesMigr[spn, tpn, sn, hn]
+                            self.infectiousAuxTau[tpn, hn] += self.PropensitiesMigr[spn, tpn, sn, hn]
+                            self.susceptibleAuxTau[tpn, sn] -= self.PropensitiesMigr[spn, tpn, sn, hn]
 
         for pn in range(self.popNum):
             #Susceptibility transition
@@ -2335,38 +2343,42 @@ cdef class BirthDeathModel:
             #Infectious-realted event
             for hn in range(self.hapNum):
                 #Recovery
-                self.PropensitiesRecovery[pn, hn] = self.dRate[hn]*self.infectious[pn, hn]
+                for cn in range(self.conditionNum):
+                    self.PropensitiesRecovery[pn, hn] = self.dRate[hn, cn]*self.infectious[pn, hn]
 
                 self.susceptibleAuxTau[pn, self.suscType[hn]] += self.PropensitiesRecovery[pn, hn]
                 self.infectiousAuxTau[pn, hn] -= self.PropensitiesRecovery[pn, hn]
 
                 #Sampling
-                self.PropensitiesSampling[pn, hn] = self.sRate[hn]*self.infectious[pn, hn]*self.samplingMultiplier[pn]
+                for cn in range(self.conditionNum):
+                    self.PropensitiesSampling[pn, hn] = self.sRate[hn, cn]*self.infectious[pn, hn]*self.samplingMultiplier[pn]
 
                 self.susceptibleAuxTau[pn, self.suscType[hn]] += self.PropensitiesSampling[pn, hn]
                 self.infectiousAuxTau[pn, hn] -= self.PropensitiesSampling[pn, hn]
 
                 #Mutation
                 for s in range(self.sites):
-                    for i in range(3):
-                        self.PropensitiesMutatations[pn, hn, s, i] = self.mRate[hn, s]*self.hapMutType[hn, s, i]/\
-                        (self.hapMutType[hn, s, 0] + self.hapMutType[hn, s, 1] + self.hapMutType[hn, s, 2])*self.infectious[pn, hn]
+                    for cn in range(self.conditionNum):
+                        for i in range(3):
+                            self.PropensitiesMutatations[pn, hn, s, i] = self.mRate[hn, cn, s]*self.hapMutType[hn, s, i]/\
+                            (self.hapMutType[hn, s, 0] + self.hapMutType[hn, s, 1] + self.hapMutType[hn, s, 2])*self.infectious[pn, hn]
 
-                        self.infectiousAuxTau[pn, self.Mutate(hn, s, i)] += self.PropensitiesMutatations[pn, hn, s, i]
-                        self.infectiousAuxTau[pn, hn] -= self.PropensitiesMutatations[pn, hn, s, i]
+                            self.infectiousAuxTau[pn, self.Mutate(hn, s, i)] += self.PropensitiesMutatations[pn, hn, s, i]
+                            self.infectiousAuxTau[pn, hn] -= self.PropensitiesMutatations[pn, hn, s, i]
                 
         #Transmission
         for tpn in range(self.popNum):
             for hn in range(self.hapNum):
-                for sn in range(self.susNum):
-                    self.PropensitiesTransmission[tpn, hn, sn] = 0.0
-                    for spn in range(self.popNum):
-                        self.PropensitiesTransmission[tpn, hn, sn] += self.bRate[hn]*self.susceptibility[hn, sn]*self.migrationRates[tpn, spn]*\
-                        self.migrationRates[tpn, spn]*self.contactDensity[spn]*self.susceptible[tpn, sn]*self.infectious[tpn, hn]/\
-                        self.actualSizes[spn]
+                for cn in range(self.conditionNum):
+                    for sn in range(self.susNum):
+                        self.PropensitiesTransmission[tpn, hn, sn] = 0.0
+                        for spn in range(self.popNum):
+                            self.PropensitiesTransmission[tpn, hn, sn] += self.bRate[hn, cn]*self.susceptibility[hn, sn]*self.migrationRates[tpn, spn]*\
+                            self.migrationRates[tpn, spn]*self.contactDensity[spn]*self.susceptible[tpn, sn]*self.infectious[tpn, hn]/\
+                            self.actualSizes[spn]
 
-                    self.infectiousAuxTau[tpn, hn] += self.PropensitiesTransmission[tpn, hn, sn]
-                    self.susceptibleAuxTau[tpn, sn] -= self.PropensitiesTransmission[tpn, hn, sn]
+                        self.infectiousAuxTau[tpn, hn] += self.PropensitiesTransmission[tpn, hn, sn]
+                        self.susceptibleAuxTau[tpn, sn] -= self.PropensitiesTransmission[tpn, hn, sn]
 
     @cython.cdivision(True)
     cdef Py_ssize_t Mutate(self, Py_ssize_t hi, Py_ssize_t s, Py_ssize_t DS):
