@@ -33,8 +33,8 @@ cdef class BirthDeathModel:
 
         bint first_simulation, sampling_probability, memory_optimization
         Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, \
-        mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length
-        double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination, SuperSpreadRate
+        mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length, sampling_events_number, gs_index
+        double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination, SuperSpreadRate, sampling_proportion, gs_time
 
         Events events
         multiEvents multievents
@@ -50,7 +50,7 @@ cdef class BirthDeathModel:
 
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
-        samplingMultiplier, times, birthInf
+        samplingMultiplier, times, birthInf, sampling_times
         double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, \
         effectiveMigration
         double[:,:,::1] hapMutType, eventHapPopRate, susceptHapPopRate
@@ -117,6 +117,10 @@ cdef class BirthDeathModel:
             self.addMemoryNum = 0
 
         self.SuperSpreadRate = 0
+
+        self.sampling_proportion = 0
+        self.sampling_events_number = 0
+        self.gs_index = 0
 
         self.hapToNum = np.zeros(self.hapNum, dtype=np.int64) # from haplotype to program number
         self.numToHap = np.zeros(self.maxHapNum, dtype=np.int64) # from program number to haplotype
@@ -413,8 +417,7 @@ cdef class BirthDeathModel:
         for i in range(attempts):
             self.seed = RndmWrapper(seed=(self.user_seed, i))
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
-                gs_index = 0
-                gs_time = self.general_sampling_times[gs_index]
+                self.gs_time = self.sampling_times[self.gs_index]
                 while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<=sample_size) and (time==-1 or self.currentTime<time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()
@@ -422,9 +425,7 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
-                    if gs_index < self.sampling_event_number and self.currentTime > gs_time:
-                        gs_index += 1
-                        gs_time = self.general_sampling_times[gs_index]
+                    if self.gs_index < self.sampling_events_number and self.currentTime > self.gs_time:
                         self.general_sampling()
 
 
@@ -520,6 +521,7 @@ cdef class BirthDeathModel:
                 elif ei == DEATH:
                     self.Death(pi, hi)
                 elif ei == SAMPLING:
+                    print(pi, hi, "old sampling")
                     self.Sampling(pi, hi)
                 else:
                     self.Mutation(pi, hi)
@@ -1439,13 +1441,26 @@ cdef class BirthDeathModel:
             haplotype = haplotype // 4
         return allele
 
-    def general_sampling(self):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef void general_sampling(self):
+        cdef:
+            Py_ssize_t pi, hi, sampling_size
+
         for pi in range(self.popNum):
             sampling_size = int(self.sizes[pi] * self.sampling_proportion)
+            #print(sampling_size, 'sampling_size')
+            #print(self.totalInfectious[pi], 'totalInfectious')
             for i in range(sampling_size):
                 self.rn = self.seed.uniform()
+                #print(self.hapPopRate[pi],  self.infectPopRate[pi], "fastChoose")
+                #print(self.infectPopRate, "infectPopRate")
                 hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                #print(pi,  hi, "Sampling")
                 self.Sampling(pi, hi)
+        self.gs_index += 1
+        self.gs_time = self.sampling_times[self.gs_index]
 
     @property
     def seed(self):
@@ -1933,14 +1948,17 @@ cdef class BirthDeathModel:
         pass
 
     def set_general_sampling(self, sampling_proportion, sampling_events_number, sampling_times):
-        self.check_value(sampling_proportion, "general sampling proportion")
-        self.check_index(sampling_proportion, 1, "general sampling proportion")
-        self.check_value(sampling_events_number, "general sampling events number")
+        self.check_value(sampling_proportion, "general sampling proportion", edge=1)
+        self.check_amount(sampling_events_number, "general sampling events number")
+        self.check_list(sampling_times, '', sampling_events_number)
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
-        self.sampling_proportion = sampling_proportion.sort()
+        self.sampling_proportion = sampling_proportion
         self.sampling_events_number = sampling_events_number
-        self.sampling_times = sampling_times
+        self.sampling_times = np.zeros(sampling_events_number)
+        for i in range(sampling_events_number):
+            self.sampling_times[i] = sampling_times[i]
+        self.sampling_times = np.sort(self.sampling_times)
 
 
     def output_tree_mutations(self):

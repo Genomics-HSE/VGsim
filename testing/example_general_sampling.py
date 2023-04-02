@@ -1,3 +1,4 @@
+import VGsim
 import sys
 sys.path.clear()
 sys.path.insert(0, '/home/lev/PycharmProjects')
@@ -6,12 +7,12 @@ print(sys.path)
 #import os.path
 #from src import _interface
 
-from VGsim.src._interface import Simulator
+#from src._interface import Simulator
 
 number_of_sites = 2
 populations_number = 3
 number_of_susceptible_groups = 3
-simulator = Simulator(number_of_sites, populations_number, number_of_susceptible_groups, seed=1234)
+simulator = VGsim.Simulator(number_of_sites, populations_number, number_of_susceptible_groups, seed=1234)
 
 #Set epidemiological parameters
 simulator.set_transmission_rate(0.25)
