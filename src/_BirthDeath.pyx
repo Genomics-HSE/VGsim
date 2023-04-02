@@ -521,7 +521,7 @@ cdef class BirthDeathModel:
                 elif ei == DEATH:
                     self.Death(pi, hi)
                 elif ei == SAMPLING:
-                    print(pi, hi, "old sampling")
+                    #print(pi, hi, "old sampling")
                     self.Sampling(pi, hi)
                 else:
                     self.Mutation(pi, hi)
@@ -1448,17 +1448,26 @@ cdef class BirthDeathModel:
         cdef:
             Py_ssize_t pi, hi, sampling_size
 
+        sampling_sizes = np.zeros(self.popNum, dtype=int)
+        gs_possible = True
         for pi in range(self.popNum):
-            sampling_size = int(self.sizes[pi] * self.sampling_proportion)
-            #print(sampling_size, 'sampling_size')
-            #print(self.totalInfectious[pi], 'totalInfectious')
-            for i in range(sampling_size):
-                self.rn = self.seed.uniform()
-                #print(self.hapPopRate[pi],  self.infectPopRate[pi], "fastChoose")
-                #print(self.infectPopRate, "infectPopRate")
-                hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
-                #print(pi,  hi, "Sampling")
-                self.Sampling(pi, hi)
+            sampling_sizes[pi] = int(self.sizes[pi] * self.sampling_proportion)
+            if sampling_sizes[pi] > self.totalInfectious[pi]:
+                print("General sampling is impossible. The amount of infectious in the population is not enough.")
+                gs_possible = False
+                break
+        if gs_possible:
+            for pi in range(self.popNum):
+                sampling_size = int(self.sizes[pi] * self.sampling_proportion)
+                #print(sampling_size, 'sampling_size')
+                #print(self.totalInfectious[pi], 'totalInfectious')
+                for i in range(sampling_size):
+                    self.rn = self.seed.uniform()
+                    #print(self.hapPopRate[pi],  self.infectPopRate[pi], "fastChoose")
+                    #print(self.infectPopRate, "infectPopRate")
+                    hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                    #print(pi,  hi, "Sampling")
+                    self.Sampling(pi, hi)
         self.gs_index += 1
         self.gs_time = self.sampling_times[self.gs_index]
 
