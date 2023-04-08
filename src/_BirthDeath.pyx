@@ -421,7 +421,6 @@ cdef class BirthDeathModel:
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
                 self.gs_it = self.general_samplings.begin()
                 self.gs_time = deref(self.gs_it).first
-                print(self.gs_time, "self.gs_time")
                 while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<=sample_size) and (time==-1 or self.currentTime<time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()
@@ -519,7 +518,6 @@ cdef class BirthDeathModel:
                 elif ei == DEATH:
                     self.Death(pi, hi)
                 elif ei == SAMPLING:
-                    #print(pi, hi, "old sampling")
                     self.Sampling(pi, hi)
                 else:
                     self.Mutation(pi, hi)
@@ -1446,19 +1444,13 @@ cdef class BirthDeathModel:
         cdef:
             Py_ssize_t pi, hi, sampling_size
 
-        print(self.gs_time, "gs_time in func")
         sampling_sizes = np.zeros(self.popNum, dtype=int)
         gs_possible = True
         for pi in range(self.popNum):
             sampling_size = int(self.totalInfectious[pi] * sampling_proportion)
-            print(sampling_size, 'sampling_size')
-            print(self.totalInfectious[pi], 'totalInfectious')
             for i in range(sampling_size):
                 self.rn = self.seed.uniform()
-                print(self.hapPopRate[pi],  self.infectPopRate[pi], "fastChoose")
-                print(self.infectPopRate, "infectPopRate")
                 hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
-                print(pi,  hi, "Sampling")
                 self.Sampling(pi, hi)
         postinc(self.gs_it)
         self.gs_time = deref(self.gs_it).first
