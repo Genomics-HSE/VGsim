@@ -1443,9 +1443,6 @@ cdef class BirthDeathModel:
     cdef void general_sampling(self, double sampling_proportion):
         cdef:
             Py_ssize_t pi, hi, sampling_size
-
-        sampling_sizes = np.zeros(self.popNum, dtype=int)
-        gs_possible = True
         for pi in range(self.popNum):
             sampling_size = int(self.totalInfectious[pi] * sampling_proportion)
             for i in range(sampling_size):
@@ -1947,8 +1944,12 @@ cdef class BirthDeathModel:
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
         for sampling_time in sampling_times:
-            self.general_sampling_item = (sampling_time, sampling_proportion)
-            self.general_samplings.insert(self.general_sampling_item)
+            it = self.general_samplings.find(sampling_time)
+            if it == self.general_samplings.end():
+                self.general_sampling_item = (sampling_time, sampling_proportion)
+                self.general_samplings.insert(self.general_sampling_item)
+            else:
+                self.general_samplings[sampling_time] += sampling_proportion
 
 
     def output_tree_mutations(self):
