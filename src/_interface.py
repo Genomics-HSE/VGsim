@@ -109,8 +109,8 @@ class Simulator:
 	def set_super_spread_rate(self, rate, left, right, population=None):
 		self.simulation.set_super_spread_rate(rate, left, right, population)
 
-	def set_general_sampling(self, sampling_proportion, sampling_events_number, sampling_times):
-		self.simulation.set_general_sampling(sampling_proportion, sampling_events_number, sampling_times)
+	def set_general_sampling(self, sampling_proportion, sampling_times):
+		self.simulation.set_general_sampling(sampling_proportion, sampling_times)
 
 	@property
 	def transmission_rate(self):
