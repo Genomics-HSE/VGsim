@@ -420,7 +420,8 @@ cdef class BirthDeathModel:
             self.seed = RndmWrapper(seed=(self.user_seed, i))
             if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
                 self.gs_it = self.general_samplings.begin()
-                self.gs_time = deref(self.gs_it).first
+                if self.gs_it != self.general_samplings.end():
+                    self.gs_time = deref(self.gs_it).first
                 while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<=sample_size) and (time==-1 or self.currentTime<time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()

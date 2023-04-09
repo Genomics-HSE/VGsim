@@ -577,3 +577,18 @@ def test_set_immunity_transition_err(rate, source, target, error, text):
 	model = Simulator(number_of_susceptible_groups=3)
 	with pytest.raises(error, match=text):
 		model.set_immunity_transition(rate=rate, source=source, target=target)
+
+
+#GENERAL SAMPLING
+# @pytest.mark.parametrize('sampling_proportion, sampling_times', [(0, []),
+# 													 (0.002, 'A*', [0.002, 0.002, 0.002, 0.002, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+# 													 (0.003, 'AT', [2, 0.003, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+# 													 (0.004, 0   , [0.004, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+# 													 (0.005, 15  , [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0.005])])
+# def test_set_transmisstion_rate(rate, haplotype, answer):
+# 	model = Simulator(number_of_sites=2)
+# 	model.set_transmission_rate(rate=rate, haplotype=haplotype)
+# 	# print(type(model.get_indexes_from_haplotype(haplotype)[0]))
+# 	# model.transmission_rate[model.get_indexes_from_haplotype(haplotype)] = rate  #(rate=rate, haplotype=haplotype)
+# 	# assert_allclose(model.get_transmission_rate(), np.asarray(answer), atol=1e-14)
+# 	assert_allclose(model.transmission_rate, np.asarray(answer), atol=1e-14)
