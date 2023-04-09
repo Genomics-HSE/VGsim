@@ -428,7 +428,7 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
-                    if self.gs_it != self.general_samplings.end() and self.currentTime > self.gs_time:
+                    while self.gs_it != self.general_samplings.end() and self.currentTime > self.gs_time:
                         self.general_sampling(deref(self.gs_it).second)
 
             if self.events.ptr <= 100 and iterations > 100:
