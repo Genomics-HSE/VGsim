@@ -1481,6 +1481,17 @@ cdef class BirthDeathModel:
     def number_of_susceptible_groups(self):
         return self.susNum
 
+    @property
+    def general_sampling_conditions(self):
+        gs_size = self.general_samplings.size()
+        gs_conditions = np.zeros((gs_size, 2))
+        it = self.general_samplings.begin()
+        for i in range(gs_size):
+            gs_conditions[i, 0] = deref(it).first
+            gs_conditions[i, 1] = deref(it).second
+            postinc(it)
+        return gs_conditions
+
 
     def check_amount(self, amount, smth, zero=True):
         if isinstance(amount, int) == False:
@@ -1939,9 +1950,11 @@ cdef class BirthDeathModel:
         pass
 
     def set_general_sampling(self, sampling_proportion, sampling_times):
-        sampling_events_number = len(sampling_times)
-        self.check_amount(sampling_events_number, "general sampling events number")
-        self.check_list(sampling_times, 'list of general sampling times', sampling_events_number)
+        self.check_value(sampling_proportion, 'general sampling proportion', edge=1)
+        if not isinstance(sampling_times, list):
+            raise TypeError('Incorrect type of list of general sampling times. Type should be list.')
+        if not sampling_times:
+            raise ValueError('Incorrect length of list of general sampling times. Length should be greater than 0.')
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
         for sampling_time in sampling_times:

@@ -580,15 +580,26 @@ def test_set_immunity_transition_err(rate, source, target, error, text):
 
 
 #GENERAL SAMPLING
-# @pytest.mark.parametrize('sampling_proportion, sampling_times', [(0, []),
-# 													 (0.002, 'A*', [0.002, 0.002, 0.002, 0.002, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
-# 													 (0.003, 'AT', [2, 0.003, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
-# 													 (0.004, 0   , [0.004, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
-# 													 (0.005, 15  , [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0.005])])
-# def test_set_transmisstion_rate(rate, haplotype, answer):
-# 	model = Simulator(number_of_sites=2)
-# 	model.set_transmission_rate(rate=rate, haplotype=haplotype)
-# 	# print(type(model.get_indexes_from_haplotype(haplotype)[0]))
-# 	# model.transmission_rate[model.get_indexes_from_haplotype(haplotype)] = rate  #(rate=rate, haplotype=haplotype)
-# 	# assert_allclose(model.get_transmission_rate(), np.asarray(answer), atol=1e-14)
-# 	assert_allclose(model.transmission_rate, np.asarray(answer), atol=1e-14)
+@pytest.mark.parametrize('sampling_proportion, sampling_times, answer', [(0.1, [300, 200], [[200, 0.1], [300, 0.1]]),
+													 (0.2, [100.5], [[100.5, 0.2]]),
+													 (0, [400, 300, 200],[[200, 0], [300, 0], [400, 0]]),
+													 (1, [500], [[500, 1]])])
+def test_set_general_sampling(sampling_proportion, sampling_times, answer):
+	model = Simulator()
+	model.set_general_sampling(sampling_proportion=sampling_proportion, sampling_times=sampling_times)
+	assert_allclose(model.general_sampling_conditions, np.asarray(answer), atol=1e-14)
+
+@pytest.mark.parametrize('sampling_proportion, sampling_times, error, text', [(None, None, TypeError, 'Incorrect type of general sampling proportion. Type should be int or float.'),
+														  ('str', None, TypeError , 'Incorrect type of general sampling proportion. Type should be int or float.'),
+														  (-1, None, ValueError, 'Incorrect value of general sampling proportion. Value should be more or equal 0 and equal or less 1.'),
+														  (2, None, ValueError, 'Incorrect value of general sampling proportion. Value should be more or equal 0 and equal or less 1.'),
+														  (0.01, None, TypeError , 'Incorrect type of list of general sampling times. Type should be list.'),
+														  (0.01, 'str', TypeError, 'Incorrect type of list of general sampling times. Type should be list.'),
+														  (0.01, [], ValueError, 'Incorrect length of list of general sampling times. Length should be greater than 0.'),
+														  (0.01, [None], TypeError, 'Incorrect type of general sampling time. Type should be int or float.'),
+														  (0.01, ['str'], TypeError, 'Incorrect type of general sampling time. Type should be int or float.'),
+														  (0.01, [-100], ValueError, 'Incorrect value of general sampling time. Value should be more or equal 0.')])
+def test_set_general_sampling_err(sampling_proportion, sampling_times, error, text):
+	model = Simulator()
+	with pytest.raises(error, match=text):
+		model.set_general_sampling(sampling_proportion=sampling_proportion, sampling_times=sampling_times)

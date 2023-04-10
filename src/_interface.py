@@ -75,6 +75,10 @@ class Simulator:
 		return self.simulation.number_of_susceptible_groups
 
 	@property
+	def general_sampling_conditions(self):
+		return self.simulation.general_sampling_conditions
+
+	@property
 	def initial_haplotype(self):
 		return self.simulation.initial_haplotype
 
