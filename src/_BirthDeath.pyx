@@ -1954,7 +1954,7 @@ cdef class BirthDeathModel:
         if isinstance(sampling_times, (int, float)):
             sampling_times = [sampling_times]
         if not isinstance(sampling_times, list):
-            raise TypeError('Incorrect type of list of general sampling times. Type should be list or int.')
+            raise TypeError('Incorrect type of list of general sampling times. Type should be list, int or float.')
         if not sampling_times:
             raise ValueError('Incorrect length of list of general sampling times. Length should be greater than 0.')
         for sampling_time in sampling_times:
