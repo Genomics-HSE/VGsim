@@ -7,6 +7,11 @@ Fast simulator of viral genealogies in the world-scale pandemic scenarios.
 [![windows](https://github.com/Genomics-HSE/VGsim/actions/workflows/windows.yml/badge.svg)](https://github.com/Genomics-HSE/VGsim/actions/workflows/windows.yml)
 [![Documentation Status](https://readthedocs.org/projects/vg-sim/badge/?version=latest)](https://vg-sim.readthedocs.io/en/latest/?badge=latest)
 
+Important
+---------
+
+The command line interface support is currently limited. We strongly encourage users to work with Python API.
+
 Documentation
 -------------
 
