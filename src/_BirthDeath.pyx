@@ -10,7 +10,7 @@ from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
 from libcpp.map cimport map as map_cpp
 from libcpp.utility cimport pair
-from cython.operator cimport dereference as deref, postincrement as postinc
+from cython.operator cimport dereference as deref, preincrement as preinc
 from mc_lib.rndm cimport RndmWrapper
 
 from prettytable import PrettyTable
@@ -69,12 +69,12 @@ cdef class BirthDeathModel:
         double[:,::1] infectiousAuxTau, susceptibleAuxTau
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
-        vector[double] super_spread_rate
+        vector[double] super_spread_rate, general_sampling_parameters
         vector[Py_ssize_t] super_spread_left, super_spread_right, super_spread_pop
 
-        map_cpp[double, double] general_samplings
-        pair[double, double] general_sampling_item
-        map_cpp[double, double].iterator gs_it
+        map_cpp[double, vector[double]] general_samplings
+        pair[double, vector[double]] general_sampling_item
+        map_cpp[double, vector[double]].iterator gs_it
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
         memory_optimization, genome_length, recombination_probability):
@@ -1441,16 +1441,22 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void general_sampling(self, double sampling_proportion):
+    cdef void general_sampling(self, vector[double] gs_parameters):
         cdef:
             Py_ssize_t pi, hi, sampling_size
-        for pi in range(self.popNum):
-            sampling_size = int(self.totalInfectious[pi] * sampling_proportion)
+            double sampling_proportion
+            vector[double].iterator it = preinc(gs_parameters.begin())
+
+        sampling_proportion = gs_parameters[0]
+        while it != gs_parameters.end():
+            pi = <Py_ssize_t>deref(it)
+            sampling_size = <Py_ssize_t>(self.totalInfectious[pi] * sampling_proportion)
             for i in range(sampling_size):
                 self.rn = self.seed.uniform()
                 hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
                 self.Sampling(pi, hi)
-        postinc(self.gs_it)
+            preinc(it)
+        preinc(self.gs_it)
         self.gs_time = deref(self.gs_it).first
 
     @property
@@ -1484,12 +1490,14 @@ cdef class BirthDeathModel:
     @property
     def general_sampling_conditions(self):
         gs_size = self.general_samplings.size()
-        gs_conditions = np.zeros((gs_size, 2))
+        gs_conditions = np.full([gs_size, self.popNum + 2], -1.0)
         it = self.general_samplings.begin()
         for i in range(gs_size):
             gs_conditions[i, 0] = deref(it).first
-            gs_conditions[i, 1] = deref(it).second
-            postinc(it)
+            gs_parameters = deref(it).second
+            for j in range(gs_parameters.size()):
+                gs_conditions[i, j + 1] = gs_parameters[j]
+            preinc(it)
         return gs_conditions
 
 
@@ -1949,8 +1957,11 @@ cdef class BirthDeathModel:
         pass
         pass
 
-    def set_general_sampling(self, sampling_proportion, sampling_times):
+    def set_general_sampling(self, sampling_proportion, sampling_times, sampling_populations):
+        self.general_sampling_parameters.clear()
         self.check_value(sampling_proportion, 'general sampling proportion', edge=1)
+        self.general_sampling_parameters.push_back(float(sampling_proportion))
+
         if isinstance(sampling_times, (int, float)):
             sampling_times = [sampling_times]
         if not isinstance(sampling_times, list):
@@ -1959,13 +1970,30 @@ cdef class BirthDeathModel:
             raise ValueError('Incorrect length of list of general sampling times. Length should be greater than 0.')
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
+
+        if sampling_populations is None:
+            for i in range(self.popNum):
+                self.general_sampling_parameters.push_back(float(i))
+        else:
+            if isinstance(sampling_populations, int):
+                sampling_populations = [sampling_populations]
+            if not isinstance(sampling_populations, list):
+                raise TypeError('Incorrect type of list of general sampling populations. Type should be list, int or None.')
+            if not sampling_populations:
+                raise ValueError('Incorrect length of list of general sampling populations. Length should be greater than 0.')
+            for sampling_population in sampling_populations:
+                self.check_index(sampling_population, self.popNum, "general sampling population", none=False)
+
+            for sampling_population in sampling_populations:
+                self.general_sampling_parameters.push_back(float(sampling_population))
+
         for sampling_time in sampling_times:
             it = self.general_samplings.find(sampling_time)
             if it == self.general_samplings.end():
-                self.general_sampling_item = (sampling_time, sampling_proportion)
+                self.general_sampling_item = (sampling_time, self.general_sampling_parameters)
                 self.general_samplings.insert(self.general_sampling_item)
             else:
-                self.general_samplings[sampling_time] += sampling_proportion
+                self.general_samplings[sampling_time][0] += sampling_proportion
 
 
     def output_tree_mutations(self):

@@ -113,7 +113,7 @@ class Simulator:
 	def set_super_spread_rate(self, rate, left, right, population=None):
 		self.simulation.set_super_spread_rate(rate, left, right, population)
 
-	def set_general_sampling(self, sampling_proportion, sampling_times):
+	def set_general_sampling(self, sampling_proportion, sampling_times, sampling_populations=None):
 		"""
 		General sampling is an event during which the simulator samples user-defined proportion of infectious in every population. It appears at times set by the user.
 
@@ -123,7 +123,7 @@ class Simulator:
 		:param sampling_times: a list of times of general samplings.
 		:type sampling_times: list
 		"""
-		self.simulation.set_general_sampling(sampling_proportion, sampling_times)
+		self.simulation.set_general_sampling(sampling_proportion, sampling_times, sampling_populations)
 
 	@property
 	def transmission_rate(self):
