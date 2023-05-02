@@ -1444,18 +1444,46 @@ cdef class BirthDeathModel:
     cdef void general_sampling(self, vector[double] gs_parameters):
         cdef:
             Py_ssize_t pi, hi, sampling_size
-            double sampling_proportion
-            vector[double].iterator it = preinc(gs_parameters.begin())
+            double sampling_proportion, bin_rn
+            vector[double].iterator it = preinc(preinc(gs_parameters.begin()))
 
         sampling_proportion = gs_parameters[0]
-        while it != gs_parameters.end():
-            pi = <Py_ssize_t>deref(it)
-            sampling_size = <Py_ssize_t>(self.totalInfectious[pi] * sampling_proportion)
-            for i in range(sampling_size):
-                self.rn = self.seed.uniform()
-                hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
-                self.Sampling(pi, hi)
-            preinc(it)
+        mode = gs_parameters[1]
+
+        if mode == 0:
+            while it != gs_parameters.end():
+                pi = <Py_ssize_t>deref(it)
+                sampling_size = <Py_ssize_t>(self.totalInfectious[pi] * sampling_proportion)
+                print(sampling_size, "sampling_size")
+                for i in range(sampling_size):
+                    self.rn = self.seed.uniform()
+                    hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                    self.Sampling(pi, hi)
+                preinc(it)
+
+        elif mode == 1:
+            while it != gs_parameters.end():
+                pi = <Py_ssize_t>deref(it)
+                if sampling_proportion <= self.totalInfectious[pi]:
+                    for i in range(int(sampling_proportion)):
+                        self.rn = self.seed.uniform()
+                        hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                        self.Sampling(pi, hi)
+                else:
+                    print('General sampling with amount =', sampling_proportion, 'time =', self.gs_time, 'population =', pi, 'is impossible. General sampling amount is more than total amount of infectious in the population.')
+                preinc(it)
+
+        else:
+            while it != gs_parameters.end():
+                pi = <Py_ssize_t>deref(it)
+                for i in range(self.totalInfectious[pi]):
+                    bin_rn = self.seed.uniform()
+                    if sampling_proportion > bin_rn:
+                        self.rn = self.seed.uniform()
+                        hi, self.rn = fastChoose(self.hapPopRate[pi], self.infectPopRate[pi], self.rn)
+                        self.Sampling(pi, hi)
+                preinc(it)
+
         preinc(self.gs_it)
         self.gs_time = deref(self.gs_it).first
 
@@ -1490,7 +1518,7 @@ cdef class BirthDeathModel:
     @property
     def general_sampling_conditions(self):
         gs_size = self.general_samplings.size()
-        gs_conditions = np.full([gs_size, self.popNum + 2], -1.0)
+        gs_conditions = np.full([gs_size, self.popNum + 3], -1.0)
         it = self.general_samplings.begin()
         for i in range(gs_size):
             gs_conditions[i, 0] = deref(it).first
@@ -1957,9 +1985,13 @@ cdef class BirthDeathModel:
         pass
         pass
 
-    def set_general_sampling(self, sampling_proportion, sampling_times, sampling_populations):
+    def set_general_sampling(self, sampling_proportion, sampling_times, mode, sampling_populations):
         self.general_sampling_parameters.clear()
-        self.check_value(sampling_proportion, 'general sampling proportion', edge=1)
+
+        if mode == 'proportion' or mode == 'binomial':
+            self.check_value(sampling_proportion, 'general sampling proportion', edge=1)
+        else:
+            self.check_amount(sampling_proportion, 'general sampling proportion')
         self.general_sampling_parameters.push_back(float(sampling_proportion))
 
         if isinstance(sampling_times, (int, float)):
@@ -1970,6 +2002,19 @@ cdef class BirthDeathModel:
             raise ValueError('Incorrect length of list of general sampling times. Length should be greater than 0.')
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
+
+        if isinstance(mode, str):
+            if mode != 'proportion' and mode != 'amount'and mode != 'binomial':
+                raise ValueError('Incorrect general sampling mode. Mode should be "proportion", "amount" or "binomial".')
+        else:
+            raise TypeError('Incorrect type of general sampling mode. Type should be str.')
+
+        if mode == 'proportion':
+            self.general_sampling_parameters.push_back(0.0)
+        elif mode == 'amount':
+            self.general_sampling_parameters.push_back(1.0)
+        else:
+            self.general_sampling_parameters.push_back(2.0)
 
         if sampling_populations is None:
             for i in range(self.popNum):
