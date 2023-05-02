@@ -1985,8 +1985,14 @@ cdef class BirthDeathModel:
         pass
         pass
 
-    def set_general_sampling(self, sampling_proportion, sampling_times, mode, sampling_populations):
+    def set_general_sampling(self, mode, sampling_proportion, sampling_times, sampling_populations):
         self.general_sampling_parameters.clear()
+
+        if isinstance(mode, str):
+            if mode != 'proportion' and mode != 'amount'and mode != 'binomial':
+                raise ValueError('Incorrect general sampling mode. Mode should be "proportion", "amount" or "binomial".')
+        else:
+            raise TypeError('Incorrect type of general sampling mode. Type should be str.')
 
         if mode == 'proportion' or mode == 'binomial':
             self.check_value(sampling_proportion, 'general sampling proportion', edge=1)
@@ -2002,12 +2008,6 @@ cdef class BirthDeathModel:
             raise ValueError('Incorrect length of list of general sampling times. Length should be greater than 0.')
         for sampling_time in sampling_times:
             self.check_value(sampling_time, "general sampling time")
-
-        if isinstance(mode, str):
-            if mode != 'proportion' and mode != 'amount'and mode != 'binomial':
-                raise ValueError('Incorrect general sampling mode. Mode should be "proportion", "amount" or "binomial".')
-        else:
-            raise TypeError('Incorrect type of general sampling mode. Type should be str.')
 
         if mode == 'proportion':
             self.general_sampling_parameters.push_back(0.0)
