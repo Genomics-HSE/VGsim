@@ -23,8 +23,10 @@ simulator.set_sampling_rate(0.001)
 #Set mutation rates
 mutation_rate=0.00003
 substitution_weights=[1,1,1,2]#ATCG
-simulator.set_mutation_rate(mutation_rate, substitution_weights)
+simulator.set_mutation_rate(mutation_rate)
+simulator.set_mutation_probabilities(substitution_weights)
 simulator.set_mutation_rate(3*mutation_rate, haplotype='G*', mutation=1)
+
 
 #Set host immunity types triggered by infection
 simulator.set_susceptibility_type(1)
@@ -47,7 +49,9 @@ simulator.set_migration_probability(10/365/2)
 simulator.set_sampling_multiplier(3, population=1)
 simulator.set_sampling_multiplier(0, population=2)
 
-simulator.set_general_sampling(0.1, 3, [20, 10, 30])
+simulator.set_general_sampling(50, [100, 200], 'amount', None)
+print(simulator.general_sampling_conditions)
+#simulator.set_general_sampling(0.11, [700, 300])
 
 #simulator.set_super_spread_rate(0.1, 10, 20, 0)
 
@@ -55,6 +59,8 @@ simulator.set_general_sampling(0.1, 3, [20, 10, 30])
 simulator.set_npi([0.1, 0.01, 0.002])
 
 #Run simulation with the exact algorithm
-simulator.simulate(10000000, epidemic_time=110)
+simulator.simulate(10000000, epidemic_time=1100)
 
 simulator.genealogy()
+
+#Save the genealogy with mutations and migrations
