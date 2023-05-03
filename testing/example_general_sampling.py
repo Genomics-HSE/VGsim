@@ -49,7 +49,7 @@ simulator.set_migration_probability(10/365/2)
 simulator.set_sampling_multiplier(3, population=1)
 simulator.set_sampling_multiplier(0, population=2)
 
-simulator.set_general_sampling(50, [100, 200], 'amount', None)
+simulator.set_general_sampling('amount', 50, [100, 100], None)
 print(simulator.general_sampling_conditions)
 #simulator.set_general_sampling(0.11, [700, 300])
 

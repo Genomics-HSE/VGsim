@@ -11,6 +11,7 @@ from libcpp.vector cimport vector
 from libcpp.map cimport map as map_cpp
 from libcpp.utility cimport pair
 from cython.operator cimport dereference as deref, preincrement as preinc
+from libcpp cimport bool
 from mc_lib.rndm cimport RndmWrapper
 
 from prettytable import PrettyTable
@@ -411,7 +412,7 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time, Py_ssize_t attempts):
-        cdef Py_ssize_t pi 
+        cdef Py_ssize_t pi
 
         self.PrepareParameters(iterations)
         self.CheckSizes()
@@ -429,7 +430,9 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
-                    while self.gs_it != self.general_samplings.end() and self.currentTime > self.gs_time:
+                    gs_flag = True
+                    if self.gs_it != self.general_samplings.end() and self.currentTime > self.gs_time:
+                        self.currentTime = self.gs_time
                         self.general_sampling(deref(self.gs_it).second)
 
             if self.events.ptr <= 100 and iterations > 100:
