@@ -1,3 +1,5 @@
+from libcpp.map cimport map
+
 cdef class Mutations:
     cdef:
         vector[Py_ssize_t] nodeId, AS, DS, site
@@ -68,29 +70,26 @@ cdef class Lockdowns:
 
 cdef class Recombination:
     cdef:
-        vector[Py_ssize_t] positions
-        # vector[Py_ssize_t] positions, hi1s, hi2s
-        # vector[double] times
+        map[double, Py_ssize_t] positions, time
+        map[Py_ssize_t, Py_ssize_t] branch
+        vector[Py_ssize_t] haplotypes
 
-        vector[Py_ssize_t] idevents, his, hi2s, nhis, posRecombs
+        Py_ssize_t counter
 
     def __init__(self):
-        pass
+        self.counter = 0
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void AddRecombination_forward(self, Py_ssize_t Id, Py_ssize_t hi, Py_ssize_t hi2, Py_ssize_t posRecomb, Py_ssize_t nhi):
-        self.idevents.push_back(Id)
-        self.his.push_back(hi)
-        self.hi2s.push_back(hi2)
-        self.nhis.push_back(nhi)
-        self.posRecombs.push_back(posRecomb)
+    cdef void AddRecombination(self, double time, Py_ssize_t position, Py_ssize_t haplotype):
+        self.positions[time] = position
+        self.haplotypes.push_back(haplotype)
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    cdef void AddRecombination(self, Py_ssize_t position):
-    # cdef void AddRecombination(self, Py_ssize_t position, Py_ssize_t hi1, Py_ssize_t hi2, double time):
-        self.positions.push_back(position)
-        # self.hi1s.push_back(hi1)
-        # self.hi2s.push_back(hi2)
-        # self.times.push_back(time)
+    cdef Py_ssize_t get_next_recombination(self):
+        self.counter += 1
+        return self.haplotypes[self.counter - 1]
+
+    cdef void AddBranch(self, double time, Py_ssize_t child, Py_ssize_t parent):
+        self.time[time] = parent
+        self.branch[child] = parent
+

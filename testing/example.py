@@ -16,7 +16,7 @@ simulator.set_sampling_rate(0.001)
 #Set mutation rates
 mutation_rate=0.00003
 substitution_weights=[1,1,1,2]#ATCG
-simulator.set_mutation_rate(mutation_rate, substitution_weights)
+simulator.set_mutation_rate(mutation_rate, haplotype='G*', mutation=1)
 simulator.set_mutation_rate(3*mutation_rate, haplotype='G*', mutation=1)
 
 #Set host immunity types triggered by infection
@@ -68,15 +68,15 @@ if os.path.exists('example_output') == False:
 	os.mkdir('example_output')
 os.chdir('example_output')
 
-#Generate a plot with epidemiological curves
-simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
-simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
-simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
-simulator.add_title(name="AA haplotype")
-simulator.add_legend()
-simulator.plot('plot')
+# #Generate a plot with epidemiological curves
+# simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+# simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+# simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
+# simulator.add_title(name="AA haplotype")
+# simulator.add_legend()
+# simulator.plot('plot')
 
 #Save the genealogy with mutations and migrations
-simulator.output_newick()
-simulator.output_mutations('mutations')
-simulator.output_migrations('migrations')
+simulator.export_newick()
+simulator.export_mutations('mutations')
+simulator.export_migrations('migrations')
