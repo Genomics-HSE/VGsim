@@ -65,6 +65,8 @@ if isinstance(clargs.suscepTransition, list):
     clargs.suscepTransition = clargs.suscepTransition[0]
 if isinstance(clargs.seed, list):
     clargs.seed = clargs.seed[0]
+if isinstance(clargs.createNewick, list):
+    clargs.createNewick = clargs.createNewick[0]
 if isinstance(clargs.output_chain_events, list):
     clargs.output_chain_events = clargs.output_chain_events[0]
 
@@ -135,10 +137,10 @@ simulator.simulate(clargs.iterations, clargs.sampleSize, clargs.time)
 simulator.genealogy(int(seed))
 
 if clargs.createNewick:
-    simulator.output_newick(clargs.createNewick)
+    simulator.export_newick(clargs.createNewick)
 if clargs.writeMutations:
-    simulator.output_mutations(clargs.writeMutations)
+    simulator.export_mutations(clargs.writeMutations)
 if clargs.writeMigrations:
-    simulator.output_migrations(clargs.writeMigrations)
+    simulator.export_migrations(clargs.writeMigrations)
 if clargs.output_chain_events:
-    simulator.output_chain_events(clargs.output_chain_events)
+    simulator.export_chain_events(clargs.output_chain_events)

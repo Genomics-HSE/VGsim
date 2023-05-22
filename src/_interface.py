@@ -668,7 +668,7 @@ class Simulator:
 		if isinstance(haplotype, int) == True:
 			self.plot_infectious(population, haplotype, step_num, label_infectious, label_samples)
 		elif isinstance(haplotype, str) == True:
-			haplotypes = self.simulation.create_list_haplotypes(haplotype)
+			haplotypes = self.simulation.create_list_for_cycles(haplotype, self.simulation.haplotype_number)
 			for hi in haplotypes:
 				self.plot_infectious(population, hi, step_num, label_infectious, label_samples)
 		else:

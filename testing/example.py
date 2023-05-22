@@ -17,6 +17,7 @@ simulator.set_sampling_rate(0.001)
 mutation_rate=0.00003
 substitution_weights=[1,1,1,2]#ATCG
 simulator.set_mutation_rate(mutation_rate, haplotype='G*', mutation=1)
+simulator.set_mutation_probabilities(substitution_weights)
 simulator.set_mutation_rate(3*mutation_rate, haplotype='G*', mutation=1)
 
 #Set host immunity types triggered by infection
