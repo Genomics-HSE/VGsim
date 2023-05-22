@@ -640,7 +640,6 @@ cdef class BirthDeathModel:
         else:
             self.NewInfections(pi, si, hi)
             self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.hapNum)
-            # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, 0)
 
         self.immuneSourcePopRate[pi, si] = self.suscepCumulTransition[si]*self.susceptible[pi, si]
         self.UpdateRates(pi, True, True, True)
