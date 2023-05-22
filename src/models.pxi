@@ -86,10 +86,14 @@ cdef class Recombination:
         self.haplotypes.push_back(haplotype)
 
     cdef Py_ssize_t get_next_recombination(self):
-        self.counter += 1
-        return self.haplotypes[self.counter - 1]
+        self.counter -= 1
+        return self.haplotypes[self.counter]
 
     cdef void AddBranch(self, double time, Py_ssize_t child, Py_ssize_t parent):
         self.time[time] = parent
         self.branch[child] = parent
+
+    cdef void UpdateBranch(self):
+        self.branch.clear()
+        self.time.clear()
 

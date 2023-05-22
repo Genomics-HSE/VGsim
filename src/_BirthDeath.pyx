@@ -33,7 +33,8 @@ cdef class BirthDeathModel:
 
         bint first_simulation, sampling_probability, memory_optimization
         Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, \
-        mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length
+        mCounter, iCounter, swapLockdown, migPlus, migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length, \
+        ptrTreeAndTime
         double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination, SuperSpreadRate
 
         Events events
@@ -45,7 +46,7 @@ cdef class BirthDeathModel:
 
         npy_int64[::1] suscType, sizes, totalSusceptible, totalInfectious, lockdownON, hapToNum, numToHap, sitesPosition
         npy_int64[::1] tree, tree_pop
-        npy_int64[:,::1] susceptible, infectious, initial_susceptible, initial_infectious
+        npy_int64[:,::1] susceptible, infectious, initial_susceptible, initial_infectious, save_infectious
 
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition, immunePopRate, infectPopRate, \
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
@@ -68,9 +69,14 @@ cdef class BirthDeathModel:
         vector[double] super_spread_rate
         vector[Py_ssize_t] super_spread_left, super_spread_right, super_spread_pop
 
+        vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
+
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
         memory_optimization, genome_length, recombination_probability):
+        cdef:
+            vector[vector[Py_ssize_t]] vecint2
+            vector[Py_ssize_t] vecint1
         self.check_amount(seed, 'seed', zero=False)
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
@@ -182,6 +188,7 @@ cdef class BirthDeathModel:
         self.susceptible = np.zeros((self.popNum, self.susNum), dtype=np.int64)
         self.initial_susceptible = np.zeros((self.popNum, self.susNum), dtype=np.int64)
         self.initial_infectious = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
+        self.save_infectious = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
 
         self.maxEffectiveBirthMigration = np.zeros(self.popNum, dtype=float)
         self.suscepCumulTransition = np.zeros(self.susNum, dtype=float)
@@ -231,6 +238,14 @@ cdef class BirthDeathModel:
 
         self.infectiousDelta = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
         self.susceptibleDelta = np.zeros((self.popNum, self.susNum), dtype=np.int64)
+
+        self.ptrTreeAndTime = 0
+        for pn in range(self.popNum):
+            self.liveBranchesS.push_back(vecint2)
+            self.newLineages.push_back(vecint2)
+            for hn in range(self.hapNum):
+                self.liveBranchesS[pn].push_back(vecint1)
+                self.newLineages[pn].push_back(vecint1)
 
 
     @cython.boundscheck(False)
@@ -390,14 +405,6 @@ cdef class BirthDeathModel:
 
         return self.bRate[self.numToHap[hi]] * ps
 
-        # for sn in range(self.susNum):
-        #     self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn] * self.susceptibility[self.numToHap[hi], sn]
-        #     for pn in range(self.popNum):
-        #         ps += self.susceptHapPopRate[pi, hi, sn] * self.effectiveMigration[pi, pn]
-
-        # return self.bRate[self.numToHap[hi], cn] * ps
-
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cpdef void SimulatePopulation(self, Py_ssize_t iterations, Py_ssize_t sample_size, float time, Py_ssize_t attempts):
@@ -422,6 +429,8 @@ cdef class BirthDeathModel:
             else:
                 self.good_attempt = i+1
                 break
+
+        self.SaveInfectious()
 
         if self.totalRate == 0.0 or self.globalInfectious == 0:
             print('Simulation finished because no infections individuals remain!')
@@ -515,6 +524,7 @@ cdef class BirthDeathModel:
             pi = self.SuperSpreadEvent()
         return pi
 
+    # Итоговая версия GenerateEvent
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
     # cdef Py_ssize_t GenerateEvent(self):
@@ -637,33 +647,6 @@ cdef class BirthDeathModel:
 
         self.bCounter += 1
 
-    # def print_recomb(self, left, right):
-    #     for i in range(left, right):
-    #         print('hi(', self.calculate_string_from_haplotype(self.rec.his[i]),  ') = ', self.rec.his[i], \
-    #             ', hi2(', self.calculate_string_from_haplotype(self.rec.hi2s[i]),  ') = ', self.rec.hi2s[i], \
-    #             ', nhi(', self.calculate_string_from_haplotype(self.rec.nhis[i]),  ') = ', self.rec.nhis[i], \
-    #             ', pos = ', self.rec.posRecombs[i], sep='')
-
-    # @cython.cdivision(True)
-    # cdef Py_ssize_t calculate_recombination_haplotype(Py_ssize_t hi1, Py_ssize_t hi2, Py_ssize_t posRecomb):
-    #     nhi = 0
-    #     for s in range(self.sites):
-    #         if self.sitesPosition[s] < posRecomb:
-    #             nhi += 4**(self.sites-s-1)*int(floor(hi/4**(self.sites-s-1)) % 4)
-    #         else:
-    #             nhi += 4**(self.sites-s-1)*int(floor(hi2/4**(self.sites-s-1)) % 4)
-    #     return nhi
-
-    def print_chain(self):
-        for i in range(self.events.ptr):
-            print(f'type - {self.events.types[i]}, haplotypes - {self.events.haplotypes[i]}, populations - {self.events.populations[i]}, newHaplotypes - {self.events.newHaplotypes[i]}, newPopulations - {self.events.newPopulations[i]}, time - {self.events.times[i]}')
-
-    def print_tree(self):
-        for i in range(2 * self.sCounter - 1 + self.rec.haplotypes.size()):
-            print(self.tree[i], end=' ')
-        print(self.rec.branch)
-
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void Death(self, Py_ssize_t pi, Py_ssize_t hi, bint add_event = True): # hi - program number
@@ -684,6 +667,7 @@ cdef class BirthDeathModel:
         self.sCounter += 1
         self.events.AddEvent(self.currentTime, SAMPLING, self.numToHap[hi], pi, self.suscType[self.numToHap[hi]], 0)
 
+    # Всё готово, нужно только поменять
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
     # cdef void Recovery(self, Py_ssize_t pi, Py_ssize_t hi, Py_ssize_t ci, bint sampling): # hi - program number
@@ -847,14 +831,21 @@ cdef class BirthDeathModel:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef void SaveInfectious(self):
+        for pn in range(self.popNum):
+            for hn in range(self.hapNum):
+                self.save_infectious[pn, hn] = self.infectious[pn, hn]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     @cython.cdivision(True)
     cpdef GetGenealogy(self, seed):
         cdef:
             Py_ssize_t ptrTreeAndTime, n1, n2, id1, id2, id3, lbs, lbs_e, ns, nt, idt, ids, lbss, propNum
             double p, p1
-            vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
-            vector[vector[Py_ssize_t]] vecint2
-            vector[Py_ssize_t] vecint1
+            # vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
+            # vector[vector[Py_ssize_t]] vecint2
+            # vector[Py_ssize_t] vecint1
             npy_int64[:,::1] liveBranches
 
             double e_time, me_time
@@ -874,56 +865,29 @@ cdef class BirthDeathModel:
             if seed is not None:
                 self.seed = RndmWrapper(seed=(seed, 0))
 
-            ptrTreeAndTime = 0
-            self.tree = np.zeros(2 * self.sCounter - 1 + self.rec.haplotypes.size(), dtype=np.int64)
-            self.tree_pop = np.zeros(2 * self.sCounter - 1 + self.rec.haplotypes.size(), dtype=np.int64)
-            self.times = np.zeros(2 * self.sCounter - 1 + self.rec.haplotypes.size(), dtype=float)
+            self.ptrTreeAndTime = 0
+            self.rec.counter = self.rec.haplotypes.size()
+            self.tree = np.zeros(2 * self.sCounter - 1 + 2 * self.rec.haplotypes.size(), dtype=np.int64)
+            self.tree_pop = np.zeros(2 * self.sCounter - 1 + 2 * self.rec.haplotypes.size(), dtype=np.int64)
+            self.times = np.zeros(2 * self.sCounter - 1 + 2 * self.rec.haplotypes.size(), dtype=float)
 
-            for i in range( self.popNum ):
-                liveBranchesS.push_back(vecint2)
-                for _ in range( self.hapNum ):
-                    liveBranchesS[i].push_back(vecint1)
+            self.rec.UpdateBranch()
+            for pn in range(self.popNum):
+                for hn in range(self.hapNum):
+                    self.infectiousDelta[pn, hn] = 0
+                    self.infectious[pn, hn] = self.save_infectious[pn, hn]
 
-            for i in range( self.popNum ):
-                newLineages.push_back(vecint2)
-                for _ in range( self.hapNum ):
-                    newLineages[i].push_back(vecint1)
-
-            for i in range( self.popNum ):
-                for j in range( self.hapNum ):
-                    self.infectiousDelta[i, j] = 0
-
-            print('Start')
             for e_id in range(self.events.ptr-1, -1, -1):
                 # this event
-                print("infectious(mutable)----")
-                for pn in range(self.popNum):
-                    for hn in range(self.currentHapNum):
-                        print(self.infectious[pn, hn], end=" ")
-                    print()
-                print('sampling(mutable)----')
-                for pn in range(self.popNum):
-                    print(liveBranchesS[pn][0])
-                    # for hn in range(self.currentHapNum):
-                    #     print(liveBranchesS[pn][hn])
-                    # print()
-                print()
                 e_time = self.events.times[e_id]
                 e_type_ = self.events.types[e_id]
                 e_haplotype = self.events.haplotypes[e_id]
                 e_population = self.events.populations[e_id]
                 e_newHaplotype = self.events.newHaplotypes[e_id]
                 e_newPopulation = self.events.newPopulations[e_id]
-                # print('event')
-                # print(e_type_)
-                # print(e_haplotype)
-                # print(e_population)
-                # print(e_newHaplotype)
-                # print(e_newPopulation)
                 if e_type_ == BIRTH:
-                    print('Birth')
                     if e_newPopulation == self.hapNum:
-                        lbs = liveBranchesS[e_population][e_haplotype].size()
+                        lbs = self.liveBranchesS[e_population][e_haplotype].size()
                         lbs_e = self.infectious[e_population, self.hapToNum[e_haplotype]]
                         p = float(lbs) * float(lbs - 1.0) / float(lbs_e) / float(lbs_e - 1.0)
                         if self.seed.uniform() < p:
@@ -932,131 +896,91 @@ cdef class BirthDeathModel:
                             if n2 >= n1:
                                 n2 += 1
 
-                            self.tree[liveBranchesS[e_population][e_haplotype][n1]] = ptrTreeAndTime
-                            self.tree[liveBranchesS[e_population][e_haplotype][n2]] = ptrTreeAndTime
-                            self.tree[ptrTreeAndTime] = -1
-                            self.tree_pop[ptrTreeAndTime] = e_population
-                            self.times[ptrTreeAndTime] = e_time
+                            self.tree[self.liveBranchesS[e_population][e_haplotype][n1]] = self.ptrTreeAndTime
+                            self.tree[self.liveBranchesS[e_population][e_haplotype][n2]] = self.ptrTreeAndTime
+                            self.tree[self.ptrTreeAndTime] = -1
+                            self.tree_pop[self.ptrTreeAndTime] = e_population
+                            self.times[self.ptrTreeAndTime] = e_time
 
-                            liveBranchesS[e_population][e_haplotype][n1] = ptrTreeAndTime
-                            liveBranchesS[e_population][e_haplotype][n2] = liveBranchesS[e_population][e_haplotype][lbs-1]
-                            liveBranchesS[e_population][e_haplotype].pop_back()
-                            ptrTreeAndTime += 1
+                            self.liveBranchesS[e_population][e_haplotype][n1] = self.ptrTreeAndTime
+                            self.liveBranchesS[e_population][e_haplotype][n2] = self.liveBranchesS[e_population][e_haplotype][lbs-1]
+                            self.liveBranchesS[e_population][e_haplotype].pop_back()
+                            self.ptrTreeAndTime += 1
                         self.infectious[e_population, self.hapToNum[e_haplotype]] -= 1
                     else:
-                        print('Recomb')
                         nhi = self.rec.get_next_recombination()
-                        # print(nhi)
-                        lbs_1 = liveBranchesS[e_population][nhi].size()
-                        # print(lbs_1)
+                        lbs_1 = self.liveBranchesS[e_population][nhi].size()
                         if self.seed.uniform() < lbs_1 / self.infectious[e_population, self.hapToNum[nhi]]:
-                            print('1_')
                             n_1 = int(floor(lbs_1 * self.seed.uniform()))
-                            # print(n_1)
-                            node_1 = liveBranchesS[e_population][nhi][n_1]
-                            self.tree[node_1] = ptrTreeAndTime
-                            self.tree_pop[ptrTreeAndTime] = e_population
-                            self.times[ptrTreeAndTime] = e_time
+                            node_1 = self.liveBranchesS[e_population][nhi][n_1]
+                            self.tree[node_1] = self.ptrTreeAndTime
+                            self.rec.AddBranch(self.currentTime, node_1, self.ptrTreeAndTime)
+                            self.tree_pop[self.ptrTreeAndTime] = e_population
+                            self.times[self.ptrTreeAndTime] = e_time
+                            self.liveBranchesS[e_population][nhi][n_1] = self.liveBranchesS[e_population][nhi][lbs_1 - 1]
+                            self.liveBranchesS[e_population][nhi].pop_back()
+                            self.infectious[e_population, self.hapToNum[nhi]] -= 1
 
-                            liveBranchesS[e_population][nhi][n_1] = liveBranchesS[e_population][nhi][lbs_1 - 1]
-                            liveBranchesS[e_population][nhi].pop_back()
-                            # self.infectious[e_population, self.hapToNum[nhi]] -= 1
+                            p_1 = self.calculate_parent(e_population, e_haplotype)
+                            self.ptrTreeAndTime += 1
+                            p_2 = self.calculate_parent(e_population, e_newPopulation)
 
-                            # print(liveBranchesS[e_population][nhi])
+                            self.add_parent(e_population, e_haplotype, self.ptrTreeAndTime - 1, p_1)
+                            self.add_parent(e_population, e_newPopulation, self.ptrTreeAndTime, p_2)
 
-                            lbs_2 = liveBranchesS[e_population][e_haplotype].size()
-                            # print('2_')
-                            p_1 = self.seed.uniform() < lbs_2 / self.infectious[e_population, self.hapToNum[e_haplotype]]
-                            if p_1:
-                                # print('3_')
-                                n_2 = int(floor(lbs_2 * self.seed.uniform()))
-                                self.tree[liveBranchesS[e_population][e_haplotype][n_2]] = ptrTreeAndTime
-
-                                liveBranchesS[e_population][e_haplotype][n_2] = liveBranchesS[e_population][e_haplotype][lbs_2 - 1]
-                                liveBranchesS[e_population][e_haplotype].pop_back()
-                                # self.infectious[e_population, self.hapToNum[nhi]] -= 1
-                            # self.tree[ptrTreeAndTime] = -1
-                            # liveBranchesS[e_population][e_haplotype].push_back(ptrTreeAndTime)
-                            ptrTreeAndTime += 1
-
-                            # print(liveBranchesS[e_population][nhi])
-                            self.rec.AddBranch(self.currentTime, node_1, ptrTreeAndTime)
-                            lbs_3 = liveBranchesS[e_population][e_newPopulation].size()
-                            # print('4_')
-                            p_2 = self.seed.uniform() < lbs_3 / self.infectious[e_population, self.hapToNum[e_newPopulation]]
-                            if p_2:
-                            # if self.seed.uniform() < lbs_3 / self.infectious[e_population, self.hapToNum[e_newPopulation]]:
-                                # print('5_')
-                                n_3 = int(floor(lbs_3 * self.seed.uniform()))
-                                self.tree[liveBranchesS[e_population][e_newPopulation][n_3]] = ptrTreeAndTime
-
-                                liveBranchesS[e_population][e_newPopulation][n_3] = liveBranchesS[e_population][e_newPopulation][lbs_3 - 1]
-                                liveBranchesS[e_population][e_newPopulation].pop_back()
-                                # self.infectious[e_population, self.hapToNum[nhi]] -= 1
-                            self.tree[ptrTreeAndTime - 1] = -1
-                            liveBranchesS[e_population][e_haplotype].push_back(ptrTreeAndTime - 1)
-                            self.tree[ptrTreeAndTime] = -1
-                            liveBranchesS[e_population][e_newPopulation].push_back(ptrTreeAndTime)
-                            ptrTreeAndTime += 1
-                            # if p_1:
-                            #     self.infectious[e_population, self.hapToNum[nhi]] += 1
-                            # if p_2:
-                            #     self.infectious[e_population, self.hapToNum[nhi]] += 1
-
+                            self.infectious[e_population, self.hapToNum[nhi]] += 1
+                            self.ptrTreeAndTime += 1
                         self.infectious[e_population, self.hapToNum[nhi]] -= 1
-                        print(liveBranchesS[e_population][nhi])
-                        print('End')
 
                 elif e_type_ == DEATH:
                     self.infectious[e_population, self.hapToNum[e_haplotype]] += 1
                 elif e_type_ == SAMPLING:
-                    print('Sample')
                     self.infectious[e_population, self.hapToNum[e_haplotype]] += 1
-                    liveBranchesS[e_population][e_haplotype].push_back( ptrTreeAndTime )
-                    self.tree[ptrTreeAndTime] = -1
-                    self.tree_pop[ptrTreeAndTime] = e_population
-                    self.times[ptrTreeAndTime] = e_time
-                    ptrTreeAndTime += 1
+                    self.liveBranchesS[e_population][e_haplotype].push_back( self.ptrTreeAndTime )
+                    self.tree[self.ptrTreeAndTime] = -1
+                    self.tree_pop[self.ptrTreeAndTime] = e_population
+                    self.times[self.ptrTreeAndTime] = e_time
+                    self.ptrTreeAndTime += 1
                 elif e_type_ == MUTATION:
-                    lbs = liveBranchesS[e_population][e_newHaplotype].size()
+                    lbs = self.liveBranchesS[e_population][e_newHaplotype].size()
                     p = float(lbs)/self.infectious[e_population, e_newHaplotype]
                     if self.seed.uniform() < p:
                         n1 = int(floor( lbs*self.seed.uniform() ))
-                        id1 = liveBranchesS[e_population][e_newHaplotype][n1]
-                        liveBranchesS[e_population][e_newHaplotype][n1] = liveBranchesS[e_population][e_newHaplotype][lbs-1]
-                        liveBranchesS[e_population][e_newHaplotype].pop_back()
-                        liveBranchesS[e_population][e_haplotype].push_back(id1)
+                        id1 = self.liveBranchesS[e_population][e_newHaplotype][n1]
+                        self.liveBranchesS[e_population][e_newHaplotype][n1] = self.liveBranchesS[e_population][e_newHaplotype][lbs-1]
+                        self.liveBranchesS[e_population][e_newHaplotype].pop_back()
+                        self.liveBranchesS[e_population][e_haplotype].push_back(id1)
                         self.mut.AddMutation(id1, e_haplotype, e_newHaplotype, e_time)
                     self.infectious[e_population, e_newHaplotype] -= 1
                     self.infectious[e_population, e_haplotype] += 1
                 elif e_type_ == SUSCCHANGE:
                     pass
                 elif e_type_ == MIGRATION:
-                    lbs = liveBranchesS[e_newPopulation][e_haplotype].size()
+                    lbs = self.liveBranchesS[e_newPopulation][e_haplotype].size()
                     p = float(lbs)/self.infectious[e_newPopulation, e_haplotype]
                     if self.seed.uniform() < p:
                         nt = int(floor( lbs*self.seed.uniform() ))
-                        lbss = liveBranchesS[e_population][e_haplotype].size()
+                        lbss = self.liveBranchesS[e_population][e_haplotype].size()
                         p1 = float(lbss)/self.infectious[e_population, e_haplotype]
                         if self.seed.uniform() < p1:
                             ns = int(floor( lbss*self.seed.uniform() ))
-                            idt = liveBranchesS[e_newPopulation][e_haplotype][nt]
-                            ids = liveBranchesS[e_population][e_haplotype][ns]
-                            id3 = ptrTreeAndTime
-                            liveBranchesS[e_population][e_haplotype][ns] = id3
-                            liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
-                            liveBranchesS[e_newPopulation][e_haplotype].pop_back()
+                            idt = self.liveBranchesS[e_newPopulation][e_haplotype][nt]
+                            ids = self.liveBranchesS[e_population][e_haplotype][ns]
+                            id3 = self.ptrTreeAndTime
+                            self.liveBranchesS[e_population][e_haplotype][ns] = id3
+                            self.liveBranchesS[e_newPopulation][e_haplotype][nt] = self.liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
+                            self.liveBranchesS[e_newPopulation][e_haplotype].pop_back()
                             self.tree[idt] = id3
                             self.tree[ids] = id3
-                            self.tree[ptrTreeAndTime] = -1
-                            self.tree_pop[ptrTreeAndTime] = e_population
-                            self.times[ptrTreeAndTime] = e_time
-                            ptrTreeAndTime += 1
+                            self.tree[self.ptrTreeAndTime] = -1
+                            self.tree_pop[self.ptrTreeAndTime] = e_population
+                            self.times[self.ptrTreeAndTime] = e_time
+                            self.ptrTreeAndTime += 1
                             self.mig.AddMigration(idt, e_time, e_population, e_newPopulation)
                         else:
-                            liveBranchesS[e_population][e_haplotype].push_back(liveBranchesS[e_newPopulation][e_haplotype][nt])
-                            liveBranchesS[e_newPopulation][e_haplotype][nt] = liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
-                            liveBranchesS[e_newPopulation][e_haplotype].pop_back()
+                            self.liveBranchesS[e_population][e_haplotype].push_back(self.liveBranchesS[e_newPopulation][e_haplotype][nt])
+                            self.liveBranchesS[e_newPopulation][e_haplotype][nt] = self.liveBranchesS[e_newPopulation][e_haplotype][lbs-1]
+                            self.liveBranchesS[e_newPopulation][e_haplotype].pop_back()
                     self.infectious[e_newPopulation, e_haplotype] -= 1
                 elif e_type_ == MULTITYPE:
                     for me_id in range(e_haplotype, e_population):
@@ -1069,7 +993,7 @@ cdef class BirthDeathModel:
                         me_newPopulation = self.multievents.newPopulations[me_id]
 
                         if me_type_ == BIRTH:
-                            lbs = liveBranchesS[me_population][me_haplotype].size()
+                            lbs = self.liveBranchesS[me_population][me_haplotype].size()
                             lbs_e = self.infectious[me_population, me_haplotype]
                             if me_num == 0 or lbs == 0:
                                 mt_ev_num = 0
@@ -1081,33 +1005,29 @@ cdef class BirthDeathModel:
                                 n2 = int(floor( (lbs-1)*self.seed.uniform() ))
                                 if n2 >= n1:
                                     n2 += 1
-                                id1 = liveBranchesS[me_population][me_haplotype][n1]
-                                id2 = liveBranchesS[me_population][me_haplotype][n2]
-                                id3 = ptrTreeAndTime
-                                newLineages[me_population][me_haplotype].push_back(id3)
+                                id1 = self.liveBranchesS[me_population][me_haplotype][n1]
+                                id2 = self.liveBranchesS[me_population][me_haplotype][n2]
+                                id3 = self.ptrTreeAndTime
+                                self.newLineages[me_population][me_haplotype].push_back(id3)
                                 if n1 == lbs-1:#TODO: need to check if we really need these if and elif. Most likely - no!
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
-                                    liveBranchesS[me_population][me_haplotype][n2] = liveBranchesS[me_population][me_haplotype][lbs-2]
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_population][me_haplotype][n2] = self.liveBranchesS[me_population][me_haplotype][lbs-2]
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
                                 elif n2 == lbs-1:
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
-                                    liveBranchesS[me_population][me_haplotype][n1] = liveBranchesS[me_population][me_haplotype][lbs-2]
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_population][me_haplotype][n1] = self.liveBranchesS[me_population][me_haplotype][lbs-2]
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
                                 else:
-                                    liveBranchesS[me_population][me_haplotype][n1] = liveBranchesS[me_population][me_haplotype][lbs-1]
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
-                                    liveBranchesS[me_population][me_haplotype][n2] = liveBranchesS[me_population][me_haplotype][lbs-2]
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_population][me_haplotype][n1] = self.liveBranchesS[me_population][me_haplotype][lbs-1]
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_population][me_haplotype][n2] = self.liveBranchesS[me_population][me_haplotype][lbs-2]
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
                                 self.tree[id1] = id3
                                 self.tree[id2] = id3
-                                self.tree[ptrTreeAndTime] = -1
-                                self.tree_pop[ptrTreeAndTime] = me_population
-                                # self.tree[id1, 0] = id3
-                                # self.tree[id2, 0] = id3
-                                # self.tree[ptrTreeAndTime, 0] = -1
-                                # self.tree_pop[ptrTreeAndTime, 0] = me_population
-                                self.times[ptrTreeAndTime] = me_time
-                                ptrTreeAndTime += 1
+                                self.tree[self.ptrTreeAndTime] = -1
+                                self.tree_pop[self.ptrTreeAndTime] = me_population
+                                self.times[self.ptrTreeAndTime] = me_time
+                                self.ptrTreeAndTime += 1
                                 lbs -= 2
                             self.infectiousDelta[me_population, me_haplotype] -= me_num
                         elif me_type_ == DEATH:
@@ -1115,27 +1035,23 @@ cdef class BirthDeathModel:
                         elif me_type_ == SAMPLING:
                             self.infectiousDelta[me_population, me_haplotype] += me_num
                             for i in range(me_num):
-                                #liveBranchesS[me_population][me_haplotype].push_back( ptrTreeAndTime )
-                                newLineages[me_population][me_haplotype].push_back( ptrTreeAndTime )
-                                self.tree[ptrTreeAndTime] = -1
-                                self.tree_pop[ptrTreeAndTime] = me_population
-                                # self.tree[ptrTreeAndTime, 0] = -1
-                                # self.tree_pop[ptrTreeAndTime, 0] = me_population
-                                self.times[ptrTreeAndTime] = me_time
-                                ptrTreeAndTime += 1
+                                self.newLineages[me_population][me_haplotype].push_back( self.ptrTreeAndTime )
+                                self.tree[self.ptrTreeAndTime] = -1
+                                self.tree_pop[self.ptrTreeAndTime] = me_population
+                                self.times[self.ptrTreeAndTime] = me_time
+                                self.ptrTreeAndTime += 1
                         elif me_type_ == MUTATION:
-                            lbs = liveBranchesS[me_population][me_newHaplotype].size()
+                            lbs = self.liveBranchesS[me_population][me_newHaplotype].size()
                             if me_num == 0 or lbs == 0:
                                 mt_ev_num = 0
                             else:
                                 mt_ev_num = random_hypergeometric(self.seed.rng, lbs, self.infectious[me_population, me_newHaplotype]-lbs, me_num)
                             for i in range(mt_ev_num):
                                 n1 = int(floor( lbs*self.seed.uniform() ))
-                                id1 = liveBranchesS[me_population][me_newHaplotype][n1]
-                                liveBranchesS[me_population][me_newHaplotype][n1] = liveBranchesS[me_population][me_newHaplotype][lbs-1]
-                                liveBranchesS[me_population][me_newHaplotype].pop_back()
-                                #liveBranchesS[me_population][me_haplotype].push_back(id1)
-                                newLineages[me_population][me_haplotype].push_back( id1 )
+                                id1 = self.liveBranchesS[me_population][me_newHaplotype][n1]
+                                self.liveBranchesS[me_population][me_newHaplotype][n1] = self.liveBranchesS[me_population][me_newHaplotype][lbs-1]
+                                self.liveBranchesS[me_population][me_newHaplotype].pop_back()
+                                self.newLineages[me_population][me_haplotype].push_back( id1 )
                                 self.mut.AddMutation(id1, me_haplotype, me_newHaplotype, me_time)
                                 lbs-=1
                             self.infectiousDelta[me_population, me_newHaplotype] -= me_num
@@ -1143,47 +1059,41 @@ cdef class BirthDeathModel:
                         elif me_type_ == SUSCCHANGE:
                             pass
                         elif me_type_ == MIGRATION:
-                            lbs = liveBranchesS[me_newPopulation][me_haplotype].size()
+                            lbs = self.liveBranchesS[me_newPopulation][me_haplotype].size()
                             if me_num == 0 or lbs == 0:
                                 mt_ev_num = 0
                             else:
                                 mt_ev_num = random_hypergeometric(self.seed.rng, lbs, self.infectious[me_newPopulation, me_haplotype]-lbs, me_num)
-                            #for i in range(mt_ev_num):
-                                lbss = liveBranchesS[me_population][me_haplotype].size()
+                                lbss = self.liveBranchesS[me_population][me_haplotype].size()
                                 if mt_ev_num == 0 or lbss == 0:
                                     mt_ev_num2 = 0
                                 else:
                                     mt_ev_num2 = random_hypergeometric(self.seed.rng, lbss, self.infectious[me_population, me_haplotype]-lbss, mt_ev_num)
-                                #print("me_num: ", me_num, "mt_ev_num: ", mt_ev_num, "mt_ev_num2: ", mt_ev_num2)
                                 for i in range(mt_ev_num2):
                                     nt = int(floor( lbs*self.seed.uniform() ))
                                     ns = int(floor( lbss*self.seed.uniform() ))
-                                    idt = liveBranchesS[me_newPopulation][me_haplotype][nt]
-                                    ids = liveBranchesS[me_population][me_haplotype][ns]
-                                    id3 = ptrTreeAndTime
-                                    liveBranchesS[me_population][me_haplotype][ns] = liveBranchesS[me_population][me_haplotype][  liveBranchesS[me_population][me_haplotype].size()-1 ]
-                                    liveBranchesS[me_population][me_haplotype].pop_back()
-                                    liveBranchesS[me_newPopulation][me_haplotype][nt] = liveBranchesS[me_newPopulation][me_haplotype][lbs-1]
-                                    liveBranchesS[me_newPopulation][me_haplotype].pop_back()
-                                    newLineages[me_population][me_haplotype].push_back( id3 )
+                                    idt = self.liveBranchesS[me_newPopulation][me_haplotype][nt]
+                                    ids = self.liveBranchesS[me_population][me_haplotype][ns]
+                                    id3 = self.ptrTreeAndTime
+                                    self.liveBranchesS[me_population][me_haplotype][ns] = self.liveBranchesS[me_population][me_haplotype][  self.liveBranchesS[me_population][me_haplotype].size()-1 ]
+                                    self.liveBranchesS[me_population][me_haplotype].pop_back()
+                                    self.liveBranchesS[me_newPopulation][me_haplotype][nt] = self.liveBranchesS[me_newPopulation][me_haplotype][lbs-1]
+                                    self.liveBranchesS[me_newPopulation][me_haplotype].pop_back()
+                                    self.newLineages[me_population][me_haplotype].push_back( id3 )
                                     self.tree[idt] = id3
                                     self.tree[ids] = id3
-                                    self.tree[ptrTreeAndTime] = -1
-                                    self.tree_pop[ptrTreeAndTime] = me_population
-                                    # self.tree[idt, 0] = id3
-                                    # self.tree[ids, 0] = id3
-                                    # self.tree[ptrTreeAndTime, 0] = -1
-                                    # self.tree_pop[ptrTreeAndTime, 0] = me_population
-                                    self.times[ptrTreeAndTime] = me_time
-                                    ptrTreeAndTime += 1
+                                    self.tree[self.ptrTreeAndTime] = -1
+                                    self.tree_pop[self.ptrTreeAndTime] = me_population
+                                    self.times[self.ptrTreeAndTime] = me_time
+                                    self.ptrTreeAndTime += 1
                                     self.mig.AddMigration(idt, me_time, me_population, me_newPopulation)
                                     lbss -= 1
                                     lbs -= 1
                                 for i in range(mt_ev_num-mt_ev_num2):
                                     nt = int(floor( lbs*self.seed.uniform() ))
-                                    newLineages[me_population][me_haplotype].push_back(liveBranchesS[me_newPopulation][me_haplotype][nt])
-                                    liveBranchesS[me_newPopulation][me_haplotype][nt] = liveBranchesS[me_newPopulation][me_haplotype][lbs-1]
-                                    liveBranchesS[me_newPopulation][me_haplotype].pop_back()
+                                    self.newLineages[me_population][me_haplotype].push_back(self.liveBranchesS[me_newPopulation][me_haplotype][nt])
+                                    self.liveBranchesS[me_newPopulation][me_haplotype][nt] = self.liveBranchesS[me_newPopulation][me_haplotype][lbs-1]
+                                    self.liveBranchesS[me_newPopulation][me_haplotype].pop_back()
                                     lbs -= 1
                             self.infectiousDelta[me_newPopulation, me_haplotype] -= me_num
                         else:
@@ -1194,12 +1104,9 @@ cdef class BirthDeathModel:
                             for hi in range(self.hapNum):
                                 self.infectious[pi, hi] += self.infectiousDelta[pi, hi]
                                 self.infectiousDelta[pi, hi] = 0
-                                while newLineages[pi][hi].size() > 0:
-                                    liveBranchesS[pi][hi].push_back( newLineages[pi][hi][newLineages[pi][hi].size()-1] )
-                                    newLineages[pi][hi].pop_back()
-                                #for i in range(newLineages[pi][hi].size()-1, -1, -1):
-                                #    liveBranchesS[pi][hi].push_back(newLineages[pi][hi][i])
-                                #    newLineages[pi][hi].pop_back()
+                                while self.newLineages[pi][hi].size() > 0:
+                                    self.liveBranchesS[pi][hi].push_back( self.newLineages[pi][hi][self.newLineages[pi][hi].size()-1] )
+                                    self.newLineages[pi][hi].pop_back()
                 else:
                     print("Unknown event type: ", e_type_)
                     print("_________________________________")
@@ -1207,19 +1114,32 @@ cdef class BirthDeathModel:
             for i in range(self.sCounter * 2 - 2):
                 if self.tree_pop[self.tree[i]] != self.tree_pop[i]:
                     self.mig.AddMigration(i, self.times[i], self.tree_pop[self.tree[i]], self.tree_pop[i])
-# 
 
-            #for i in range(self.sCounter * 2 - 1):
-            #    print(self.tree[i], end=" ")
-            #print("")
-            #deg = [0 for i in range(self.sCounter * 2 - 1)]
-            #for i in range(self.sCounter * 2 - 1):
-            #    deg[self.tree[i]] += 1
-            #for i in range(self.sCounter * 2 - 1):
-            #    print(deg[i], end=" ")
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef bint calculate_parent(self, Py_ssize_t population, Py_ssize_t haplotype):
+        cdef:
+            Py_ssize_t lbs, n
+            bint p
 
-            #self.CheckTree()
+        lbs = self.liveBranchesS[population][haplotype].size()
+        p = self.seed.uniform() < lbs / self.infectious[population, self.hapToNum[haplotype]]
+        if p:
+            n = int(floor(lbs * self.seed.uniform()))
+            self.tree[self.liveBranchesS[population][haplotype][n]] = self.ptrTreeAndTime
 
+            self.liveBranchesS[population][haplotype][n] = self.liveBranchesS[population][haplotype][lbs - 1]
+            self.liveBranchesS[population][haplotype].pop_back()
+            self.infectious[population, self.hapToNum[haplotype]] -= 1
+        return p
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void add_parent(self, Py_ssize_t population, Py_ssize_t haplotype, Py_ssize_t node, bint p):
+        self.tree[node] = -1
+        self.liveBranchesS[population][haplotype].push_back(node)
+        if p:
+            self.infectious[population, self.hapToNum[haplotype]] += 1
 
     def print_basic_parameters(self):
         table = PrettyTable()
@@ -1407,7 +1327,6 @@ cdef class BirthDeathModel:
 
     def calculate_indexes(self, indexes_list, edge):
         if isinstance(indexes_list, list):
-            # TODO Через map
             indexes = set()
             for i in indexes_list:
                 indexes.update(self.calculate_index(i, edge))
