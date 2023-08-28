@@ -435,6 +435,8 @@ class Simulator:
 		"""
 		self.simulation.set_total_migration_probability(total_probability)
 
+	def set_migration_restrictions(self, source, target, restriction_levels):
+		self.simulation.set_migration_restrictions(source, target, restriction_levels)
 	@property
 	def susceptible(self):
 		return self.simulation.susceptible

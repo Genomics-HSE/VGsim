@@ -8,6 +8,10 @@ from numpy cimport npy_int64
 
 from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
+from libcpp.map cimport map as map_cpp
+from libcpp.utility cimport pair
+from cython.operator cimport dereference as deref, preincrement as preinc, predecrement as predec
+from libcpp cimport bool
 from mc_lib.rndm cimport RndmWrapper
 
 from prettytable import PrettyTable
@@ -24,12 +28,44 @@ include "fast_choose.pxi"
 include "models.pxi"
 include "events.pxi"
 
+cdef class Migration_restriction:
+    cdef:
+        map_cpp[Py_ssize_t, double] mr_levels
+        pair[Py_ssize_t, double] mr_level
+        map_cpp[Py_ssize_t, double].iterator mr_it
+
+    def __init__(self, mr_levels_list, first_level):
+        self.mr_level = (0, first_level)
+        self.mr_levels.insert(self.mr_level)
+        for ms in mr_levels_list:
+            self.mr_level = (ms[0], ms[1])
+            self.mr_levels.insert(self.mr_level)
+            self.mr_it = self.mr_levels.begin()
+
+    cdef double check_level(self, Py_ssize_t infectious_number):
+        cdef:
+            map_cpp[Py_ssize_t, double].iterator mr_it_temp = self.mr_it
+
+        if infectious_number >= deref(mr_it_temp).first and infectious_number < deref(preinc(mr_it_temp)).first:
+            return -1
+        elif infectious_number >= deref(mr_it_temp).first:
+            while infectious_number >= deref(preinc(mr_it_temp)).first:
+                pass
+            return deref(predec(mr_it_temp)).second
+        else:
+            while infectious_number < deref(predec(mr_it_temp)).first:
+                pass
+            return deref(mr_it_temp).second
+
+
 #pi - population ID, pn - popoulation number, spi - source population ID, tpi - target population ID
 #hi - haplotype ID, hn - haplotype number, nhi - new haplotype number
 #si - susceptibility ID, sn - susceptibility number, ssi - source susceptibility ID, tsi - target susceptibility ID
 cdef class BirthDeathModel:
     cdef:
         RndmWrapper seed
+
+        bool mr_flag
 
         bint first_simulation, sampling_probability, memory_optimization
         Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, \
@@ -70,6 +106,8 @@ cdef class BirthDeathModel:
         vector[Py_ssize_t] super_spread_left, super_spread_right, super_spread_pop
 
         vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
+        
+        list migration_restrictions
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
@@ -91,7 +129,7 @@ cdef class BirthDeathModel:
 
         self.check_amount(number_of_sites, 'number of sites', zero=False)
         self.sites = number_of_sites
-        self.hapNum = 4**self.sites
+        self.hapNum = int(4**self.sites)
         self.check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         self.susNum = number_of_susceptible_groups
         self.check_amount(populations_number, 'populations number')
@@ -112,8 +150,8 @@ cdef class BirthDeathModel:
 
         if self.memory_optimization:
             if self.sites > 2:
-                self.maxHapNum = 4**(self.sites-2)
-                self.addMemoryNum = 4**(self.sites-2)
+                self.maxHapNum = int(4**(self.sites-2))
+                self.addMemoryNum = int(4**(self.sites-2))
             else:
                 self.maxHapNum = 4
                 self.addMemoryNum = 4
@@ -423,7 +461,8 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
-
+                    if self.mr_flag:
+                        self.migration_restriction()
             if self.events.ptr <= 100 and iterations > 100:
                 self.Restart()
             else:
@@ -1325,6 +1364,7 @@ cdef class BirthDeathModel:
 
 
     def calculate_indexes(self, indexes_list, edge):
+        print(indexes_list, 'indexes_list')
         if isinstance(indexes_list, list):
             indexes = set()
             for i in indexes_list:
@@ -1334,6 +1374,7 @@ cdef class BirthDeathModel:
         return indexes
 
     def calculate_index(self, index, edge):
+        print(index, 'index')
         if isinstance(index, str):
             haplotypes = [index]
             letters = ['A', 'T', 'C', 'G']
@@ -1589,6 +1630,32 @@ cdef class BirthDeathModel:
             self.super_spread_left.push_back(left)
             self.super_spread_right.push_back(right)
             self.super_spread_pop.push_back(pn)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.cdivision(True)
+    cdef void set_migration_restrictions(self, Py_ssize_t source, Py_ssize_t target, list restriction_levels):
+        cdef:
+            list mrs = []
+            Migration_restriction mr
+
+        if not self.migration_restrictions:
+            self.mr_flag = True
+            for i in range(self.popNum):
+                for j in range(self.popNum):
+                    mr = Migration_restriction([], self.migrationRates[i, j])
+                    mrs.append(mr)
+                self.migration_restrictions.append(mrs)
+
+        mr = Migration_restriction[restriction_levels,  self.migrationRates[source, target]]
+        self.migration_restrictions[source][target] = mr
+
+    def migration_restriction(self):
+        for i in range(self.popNum):
+            for j in range(self.popNum):
+                restriction = self.migration_restrictions[i][j].check_level(self.totalInfectious[i])
+                if restriction != -1:
+                    self.migrationRates[i, j] = restriction
 
     @property
     def transmission_rate(self):
@@ -1851,6 +1918,7 @@ cdef class BirthDeathModel:
         return self.migrationRates
 
     def set_migration_probability(self, probability, source, target):
+        print('HEY HEY HEY')
         self.check_value(probability, 'migration probability', edge=1)
         self.check_indexes(source, self.popNum, 'population')
         self.check_indexes(target, self.popNum, 'population')
@@ -2595,7 +2663,7 @@ cdef class BirthDeathModel:
     cdef Py_ssize_t Mutate(self, Py_ssize_t hi, Py_ssize_t s, Py_ssize_t DS):
         cdef Py_ssize_t digit4, AS
 
-        digit4 = 4**(self.sites-s-1)
+        digit4 = int(4**(self.sites-s-1))
         AS = int(floor(hi/digit4) % 4)
         if DS >= AS:
             DS += 1
