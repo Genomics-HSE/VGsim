@@ -37,24 +37,70 @@ cdef class Migration_restriction:
     def __init__(self, mr_levels_list, first_level):
         self.mr_level = (0, first_level)
         self.mr_levels.insert(self.mr_level)
-        for ms in mr_levels_list:
-            self.mr_level = (ms[0], ms[1])
+        for mr in mr_levels_list:
+            self.mr_level = (mr[0], mr[1])
             self.mr_levels.insert(self.mr_level)
-            self.mr_it = self.mr_levels.begin()
+        self.mr_it = self.mr_levels.begin()
 
-    cdef double check_level(self, Py_ssize_t infectious_number):
+    cpdef void print_mr(self):
+        cdef:
+            map_cpp[Py_ssize_t, double].iterator mr_it_temp_p = self.mr_it
+
+        while mr_it_temp_p != self.mr_levels.end():
+            print(deref(mr_it_temp_p).first, deref(mr_it_temp_p).second)
+            preinc(mr_it_temp_p)
+
+    cpdef double check_level(self, Py_ssize_t infectious_number):
         cdef:
             map_cpp[Py_ssize_t, double].iterator mr_it_temp = self.mr_it
 
-        if infectious_number >= deref(mr_it_temp).first and infectious_number < deref(preinc(mr_it_temp)).first:
+        # print("I'M INSIDE")
+        # print(self.mr_levels.size())
+        # deref(mr_it_temp).first
+        # print('lalala')
+        # print("I'M STILL INSIDE")
+        # print(self.mr_levels.size())
+        mr_it_temp = self.mr_it
+        if self.mr_levels.size() == 1 or (infectious_number >= deref(mr_it_temp).first and mr_it_temp == predec(self.mr_levels.end())) or (infectious_number >= deref(mr_it_temp).first and infectious_number < deref(preinc(mr_it_temp)).first):
+            # print('-1')
             return -1
-        elif infectious_number >= deref(mr_it_temp).first:
-            while infectious_number >= deref(preinc(mr_it_temp)).first:
+
+        mr_it_temp = self.mr_it
+
+        if mr_it_temp != predec(self.mr_levels.end()) and infectious_number >= deref(preinc(mr_it_temp)).first:
+            # print('elif')
+            predec(mr_it_temp)
+            # print(deref(mr_it_temp).first, 'deref(mr_it_temp).first_test')
+            # print(deref(mr_it_temp).second, 'deref(mr_it_temp).second_test')
+            # mr_it_temp = self.mr_levels.begin()
+            # while mr_it_temp != self.mr_levels.end():
+            #     print(deref(mr_it_temp).first, 'deref(mr_it_temp).first')
+            #     print(deref(mr_it_temp).second, 'deref(mr_it_temp).second')
+            #     preinc(mr_it_temp)
+            while mr_it_temp != self.mr_levels.end() and infectious_number >= deref(preinc(mr_it_temp)).first:
+                # print(self.mr_levels.size(), 'self.mr_levels.size())')
+                # print(deref(mr_it_temp).first, 'deref(mr_it_temp).first')
+                # print(deref(mr_it_temp).second, 'deref(mr_it_temp).second')
+                # print(infectious_number, 'infectious_number')
+                # print(mr_it_temp == self.mr_levels.end())
+                # print(mr_it_temp == predec(self.mr_levels.end()))
+                # print("I'M STUCK 1")
                 pass
-            return deref(predec(mr_it_temp)).second
-        else:
+            # print('deref(predec(mr_it_temp)).second')
+            print('POLUNDRA 1')
+            self.mr_it = predec(mr_it_temp)
+            return deref(mr_it_temp).second
+
+        mr_it_temp = self.mr_it
+
+        if infectious_number < deref(mr_it_temp).first:
+            # print('else')
             while infectious_number < deref(predec(mr_it_temp)).first:
+                # print("I'M STUCK 2")
                 pass
+            # print('deref(mr_it_temp).second')
+            print('POLUNDRA 2')
+            self.mr_it = mr_it_temp
             return deref(mr_it_temp).second
 
 
@@ -64,8 +110,6 @@ cdef class Migration_restriction:
 cdef class BirthDeathModel:
     cdef:
         RndmWrapper seed
-
-        bool mr_flag
 
         bint first_simulation, sampling_probability, memory_optimization
         Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum, susNum, bCounter, dCounter, sCounter, \
@@ -88,7 +132,7 @@ cdef class BirthDeathModel:
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
         samplingMultiplier, times, birthInf
         double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, \
-        effectiveMigration
+        effectiveMigration, migrationRatesCopy
         double[:,:,::1] hapMutType, eventHapPopRate, susceptHapPopRate
 
         double[:,:,:,::1] PropensitiesMigr, PropensitiesMutatations
@@ -106,12 +150,13 @@ cdef class BirthDeathModel:
         vector[Py_ssize_t] super_spread_left, super_spread_right, super_spread_pop
 
         vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
-        
+
         list migration_restrictions
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
         memory_optimization, genome_length, recombination_probability):
+        self.migration_restrictions = []
         cdef:
             vector[vector[Py_ssize_t]] vecint2
             vector[Py_ssize_t] vecint1
@@ -461,7 +506,8 @@ cdef class BirthDeathModel:
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
-                    if self.mr_flag:
+                    if self.migration_restrictions:
+                        # print('YOU ARE IN CYBERGULAG NOW')
                         self.migration_restriction()
             if self.events.ptr <= 100 and iterations > 100:
                 self.Restart()
@@ -1364,7 +1410,6 @@ cdef class BirthDeathModel:
 
 
     def calculate_indexes(self, indexes_list, edge):
-        print(indexes_list, 'indexes_list')
         if isinstance(indexes_list, list):
             indexes = set()
             for i in indexes_list:
@@ -1374,7 +1419,6 @@ cdef class BirthDeathModel:
         return indexes
 
     def calculate_index(self, index, edge):
-        print(index, 'index')
         if isinstance(index, str):
             haplotypes = [index]
             letters = ['A', 'T', 'C', 'G']
@@ -1634,28 +1678,50 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.cdivision(True)
-    cdef void set_migration_restrictions(self, Py_ssize_t source, Py_ssize_t target, list restriction_levels):
+    cpdef void set_migration_restrictions(self, Py_ssize_t source, Py_ssize_t target, list restriction_levels):
         cdef:
             list mrs = []
             Migration_restriction mr
 
+        print(source, target, 'set_migration_restrictions')
+        self.migrationRatesCopy = np.copy(self.migrationRates)
         if not self.migration_restrictions:
-            self.mr_flag = True
             for i in range(self.popNum):
+                mrs = []
                 for j in range(self.popNum):
                     mr = Migration_restriction([], self.migrationRates[i, j])
                     mrs.append(mr)
                 self.migration_restrictions.append(mrs)
 
-        mr = Migration_restriction[restriction_levels,  self.migrationRates[source, target]]
+        mr = Migration_restriction(restriction_levels,  self.migrationRates[source, target])
         self.migration_restrictions[source][target] = mr
 
-    def migration_restriction(self):
         for i in range(self.popNum):
             for j in range(self.popNum):
+                print('maps')
+                print(i, j)
+                self.migration_restrictions[i][j].print_mr()
+
+
+    def migration_restriction(self):
+        # print("I'M IN")
+        for i in range(self.popNum):
+            for j in range(self.popNum):
+                # print("I'M GONNA CHECK")
+                # print(i, j)
                 restriction = self.migration_restrictions[i][j].check_level(self.totalInfectious[i])
+                # print('I CHECKED')
                 if restriction != -1:
+                    # print(self.totalInfectious[i], 'self.totalInfectious[i]')
+                    # print(restriction, 'restriction')
                     self.migrationRates[i, j] = restriction
+                    self.check_mig_rate()
+        # for i in self.migrationRatesCopy:
+        #     print(list(i), 'before')
+        print(list(self.totalInfectious))
+        # for i in self.migrationRates:
+        #     print(list(i), 'after')
+        print(list(self.migrationRates[1]), 'after')
 
     @property
     def transmission_rate(self):
@@ -1918,7 +1984,6 @@ cdef class BirthDeathModel:
         return self.migrationRates
 
     def set_migration_probability(self, probability, source, target):
-        print('HEY HEY HEY')
         self.check_value(probability, 'migration probability', edge=1)
         self.check_indexes(source, self.popNum, 'population')
         self.check_indexes(target, self.popNum, 'population')
