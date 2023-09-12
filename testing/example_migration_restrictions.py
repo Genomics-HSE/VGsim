@@ -37,8 +37,9 @@ simulator.set_population_size(5000000, population=1)
 simulator.set_population_size(1000000, population=2)
 simulator.set_migration_probability(10/365/2)
 
-simulator.set_migration_restrictions(1, 0, [[190, 1/365], [210, 1/1000]])
-simulator.set_migration_restrictions(1, 2, [[180, 1/365], [200, 1/1000]])
+simulator.set_migration_restrictions(1, 0, [[200, 1/365], [220, 1/1000]])
+simulator.set_migration_restrictions(1, 2, [[210, 1/365], [230, 1/1000]])
+simulator.set_migration_restrictions(0, 1, [[135, 1/365], [140, 1/1000], [150, 1/5000]])
 
 
 #Set specific sampling efforts in different populations

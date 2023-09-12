@@ -54,52 +54,23 @@ cdef class Migration_restriction:
         cdef:
             map_cpp[Py_ssize_t, double].iterator mr_it_temp = self.mr_it
 
-        # print("I'M INSIDE")
-        # print(self.mr_levels.size())
-        # deref(mr_it_temp).first
-        # print('lalala')
-        # print("I'M STILL INSIDE")
-        # print(self.mr_levels.size())
         mr_it_temp = self.mr_it
         if self.mr_levels.size() == 1 or (infectious_number >= deref(mr_it_temp).first and mr_it_temp == predec(self.mr_levels.end())) or (infectious_number >= deref(mr_it_temp).first and infectious_number < deref(preinc(mr_it_temp)).first):
-            # print('-1')
             return -1
 
         mr_it_temp = self.mr_it
 
         if mr_it_temp != predec(self.mr_levels.end()) and infectious_number >= deref(preinc(mr_it_temp)).first:
-            # print('elif')
-            predec(mr_it_temp)
-            # print(deref(mr_it_temp).first, 'deref(mr_it_temp).first_test')
-            # print(deref(mr_it_temp).second, 'deref(mr_it_temp).second_test')
-            # mr_it_temp = self.mr_levels.begin()
-            # while mr_it_temp != self.mr_levels.end():
-            #     print(deref(mr_it_temp).first, 'deref(mr_it_temp).first')
-            #     print(deref(mr_it_temp).second, 'deref(mr_it_temp).second')
-            #     preinc(mr_it_temp)
             while mr_it_temp != self.mr_levels.end() and infectious_number >= deref(preinc(mr_it_temp)).first:
-                # print(self.mr_levels.size(), 'self.mr_levels.size())')
-                # print(deref(mr_it_temp).first, 'deref(mr_it_temp).first')
-                # print(deref(mr_it_temp).second, 'deref(mr_it_temp).second')
-                # print(infectious_number, 'infectious_number')
-                # print(mr_it_temp == self.mr_levels.end())
-                # print(mr_it_temp == predec(self.mr_levels.end()))
-                # print("I'M STUCK 1")
                 pass
-            # print('deref(predec(mr_it_temp)).second')
-            print('POLUNDRA 1')
             self.mr_it = predec(mr_it_temp)
             return deref(mr_it_temp).second
 
         mr_it_temp = self.mr_it
 
         if infectious_number < deref(mr_it_temp).first:
-            # print('else')
             while infectious_number < deref(predec(mr_it_temp)).first:
-                # print("I'M STUCK 2")
                 pass
-            # print('deref(mr_it_temp).second')
-            print('POLUNDRA 2')
             self.mr_it = mr_it_temp
             return deref(mr_it_temp).second
 
@@ -132,7 +103,7 @@ cdef class BirthDeathModel:
         popRate, migPopRate, actualSizes, contactDensity, contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD, \
         samplingMultiplier, times, birthInf
         double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition, immuneSourcePopRate, hapPopRate, migrationRates, \
-        effectiveMigration, migrationRatesCopy
+        effectiveMigration
         double[:,:,::1] hapMutType, eventHapPopRate, susceptHapPopRate
 
         double[:,:,:,::1] PropensitiesMigr, PropensitiesMutatations
@@ -1683,8 +1654,6 @@ cdef class BirthDeathModel:
             list mrs = []
             Migration_restriction mr
 
-        print(source, target, 'set_migration_restrictions')
-        self.migrationRatesCopy = np.copy(self.migrationRates)
         if not self.migration_restrictions:
             for i in range(self.popNum):
                 mrs = []
@@ -1696,32 +1665,14 @@ cdef class BirthDeathModel:
         mr = Migration_restriction(restriction_levels,  self.migrationRates[source, target])
         self.migration_restrictions[source][target] = mr
 
-        for i in range(self.popNum):
-            for j in range(self.popNum):
-                print('maps')
-                print(i, j)
-                self.migration_restrictions[i][j].print_mr()
-
 
     def migration_restriction(self):
-        # print("I'M IN")
         for i in range(self.popNum):
             for j in range(self.popNum):
-                # print("I'M GONNA CHECK")
-                # print(i, j)
                 restriction = self.migration_restrictions[i][j].check_level(self.totalInfectious[i])
-                # print('I CHECKED')
                 if restriction != -1:
-                    # print(self.totalInfectious[i], 'self.totalInfectious[i]')
-                    # print(restriction, 'restriction')
                     self.migrationRates[i, j] = restriction
                     self.check_mig_rate()
-        # for i in self.migrationRatesCopy:
-        #     print(list(i), 'before')
-        print(list(self.totalInfectious))
-        # for i in self.migrationRates:
-        #     print(list(i), 'after')
-        print(list(self.migrationRates[1]), 'after')
 
     @property
     def transmission_rate(self):
