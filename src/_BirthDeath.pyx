@@ -8,10 +8,11 @@ from numpy cimport npy_int64
 
 from libc.math cimport log, floor, abs
 from libcpp.vector cimport vector
-from libcpp.map cimport map as map_cpp
+from libcpp.map cimport multimap as multimap_cpp
 from libcpp.utility cimport pair
 from cython.operator cimport dereference as deref, preincrement as preinc, predecrement as predec
 from libcpp cimport bool
+from libcpp.algorithm cimport sort
 from mc_lib.rndm cimport RndmWrapper
 
 from prettytable import PrettyTable
@@ -30,49 +31,85 @@ include "events.pxi"
 
 cdef class Migration_restriction:
     cdef:
-        map_cpp[Py_ssize_t, double] mr_levels
-        pair[Py_ssize_t, double] mr_level
-        map_cpp[Py_ssize_t, double].iterator mr_it
+        multimap_cpp[Py_ssize_t, pair[Py_ssize_t, Py_ssize_t]] mr_levels
+        pair[Py_ssize_t, Py_ssize_t] mr_level_params
+        pair[Py_ssize_t, pair[Py_ssize_t, Py_ssize_t]] mr_level
+        multimap_cpp[Py_ssize_t, pair[Py_ssize_t, Py_ssize_t]].iterator mr_it
 
-    def __init__(self, mr_levels_list, first_level):
-        self.mr_level = (0, first_level)
-        self.mr_levels.insert(self.mr_level)
-        for mr in mr_levels_list:
-            self.mr_level = (mr[0], mr[1])
-            self.mr_levels.insert(self.mr_level)
+        pair[Py_ssize_t, double] target_level_params
+        vector[vector[pair[Py_ssize_t, double]]] mr_levels_by_targets
+
+    def __init__(self, popNum, first_levels):
+        # for i in range:
+        #     self.mr_level_params = (, first_level)
+        #     self.mr_level = ()
+        #     self.mr_levels.insert(self.mr_level)
+        # for mr in mr_levels_list:
+        #     self.mr_level = (mr[0], mr[1])
+        #     self.mr_levels.insert(self.mr_level)
+        self.mr_levels_by_targets.resize(popNum)
+        for i in range(popNum):
+            self.target_level_params = (0, first_levels[i])
+            self.mr_levels_by_targets[i].push_back(self.target_level_params)
         self.mr_it = self.mr_levels.begin()
+
+    def insert_in_vector(self, target, mr_levels_list):
+        for mr_level in mr_levels_list:
+            self.target_level_params = (mr_level[0], mr_level[1])
+            self.mr_levels_by_targets[target].push_back(self.target_level_params)
+
+    def insert_in_multimap(self, bound, target, index):
+        self.mr_level_params = (target, index)
+        self.mr_level = (bound, self.mr_level_params)
+        self.mr_levels.insert(self.mr_level)
 
     cpdef void print_mr(self):
         cdef:
-            map_cpp[Py_ssize_t, double].iterator mr_it_temp_p = self.mr_it
+            multimap_cpp[Py_ssize_t, pair[Py_ssize_t, Py_ssize_t]].iterator mr_it_temp_p = self.mr_levels.begin()
 
+        print('map:')
         while mr_it_temp_p != self.mr_levels.end():
-            print(deref(mr_it_temp_p).first, deref(mr_it_temp_p).second)
+            print(deref(mr_it_temp_p).first, deref(mr_it_temp_p).second.first, deref(mr_it_temp_p).second.second)
             preinc(mr_it_temp_p)
 
-    cpdef double check_level(self, Py_ssize_t infectious_number):
+    def set_map(self, popNum):
+        for i in range(popNum):
+            sort(self.mr_levels_by_targets[i].begin(), self.mr_levels_by_targets[i].end())
+            for j in range(self.mr_levels_by_targets[i].size()):
+                print(self.mr_levels_by_targets[i][j], i, j, 'level')
+                self.insert_in_multimap(self.mr_levels_by_targets[i][j].first, i, j)
+
+        self.mr_it = self.mr_levels.begin()
+        for i in range(popNum - 1):
+            preinc(self.mr_it)
+        print(deref(self.mr_it).first, 'it')
+        print(self.mr_levels.size(), 'size')
+        self.print_mr()
+
+    cpdef (Py_ssize_t, double) check_level(self, Py_ssize_t infectious_number):
         cdef:
-            map_cpp[Py_ssize_t, double].iterator mr_it_temp = self.mr_it
+            multimap_cpp[Py_ssize_t, pair[Py_ssize_t, Py_ssize_t]].iterator mr_it_temp = self.mr_it
 
         mr_it_temp = self.mr_it
+
         if self.mr_levels.size() == 1 or (infectious_number >= deref(mr_it_temp).first and mr_it_temp == predec(self.mr_levels.end())) or (infectious_number >= deref(mr_it_temp).first and infectious_number < deref(preinc(mr_it_temp)).first):
-            return -1
+            return -1, -1
 
         mr_it_temp = self.mr_it
 
         if mr_it_temp != predec(self.mr_levels.end()) and infectious_number >= deref(preinc(mr_it_temp)).first:
-            while mr_it_temp != self.mr_levels.end() and infectious_number >= deref(preinc(mr_it_temp)).first:
-                pass
-            self.mr_it = predec(mr_it_temp)
-            return deref(mr_it_temp).second
+            self.mr_it = mr_it_temp
+            # if deref(mr_it_temp).first == 0:
+            #     return -1
+            return deref(mr_it_temp).second.first, self.mr_levels_by_targets[deref(mr_it_temp).second.first][deref(mr_it_temp).second.second].second
 
         mr_it_temp = self.mr_it
 
         if infectious_number < deref(mr_it_temp).first:
-            while infectious_number < deref(predec(mr_it_temp)).first:
-                pass
-            self.mr_it = mr_it_temp
-            return deref(mr_it_temp).second
+            self.mr_it = predec(mr_it_temp)
+            preinc(mr_it_temp)
+            print(infectious_number, 'infectious_number')
+            return deref(mr_it_temp).second.first, self.mr_levels_by_targets[deref(mr_it_temp).second.first][deref(mr_it_temp).second.second - 1].second
 
 
 #pi - population ID, pn - popoulation number, spi - source population ID, tpi - target population ID
@@ -123,6 +160,8 @@ cdef class BirthDeathModel:
         vector[vector[vector[Py_ssize_t]]] liveBranchesS, newLineages
 
         list migration_restrictions
+
+        bool mr_setted
 
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
@@ -301,6 +340,8 @@ cdef class BirthDeathModel:
                 self.liveBranchesS[pn].push_back(vecint1)
                 self.newLineages[pn].push_back(vecint1)
 
+        self.mr_setted = False
+
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -478,8 +519,7 @@ cdef class BirthDeathModel:
                         break
                     self.CheckLockdown(pi)
                     if self.migration_restrictions:
-                        # print('YOU ARE IN CYBERGULAG NOW')
-                        self.migration_restriction()
+                        self.migration_restriction(pi)
             if self.events.ptr <= 100 and iterations > 100:
                 self.Restart()
             else:
@@ -1651,28 +1691,34 @@ cdef class BirthDeathModel:
     @cython.cdivision(True)
     cpdef void set_migration_restrictions(self, Py_ssize_t source, Py_ssize_t target, list restriction_levels):
         cdef:
-            list mrs = []
             Migration_restriction mr
 
         if not self.migration_restrictions:
             for i in range(self.popNum):
-                mrs = []
-                for j in range(self.popNum):
-                    mr = Migration_restriction([], self.migrationRates[i, j])
-                    mrs.append(mr)
-                self.migration_restrictions.append(mrs)
+                mr = Migration_restriction(self.popNum, self.migrationRates[i])
+                self.migration_restrictions.append(mr)
 
-        mr = Migration_restriction(restriction_levels,  self.migrationRates[source, target])
-        self.migration_restrictions[source][target] = mr
+        self.migration_restrictions[source].insert_in_vector(target, restriction_levels)
+        for i in self.migrationRates:
+            print(list(i), 'before')
 
 
-    def migration_restriction(self):
-        for i in range(self.popNum):
-            for j in range(self.popNum):
-                restriction = self.migration_restrictions[i][j].check_level(self.totalInfectious[i])
-                if restriction != -1:
-                    self.migrationRates[i, j] = restriction
-                    self.check_mig_rate()
+
+    def migration_restriction(self, source):
+        if not self.mr_setted:
+            for mr in self.migration_restrictions:
+                mr.set_map(self.popNum)
+                self.mr_setted = True
+
+        target, restriction = self.migration_restrictions[source].check_level(self.totalInfectious[source])
+        while target != -1:
+            self.migrationRates[source, target] = restriction
+            print(target, restriction, 'target, restriction')
+            self.check_mig_rate()
+            target, restriction = self.migration_restrictions[source].check_level(self.totalInfectious[source])
+            print(list(self.totalInfectious), 'self.totalInfectious')
+            for i in self.migrationRates:
+                print(list(i), 'after')
 
     @property
     def transmission_rate(self):
