@@ -74,7 +74,6 @@ cdef class Migration_restriction:
         self.mr_it = self.mr_levels.begin()
         for i in range(popNum - 1):
             preinc(self.mr_it)
-        self.print_mr()
 
     cpdef (Py_ssize_t, double) check_level(self, Py_ssize_t infectious_number):
         cdef:
