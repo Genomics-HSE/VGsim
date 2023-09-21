@@ -40,13 +40,6 @@ cdef class Migration_restriction:
         vector[vector[pair[Py_ssize_t, double]]] mr_levels_by_targets
 
     def __init__(self, popNum, first_levels):
-        # for i in range:
-        #     self.mr_level_params = (, first_level)
-        #     self.mr_level = ()
-        #     self.mr_levels.insert(self.mr_level)
-        # for mr in mr_levels_list:
-        #     self.mr_level = (mr[0], mr[1])
-        #     self.mr_levels.insert(self.mr_level)
         self.mr_levels_by_targets.resize(popNum)
         for i in range(popNum):
             self.target_level_params = (0, first_levels[i])
@@ -76,14 +69,11 @@ cdef class Migration_restriction:
         for i in range(popNum):
             sort(self.mr_levels_by_targets[i].begin(), self.mr_levels_by_targets[i].end())
             for j in range(self.mr_levels_by_targets[i].size()):
-                print(self.mr_levels_by_targets[i][j], i, j, 'level')
                 self.insert_in_multimap(self.mr_levels_by_targets[i][j].first, i, j)
 
         self.mr_it = self.mr_levels.begin()
         for i in range(popNum - 1):
             preinc(self.mr_it)
-        print(deref(self.mr_it).first, 'it')
-        print(self.mr_levels.size(), 'size')
         self.print_mr()
 
     cpdef (Py_ssize_t, double) check_level(self, Py_ssize_t infectious_number):
@@ -108,7 +98,6 @@ cdef class Migration_restriction:
         if infectious_number < deref(mr_it_temp).first:
             self.mr_it = predec(mr_it_temp)
             preinc(mr_it_temp)
-            print(infectious_number, 'infectious_number')
             return deref(mr_it_temp).second.first, self.mr_levels_by_targets[deref(mr_it_temp).second.first][deref(mr_it_temp).second.second - 1].second
 
 
@@ -1699,8 +1688,7 @@ cdef class BirthDeathModel:
                 self.migration_restrictions.append(mr)
 
         self.migration_restrictions[source].insert_in_vector(target, restriction_levels)
-        for i in self.migrationRates:
-            print(list(i), 'before')
+
 
 
 
@@ -1713,12 +1701,8 @@ cdef class BirthDeathModel:
         target, restriction = self.migration_restrictions[source].check_level(self.totalInfectious[source])
         while target != -1:
             self.migrationRates[source, target] = restriction
-            print(target, restriction, 'target, restriction')
             self.check_mig_rate()
             target, restriction = self.migration_restrictions[source].check_level(self.totalInfectious[source])
-            print(list(self.totalInfectious), 'self.totalInfectious')
-            for i in self.migrationRates:
-                print(list(i), 'after')
 
     @property
     def transmission_rate(self):
