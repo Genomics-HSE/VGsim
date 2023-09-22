@@ -91,7 +91,7 @@ cdef class BirthDeathModel:
 
         self.check_amount(number_of_sites, 'number of sites', zero=False)
         self.sites = number_of_sites
-        self.hapNum = 4**self.sites
+        self.hapNum = int(4**self.sites)
         self.check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         self.susNum = number_of_susceptible_groups
         self.check_amount(populations_number, 'populations number')
@@ -112,8 +112,8 @@ cdef class BirthDeathModel:
 
         if self.memory_optimization:
             if self.sites > 2:
-                self.maxHapNum = 4**(self.sites-2)
-                self.addMemoryNum = 4**(self.sites-2)
+                self.maxHapNum = int(4**(self.sites - 2))
+                self.addMemoryNum = int(4**(self.sites - 2))
             else:
                 self.maxHapNum = 4
                 self.addMemoryNum = 4
@@ -253,11 +253,12 @@ cdef class BirthDeathModel:
     cdef void FirstInfection(self):
         if self.globalInfectious == 0:
             for sn in range(self.susNum):
-                if self.susceptible[0, sn] != 0:
-                    if self.memory_optimization:
-                        self.AddHaplotype(0, 0)
-                    self.NewInfections(0, sn, 0)
-                    return
+                if self.susceptible[0, sn] == 0:
+                    continue
+                if self.memory_optimization:
+                    self.AddHaplotype(0, 0)
+                self.NewInfections(0, sn, 0)
+                return
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -414,12 +415,11 @@ cdef class BirthDeathModel:
         self.CheckSizes()
 
         for i in range(attempts):
-            self.seed = RndmWrapper(seed=(self.user_seed, i))
-            if self.totalRate+self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
-                while (self.events.ptr<self.events.size and (sample_size==-1 or self.sCounter<sample_size) and (time==-1 or self.currentTime<time)):
+            self.seed = RndmWrapper(seed = (self.user_seed, i))
+            if self.totalRate + self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
+                while (self.events.ptr < self.events.size and (sample_size == -1 or self.sCounter <= sample_size) and (time == -1 or self.currentTime < time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()
-                    # self.Debug()
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
                         break
                     self.CheckLockdown(pi)
@@ -449,11 +449,17 @@ cdef class BirthDeathModel:
         self.events.CreateEvents(iterations)
         if self.first_simulation == False:
             self.FirstInfection()
+            self.globalInfectious = 0
             for pn in range(self.popNum):
+                self.totalSusceptible[pn] = 0
                 for sn in range(self.susNum):
                     self.initial_susceptible[pn, sn] = self.susceptible[pn, sn]
+                    self.totalSusceptible[pn] += self.susceptible[pn, sn]
+                self.totalInfectious[pn] = 0
                 for hn in range(self.hapNum):
                     self.initial_infectious[pn, hn] = self.infectious[pn, hn]
+                    self.totalInfectious[pn] += self.infectious[pn, hn]
+                    self.globalInfectious += self.infectious[pn, hn]
             self.first_simulation = True
         for pn in range(self.popNum):
             self.CheckLockdown(pn)
@@ -630,10 +636,11 @@ cdef class BirthDeathModel:
             nhi = 0
             for s in range(self.sites):
                 if self.sitesPosition[s] < posRecomb:
-                    nhi += 4**(self.sites-s-1)*int(floor(hi/4**(self.sites-s-1)) % 4)
+                    nhi += int(4**(self.sites - s - 1) * floor(hi / 4**(self.sites - s - 1)) % 4)
                 else:
-                    nhi += 4**(self.sites-s-1)*int(floor(hi2/4**(self.sites-s-1)) % 4)
-            self.rec.AddRecombination(self.currentTime, posRecomb, nhi)
+                    nhi += int(4**(self.sites - s - 1) * floor(hi2 / 4**(self.sites - s - 1)) % 4)
+
+            self.rec.AddRecombination_forward(self.events.ptr, hi, hi2, posRecomb, nhi)
 
             self.NewInfections(pi, si, nhi)
             self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.numToHap[hi2])
@@ -688,7 +695,7 @@ cdef class BirthDeathModel:
     cdef void Mutation(self, Py_ssize_t pi, Py_ssize_t hi): # hi - program number
         cdef:
             bint check = True
-            Py_ssize_t ohi, mi, digit4, AS, DS, nhi
+            Py_ssize_t ohi, mi, DS, nhi
 
         ohi = self.numToHap[hi] # ohi - haplotype
         mi, self.rn = fastChoose(self.mRate[ohi], self.tmRate[hi], self.rn)
@@ -1491,15 +1498,15 @@ cdef class BirthDeathModel:
             raise TypeError('Incorrect type of ' + smth + '. Type should be list.')
 
     def check_amount_sus(self, amount, source_type, target_type, population):
-        if self.initial_susceptible[population, source_type] - amount < 0:
+        if self.susceptible[population, source_type] - amount < 0:
             raise ValueError('Number of susceptible minus amount should be more or equal 0.')
-        if self.initial_susceptible[population, target_type] + amount > self.sizes[population]:
+        if self.susceptible[population, target_type] + amount > self.sizes[population]:
             raise ValueError('Number of susceptible plus amount should be equal or less population size.')
 
     def check_amount_inf(self, amount, source_type, target_haplotype, population):
-        if self.initial_susceptible[population, source_type] - amount < 0:
+        if self.susceptible[population, source_type] - amount < 0:
             raise ValueError('Number of susceptible minus amount should be more or equal 0.')
-        if self.initial_infectious[population, target_haplotype] + amount > self.sizes[population]:
+        if self.infectious[population, target_haplotype] + amount > self.sizes[population]:
             raise ValueError('Number of infectious plus amount should be equal or less population size.')
 
     def check_mig_rate(self):
@@ -1759,13 +1766,13 @@ cdef class BirthDeathModel:
 
         for pn in populations:
             self.sizes[pn] = amount
-            self.initial_susceptible[pn, 0] = amount
+            self.susceptible[pn, 0] = amount
             for sn in range(1, self.susNum):
-                self.initial_susceptible[pn, 0] = 0
+                self.susceptible[pn, sn] = 0
 
     @property
     def susceptible(self):
-        return self.initial_susceptible
+        return self.susceptible
 
     def set_susceptible(self, amount, source_type, target_type, population):
         if self.first_simulation:
@@ -1781,12 +1788,12 @@ cdef class BirthDeathModel:
         for pn in populations:
             self.check_amount_sus(amount, source_type, target_type, pn)
 
-            self.initial_susceptible[pn, source_type] -= amount
-            self.initial_susceptible[pn, target_type] += amount
+            self.susceptible[pn, source_type] -= amount
+            self.susceptible[pn, target_type] += amount
 
     @property
     def infectious(self):
-        return self.initial_infectious
+        return self.infectious
 
     def set_infectious(self, amount, source_type, target_haplotype, population):
         if self.first_simulation:
@@ -1800,8 +1807,8 @@ cdef class BirthDeathModel:
         for pn in populations:
             self.check_amount_inf(amount, source_type, target_haplotype, pn)
 
-            self.initial_susceptible[pn, source_type] -= amount
-            self.initial_infectious[pn, target_haplotype] += amount
+            self.susceptible[pn, source_type] -= amount
+            self.infectious[pn, target_haplotype] += amount
 
     @property
     def contact_density(self):
@@ -2595,11 +2602,11 @@ cdef class BirthDeathModel:
     cdef Py_ssize_t Mutate(self, Py_ssize_t hi, Py_ssize_t s, Py_ssize_t DS):
         cdef Py_ssize_t digit4, AS
 
-        digit4 = 4**(self.sites-s-1)
-        AS = int(floor(hi/digit4) % 4)
+        digit4 = int(4**(self.sites - s - 1))
+        AS = int(floor(hi / digit4) % 4)
         if DS >= AS:
             DS += 1
-        return hi + (DS-AS)*digit4
+        return hi + (DS - AS) * digit4
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
