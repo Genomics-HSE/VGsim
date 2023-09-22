@@ -39,6 +39,7 @@ cdef class Migration_restriction:
         pair[Py_ssize_t, double] target_level_params
         vector[vector[pair[Py_ssize_t, double]]] mr_levels_by_targets
 
+        double[::1] mr_rates
     def __init__(self, popNum, first_levels):
         self.mr_levels_by_targets.resize(popNum)
         for i in range(popNum):
@@ -65,15 +66,27 @@ cdef class Migration_restriction:
             print(deref(mr_it_temp_p).first, deref(mr_it_temp_p).second.first, deref(mr_it_temp_p).second.second)
             preinc(mr_it_temp_p)
 
-    def set_map(self, popNum):
+    def set_map_and_array(self, popNum):
+        # print(1)
+        size = 0
+        for i in range(popNum):
+            size += self.mr_levels_by_targets[i].size()
+        # print(2)
+        sum = 0
+        self.mr_rates = np.zeros(size, dtype=float)
+        # print(3)
         for i in range(popNum):
             sort(self.mr_levels_by_targets[i].begin(), self.mr_levels_by_targets[i].end())
             for j in range(self.mr_levels_by_targets[i].size()):
-                self.insert_in_multimap(self.mr_levels_by_targets[i][j].first, i, j)
+                self.mr_rates[sum + j] = self.mr_levels_by_targets[i][j].second
+                self.insert_in_multimap(self.mr_levels_by_targets[i][j].first, i, sum + j)
+            sum += self.mr_levels_by_targets[i].size()
+        # print(4)
 
         self.mr_it = self.mr_levels.begin()
         for i in range(popNum - 1):
             preinc(self.mr_it)
+        # print(5)
 
     cpdef (Py_ssize_t, double) check_level(self, Py_ssize_t infectious_number):
         cdef:
@@ -90,14 +103,14 @@ cdef class Migration_restriction:
             self.mr_it = mr_it_temp
             # if deref(mr_it_temp).first == 0:
             #     return -1
-            return deref(mr_it_temp).second.first, self.mr_levels_by_targets[deref(mr_it_temp).second.first][deref(mr_it_temp).second.second].second
+            return deref(mr_it_temp).second.first, self.mr_rates[deref(mr_it_temp).second.second]
 
         mr_it_temp = self.mr_it
 
         if infectious_number < deref(mr_it_temp).first:
             self.mr_it = predec(mr_it_temp)
             preinc(mr_it_temp)
-            return deref(mr_it_temp).second.first, self.mr_levels_by_targets[deref(mr_it_temp).second.first][deref(mr_it_temp).second.second - 1].second
+            return deref(mr_it_temp).second.first, self.mr_rates[deref(mr_it_temp).second.second - 1]
 
 
 #pi - population ID, pn - popoulation number, spi - source population ID, tpi - target population ID
@@ -1694,7 +1707,7 @@ cdef class BirthDeathModel:
     def migration_restriction(self, source):
         if not self.mr_setted:
             for mr in self.migration_restrictions:
-                mr.set_map(self.popNum)
+                mr.set_map_and_array(self.popNum)
                 self.mr_setted = True
 
         target, restriction = self.migration_restrictions[source].check_level(self.totalInfectious[source])
