@@ -118,7 +118,7 @@ class Simulator:
 		if basic_parameters:
 			self.simulation.print_basic_parameters()
 		if population or susceptible or infectious or migration:
-			self.simulation.print_populations(population=population, susceptibles=susceptibles, infectious=infectious, \
+			self.simulation.print_populations(population=population, susceptibles=susceptible, infectious=infectious, \
 			migration=migration)
 		if immunity or transition:
 			self.simulation.print_immunity_model(immunity=immunity, transition=transition)
