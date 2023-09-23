@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://$PROJECT_DIR$/.idea/vgsim_etalon.iml" filepath="$PROJECT_DIR$/.idea/vgsim_etalon.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/.idea/VGsim_testing_restrictions.iml" filepath="$PROJECT_DIR$/.idea/VGsim_testing_restrictions.iml" />
+>>>>>>> main
     </modules>
   </component>
 </project>
