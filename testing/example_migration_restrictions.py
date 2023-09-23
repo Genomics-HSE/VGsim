@@ -1,9 +1,11 @@
 import VGsim
 import os
 import os.path
+import time
 
+start_time = time.time()
 number_of_sites = 2
-populations_number = 3
+populations_number = 100
 number_of_susceptible_groups = 3
 simulator = VGsim.Simulator(number_of_sites, populations_number, number_of_susceptible_groups, seed=1234)
 
@@ -32,14 +34,15 @@ simulator.set_immunity_transition(1/90, source=1, target=0)
 simulator.set_immunity_transition(1/180, source=2, target=0)
 
 #Set host population structure with three populations and migration
-simulator.set_population_size(10000000, population=0)
-simulator.set_population_size(5000000, population=1)
-simulator.set_population_size(1000000, population=2)
-simulator.set_migration_probability(10/365/2)
+simulator.set_population_size(10000000)
+simulator.set_migration_probability(1/365/2)
 
-simulator.set_migration_restrictions(1, 0, [[200, 1/365], [220, 1/1000]])
-simulator.set_migration_restrictions(1, 2, [[210, 1/365], [230, 1/1000]])
-simulator.set_migration_restrictions(0, 1, [[135, 1/365], [140, 1/1000], [150, 1/5000]])
+# simulator.set_migration_restrictions(1, 0, [[200, 1/365], [220, 1/1000]])
+# simulator.set_migration_restrictions(1, 2, [[210, 1/365], [230, 1/1000]])
+# simulator.set_migration_restrictions(0, 1, [[300, 1/365], [500, 1/1000], [1000, 1/5000]])
+# simulator.set_migration_restrictions(0, 2, [[400, 1/365], [800, 1/1000], [1100, 1/5000]])
+# simulator.set_migration_restrictions(10, 15, [[400, 1/365], [800, 1/1000], [1100, 1/5000]])
+
 
 
 #Set specific sampling efforts in different populations
@@ -51,6 +54,9 @@ simulator.set_npi([0.1, 0.01, 0.002])
 
 #Run simulation with the exact algorithm
 simulator.simulate(10000000, epidemic_time=110)
+
+end_time = time.time()
+print(end_time - start_time)
 
 #Change some of parameters
 ##simulator.set_immunity_transition(0.05, source=0, target=1)
