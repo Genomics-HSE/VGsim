@@ -51,22 +51,22 @@ cdef class SuperSpread:
     cdef:
         vector[Py_ssize_t] nodeId
         vector[double] time
-        vector[Py_ssize_t] oldPop
-        vector[Py_ssize_t] newPop
+        vector[Py_ssize_t] resistance
+        vector[Py_ssize_t] infectious
 
     def __init__(self):
         self.nodeId = []
         self.time = []
-        self.oldPop = []
-        self.newPop = []
+        self.resistance = []
+        self.infectious = []
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void AddSuperSpread(self, Py_ssize_t nodeId, double time, Py_ssize_t oldPop, Py_ssize_t newPop):
+    cdef void AddSuperSpread(self, Py_ssize_t nodeId, double time, Py_ssize_t resistance, Py_ssize_t infectious):
         self.nodeId.push_back(nodeId)
         self.time.push_back(time)
-        self.oldPop.push_back(oldPop)
-        self.newPop.push_back(newPop)
+        self.oldPop.push_back(resistance)
+        self.newPop.push_back(infectious)
 
     def get_superspread(self, id_spr):
         if id_spr < len(self.nodeId):
