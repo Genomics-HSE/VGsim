@@ -47,6 +47,32 @@ cdef class Migrations:
 
     def get_migration(self, id_mig):
         return self.nodeId[id_mig], self.time[id_mig], self.oldPop[id_mig], self.newPop[id_mig]
+cdef class SuperSpread:
+    cdef:
+        vector[Py_ssize_t] nodeId
+        vector[double] time
+        vector[Py_ssize_t] oldPop
+        vector[Py_ssize_t] newPop
+
+    def __init__(self):
+        self.nodeId = []
+        self.time = []
+        self.oldPop = []
+        self.newPop = []
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void AddSuperSpread(self, Py_ssize_t nodeId, double time, Py_ssize_t oldPop, Py_ssize_t newPop):
+        self.nodeId.push_back(nodeId)
+        self.time.push_back(time)
+        self.oldPop.push_back(oldPop)
+        self.newPop.push_back(newPop)
+
+    def get_superspread(self, id_spr):
+        if id_spr < len(self.nodeId):
+            return self.nodeId[id_spr], self.time[id_spr], self.oldPop[id_spr], self.newPop[id_spr]
+        else:
+            raise IndexError("Event ID out of range")
 
 
 cdef class Lockdowns:
