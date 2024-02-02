@@ -187,11 +187,14 @@ def test_set_coinfection_parameters(recombination, error, text):
 
 #TRANSMISSION RATE
 # @pytest.mark.parametrize('rate, haplotype, condition', [()])
-@pytest.mark.parametrize('rate, haplotype, answer', [(0    , None, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-													 (0.002, 'A*', [0.002, 0.002, 0.002, 0.002, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
-													 (0.003, 'AT', [2, 0.003, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
-													 (0.004, 0   , [0.004, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
-													 (0.005, 15  , [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0.005])])
+@pytest.mark.parametrize('rate , haplotype    , answer', 
+						[(0    , None         , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+						 (0.002, 'A*'         , [0.002, 0.002, 0.002, 0.002, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+						 (0.003, 'AT'         , [2, 0.003, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+						 (0.004, 0            , [0.004, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
+						 (0.005, 15           , [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0.005]),
+						 (0.006, [0, 15, 'T*'], [0.006, 2, 2, 2, 0.006, 0.006, 0.006, 0.006, 2, 2, 2, 2, 2, 2, 2, 0.006]),
+						 (0.007, []           , [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])])
 def test_set_transmisstion_rate(rate, haplotype, answer):
 	model = Simulator(number_of_sites=2)
 	model.set_transmission_rate(rate=rate, haplotype=haplotype)
@@ -204,7 +207,7 @@ def test_set_transmisstion_rate(rate, haplotype, answer):
 @pytest.mark.parametrize('rate, haplotype, error, text', [(None , None  , TypeError , 'Incorrect type of transmission rate. Type should be int or float.'),
 														  ('str', None  , TypeError , 'Incorrect type of transmission rate. Type should be int or float.'),
 														  (-1   , None  , ValueError, 'Incorrect value of transmission rate. Value should be more or equal 0.'),
-														  (0.01 , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+														  # (0.01 , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 														  (0.01 , -1    , IndexError, 'There are no such haplotype!'),
 														  (0.01 , 16    , IndexError, 'There are no such haplotype!'),
 														  (0.01 , 'str' , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
@@ -229,7 +232,7 @@ def test_set_recovery_rate(rate, haplotype, answer):
 @pytest.mark.parametrize('rate, haplotype, error, text', [(None , None  , TypeError , 'Incorrect type of recovery rate. Type should be int or float.'),
 														  ('str', None  , TypeError , 'Incorrect type of recovery rate. Type should be int or float.'),
 														  (-1   , None  , ValueError, 'Incorrect value of recovery rate. Value should be more or equal 0.'),
-														  (0.01 , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+														  # (0.01 , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 														  (0.01 , -1    , IndexError, 'There are no such haplotype!'),
 														  (0.01 , 16    , IndexError, 'There are no such haplotype!'),
 														  (0.01 , 'str' , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
@@ -253,7 +256,7 @@ def test_set_sampling_rate(rate, haplotype, answer):
 @pytest.mark.parametrize('rate, haplotype, error, text', [(None , None  , TypeError , 'Incorrect type of sampling rate. Type should be int or float.'),
 														  ('str', None  , TypeError , 'Incorrect type of sampling rate. Type should be int or float.'),
 														  (-1   , None  , ValueError, 'Incorrect value of sampling rate. Value should be more or equal 0.'),
-														  (0.01 , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+														  # (0.01 , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 														  (0.01 , -1    , IndexError, 'There are no such haplotype!'),
 														  (0.01 , 16    , IndexError, 'There are no such haplotype!'),
 														  (0.01 , 'str' , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
@@ -282,7 +285,7 @@ def test_set_mutation_rate(rate, haplotype, mutation, answer):
 @pytest.mark.parametrize('rate, haplotype, mutation, error, text', [(None , None  , None , TypeError , 'Incorrect type of mutation rate. Type should be int or float.'),
 																	('str', None  , None , TypeError , 'Incorrect type of mutation rate. Type should be int or float.'),
 																	(-1   , None  , None , ValueError, 'Incorrect value of mutation rate. Value should be more or equal 0.'),
-																	(2    , [1, 2], None , TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+																	# (2    , [1, 2], None , TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 																	(2    , -1    , None , IndexError, 'There are no such haplotype!'),
 																	(2    , 16    , None , IndexError, 'There are no such haplotype!'),
 																	(2    , 'str' , None , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
@@ -319,7 +322,7 @@ def test_set_mutation_probabilities(probabilities, haplotype, mutation, answer):
 																			 ([0, 0, 0, 5]    , None  , None , ValueError, 'Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.'),
 																			 ([None, 0, 0, 5] , None  , None , TypeError , 'Incorrect type of mutation probabilities. Type should be int or float.'),
 																			 (['str', 0, 0, 5], None  , None , TypeError , 'Incorrect type of mutation probabilities. Type should be int or float.'),
-																			 ([2, 3, 4, 5]    , [1, 2], None , TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+																			 # ([2, 3, 4, 5]    , [1, 2], None , TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 																			 ([2, 3, 4, 5]    , -1    , None , IndexError, 'There are no such haplotype!'),
 																			 ([2, 3, 4, 5]    , 16    , None , IndexError, 'There are no such haplotype!'),
 																			 ([2, 3, 4, 5]    , 'str' , None , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
@@ -512,7 +515,7 @@ def test_set_susceptibility_type(susceptibility_type, haplotype, answer):
 																		 ('str', None  , TypeError , 'Incorrect type of susceptibility type. Type should be int.'),
 																		 (-1   , None  , IndexError, 'There are no such susceptibility type!'),
 																		 (4    , None  , IndexError, 'There are no such susceptibility type!'),
-																		 (2    , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+																		 # (2    , [1, 2], TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 																		 (2    , -1    , IndexError, 'There are no such haplotype!'),
 																		 (2    , 16    , IndexError, 'There are no such haplotype!'),
 																		 (2    , 'str' , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
@@ -538,7 +541,7 @@ def test_set_susceptibility(rate, haplotype, susceptibility_type, answer):
 @pytest.mark.parametrize('rate, haplotype, susceptibility_type, error, text', [(None , None  , None , TypeError , 'Incorrect type of susceptibility rate. Type should be int or float.'),
 																			   ('str', None  , None , TypeError , 'Incorrect type of susceptibility rate. Type should be int or float.'),
 																			   (-1   , None  , None , ValueError, 'Incorrect value of susceptibility rate. Value should be more or equal 0.'),
-																			   (2    , [1, 2], None , TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
+																			   # (2    , [1, 2], None , TypeError , 'Incorrect type of haplotype. Type should be int or str or None.'),
 																			   (2    , -1    , None , IndexError, 'There are no such haplotype!'),
 																			   (2    , 16    , None , IndexError, 'There are no such haplotype!'),
 																			   (2    , 'str' , None , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
