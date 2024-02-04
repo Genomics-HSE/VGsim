@@ -48,17 +48,17 @@ simulator.set_npi([0.1, 0.01, 0.002])
 simulator.simulate(10000000, epidemic_time=110)
 
 #Change some of parameters
-##simulator.set_immunity_transition(0.05, source=0, target=1)
-##simulator.set_immunity_transition(0.05, source=0, target=2)
-##simulator.set_contact_density(0.7, population=0)
-##simulator.set_contact_density(0.7, population=1)
-##simulator.set_migration_probability(2/365/2, source=0, target=2)
-##simulator.set_migration_probability(2/365/2, source=1, target=2)
+simulator.set_immunity_transition(0.05, source=0, target=1)
+simulator.set_immunity_transition(0.05, source=0, target=2)
+simulator.set_contact_density(0.7, population=0)
+simulator.set_contact_density(0.7, population=1)
+simulator.set_migration_probability(2/365/2, source=0, target=2)
+simulator.set_migration_probability(2/365/2, source=1, target=2)
 
 ##print("\nSwitching to tau-leaping algorithm.\n")
 
 #Run simulation with the approximate tau-leaping algorithm
-##simulator.simulate(1000, epidemic_time=210, method='tau')
+simulator.simulate(1000, epidemic_time=210, method='tau')
 
 #Simulate genealogy of sampled individuals
 simulator.genealogy()
@@ -70,12 +70,12 @@ if os.path.exists('example_output') == False:
 os.chdir('example_output')
 
 #Generate a plot with epidemiological curves
-simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
-simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
-simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
-simulator.add_title(name="AA haplotype")
-simulator.add_legend()
-simulator.plot('plot')
+# simulator.add_plot_infectious(population=0, haplotype='AA', step_num=100)
+# simulator.add_plot_infectious(population=1, haplotype='AA', step_num=100)
+# simulator.add_plot_infectious(population=2, haplotype='AA', step_num=100)
+# simulator.add_title(name="AA haplotype")
+# simulator.add_legend()
+# simulator.plot('plot')
 
 #Save the genealogy with mutations and migrations
 simulator.export_newick()

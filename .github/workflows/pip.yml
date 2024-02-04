@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
         os:  [ubuntu-latest, macos-latest]
         # pip cache paths
         include:
@@ -48,9 +48,11 @@ jobs:
         python ./VGsim_cmd.py -it 100000 -seed 2022
     - name: Run an test 3
       run: |
-        cd testing
-        python ./check_simulator.py
+        python ./testing/example.py
     - name: Run an test 4
       run: |
-        cd tests
-        pytest test_interface.py
+        cd testing
+        python ./check_simulator.py
+    - name: Run an test 5
+      run: |
+        python -m pytest ./tests/test_interface.py

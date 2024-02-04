@@ -78,7 +78,7 @@ simulator.export_chain_events('reference_' + str(name))
 simulator = VGsim.Simulator(number_of_sites=2, seed=2020)
 
 name = 8
-simulator.set_mutation_rate(probabilities=[1, 0, 0, 1])
+simulator.set_mutation_probabilities([1, 0, 0, 1])
 simulator.simulate(100000)
 simulator.export_chain_events('reference_' + str(name))
 
@@ -89,7 +89,8 @@ name = 9
 simulator.set_transmission_rate(5.0, haplotype=12)
 simulator.set_recovery_rate(1.5)
 simulator.set_sampling_rate(0.3)
-simulator.set_mutation_rate(0.01, probabilities=[1, 0, 0, 1])
+simulator.set_mutation_rate(0.01)
+simulator.set_mutation_probabilities([1, 0, 0, 1])
 simulator.set_migration_probability(0.01, source=0, target=1)
 simulator.set_migration_probability(0.005, source=2, target=1)
 simulator.set_sampling_multiplier(2.5, population=1)
