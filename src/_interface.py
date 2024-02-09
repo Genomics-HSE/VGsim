@@ -837,7 +837,7 @@ class Simulator:
         """
         start_time = time.time()
         self.simulation.GetGenealogy(seed)
-        print(f"Getting genealogy time:{time.time() - start_time}")
+        print(f"Getting genealogy time: {time.time() - start_time}")
 
     def print_recomb(self, left, right):
         self.simulation.print_recomb(left, right)

@@ -309,7 +309,8 @@ cdef class BirthDeathModel:
 
                 self.eventHapPopRate[pn, hn, 0] = self.BirthRate(pn, hn)
                 self.eventHapPopRate[pn, hn, 1] = self.dRate[self.numToHap[hn]]
-                self.eventHapPopRate[pn, hn, 2] = self.sRate[self.numToHap[hn]] * self.samplingMultiplier[pn]
+                self.eventHapPopRate[pn, hn, 2] = self.sRate[self.numToHap[hn]] * \
+                    self.samplingMultiplier[pn]
                 self.eventHapPopRate[pn, hn, 3] = self.tmRate[hn]
                 self.tEventHapPopRate[pn, hn] = 0
                 for i in range(4):
@@ -317,7 +318,8 @@ cdef class BirthDeathModel:
                 self.hapPopRate[pn, hn] = self.tEventHapPopRate[pn, hn] * self.infectious[pn, hn]
                 self.infectPopRate[pn] += self.hapPopRate[pn, hn]
             for sn in range(self.susNum):
-                self.immuneSourcePopRate[pn, sn] = self.suscepCumulTransition[sn] * self.susceptible[pn, sn]
+                self.immuneSourcePopRate[pn, sn] = self.suscepCumulTransition[sn] * \
+                    self.susceptible[pn, sn]
                 self.immunePopRate[pn] += self.immuneSourcePopRate[pn, sn]
             self.popRate[pn] = self.infectPopRate[pn] + self.immunePopRate[pn]
             self.totalRate += self.popRate[pn]
@@ -329,8 +331,9 @@ cdef class BirthDeathModel:
                     continue
                 self.effectiveMigration[pn1, pn2] = 0.0
                 for pn3 in range(self.popNum):
-                    self.effectiveMigration[pn1, pn2] += self.migrationRates[pn1, pn3] * self.migrationRates[pn2, pn3] * \
-                    self.contactDensity[pn3] / self.actualSizes[pn3]
+                    self.effectiveMigration[pn1, pn2] += self.migrationRates[pn1, pn3] * \
+                        self.migrationRates[pn2, pn3] * self.contactDensity[pn3] / \
+                        self.actualSizes[pn3]
                 if self.effectiveMigration[pn1, pn2] > maxEffectiveMigration[pn2]:
                     maxEffectiveMigration[pn2] = self.effectiveMigration[pn1, pn2]
 
@@ -343,8 +346,8 @@ cdef class BirthDeathModel:
         self.totalMigrationRate = 0.0
         for pn in range(self.popNum):
             self.maxEffectiveBirthMigration[pn] = maxEffectiveMigration[pn] * maxEffectiveBirth
-            self.migPopRate[pn] = self.maxEffectiveBirthMigration[pn] * self.totalSusceptible[pn] * (self.globalInfectious - \
-                self.totalInfectious[pn])
+            self.migPopRate[pn] = self.maxEffectiveBirthMigration[pn] * \
+                self.totalSusceptible[pn] * (self.globalInfectious - self.totalInfectious[pn])
             self.totalMigrationRate += self.migPopRate[pn]
 
     @cython.boundscheck(False)
@@ -362,7 +365,7 @@ cdef class BirthDeathModel:
                 self.hapToNum[mem_h] += 1
                 self.infectious[pi, i], mem_inf = mem_inf, self.infectious[pi, i]
                 self.numToHap[i], mem_h = mem_h, self.numToHap[i]
-            if (self.numToHap[i] > nhi or self.numToHap[i] == 0) and self.numToHap[i-1] < nhi:
+            if (self.numToHap[i] > nhi or self.numToHap[i] == 0) and self.numToHap[i - 1] < nhi:
                 mem_h = self.numToHap[i]
                 check = True
                 self.numToHap[i] = nhi
@@ -380,10 +383,11 @@ cdef class BirthDeathModel:
         cdef double ps = 0.0 
 
         for sn in range(self.susNum):
-            self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn] * self.susceptibility[self.numToHap[hi], sn]
+            self.susceptHapPopRate[pi, hi, sn] = self.susceptible[pi, sn] * \
+                self.susceptibility[self.numToHap[hi], sn]
             for pn in range(self.popNum):
-                ps += self.susceptHapPopRate[pi, hi, sn] * self.migrationRates[pi, pn] * self.migrationRates[pi, pn] * \
-                self.contactDensity[pn] / self.actualSizes[pn]
+                ps += self.susceptHapPopRate[pi, hi, sn] * self.migrationRates[pi, pn] * \
+                    self.migrationRates[pi, pn] * self.contactDensity[pn] / self.actualSizes[pn]
 
         return self.bRate[self.numToHap[hi]] * ps
 
@@ -398,7 +402,9 @@ cdef class BirthDeathModel:
         for i in range(attempts):
             self.seed = RndmWrapper(seed = (self.user_seed, i))
             if self.totalRate + self.totalMigrationRate != 0.0 and self.globalInfectious != 0:
-                while (self.events.ptr < self.events.size and (sample_size == -1 or self.sCounter <= sample_size) and (time == -1 or self.currentTime < time)):
+                while (self.events.ptr < self.events.size and \
+                    (sample_size == -1 or self.sCounter <= sample_size) and \
+                    (time == -1 or self.currentTime < time)):
                     self.SampleTime()
                     pi = self.GenerateEvent()
                     if self.totalRate == 0.0 or self.globalInfectious == 0:
@@ -453,7 +459,7 @@ cdef class BirthDeathModel:
         print('Actual sizes: ', end='')
         for pn in range(self.popNum):
             print(self.actualSizes[pn], end=' ')
-            if abs(self.actualSizes[pn]/self.sizes[pn]-1) >= 0.1:
+            if abs(self.actualSizes[pn] / self.sizes[pn] - 1) >= 0.1:
                 check = True
                 list_pop.append(str(pn))
         print()
@@ -535,8 +541,8 @@ cdef class BirthDeathModel:
         if migration:
             self.totalMigrationRate = 0.0
             for pn in range(self.popNum):
-                self.migPopRate[pn] = self.maxEffectiveBirthMigration[pn] * self.totalSusceptible[pn] * \
-                (self.globalInfectious - self.totalInfectious[pn])
+                self.migPopRate[pn] = self.maxEffectiveBirthMigration[pn] * \
+                    self.totalSusceptible[pn] * (self.globalInfectious - self.totalInfectious[pn])
                 self.totalMigrationRate += self.migPopRate[pn]
 
     @cython.boundscheck(False)
@@ -571,7 +577,7 @@ cdef class BirthDeathModel:
 
             self.infectious[pi, hi] -= 1
             for hn in range(self.hapNum):
-                self.birthInf[hn] = self.eventHapPopRate[pi, hn, 0]*self.infectious[pi, hn]
+                self.birthInf[hn] = self.eventHapPopRate[pi, hn, 0] * self.infectious[pi, hn]
                 hs += self.birthInf[hn]
             self.infectious[pi, hi] += 1
             hi2, self.rn = fastChoose(self.birthInf, hs, self.rn)
@@ -609,13 +615,15 @@ cdef class BirthDeathModel:
     @cython.wraparound(False)
     cdef void Death(self, Py_ssize_t pi, Py_ssize_t hi, bint add_event = True): # hi - program number
         self.NewRecoveries(pi, self.suscType[self.numToHap[hi]], hi)
-        self.immuneSourcePopRate[pi, self.suscType[self.numToHap[hi]]] = self.susceptible[pi, self.suscType[self.numToHap[hi]]] * \
-        self.suscepCumulTransition[self.suscType[self.numToHap[hi]]]
+        self.immuneSourcePopRate[pi, self.suscType[self.numToHap[hi]]] = \
+            self.susceptible[pi, self.suscType[self.numToHap[hi]]] * \
+            self.suscepCumulTransition[self.suscType[self.numToHap[hi]]]
         self.UpdateRates(pi, True, True, True)
 
         if add_event:
             self.dCounter += 1
-            self.events.AddEvent(self.currentTime, DEATH, self.numToHap[hi], pi, self.suscType[self.numToHap[hi]], 0)
+            self.events.AddEvent(self.currentTime, DEATH, self.numToHap[hi], pi, \
+                self.suscType[self.numToHap[hi]], 0)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -623,7 +631,8 @@ cdef class BirthDeathModel:
         self.Death(pi, hi, False)
 
         self.sCounter += 1
-        self.events.AddEvent(self.currentTime, SAMPLING, self.numToHap[hi], pi, self.suscType[self.numToHap[hi]], 0)
+        self.events.AddEvent(self.currentTime, SAMPLING, self.numToHap[hi], pi, \
+            self.suscType[self.numToHap[hi]], 0)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -635,8 +644,8 @@ cdef class BirthDeathModel:
 
         ohi = self.numToHap[hi] # ohi - haplotype
         mi, self.rn = fastChoose(self.mRate[ohi], self.tmRate[hi], self.rn)
-        DS, self.rn = fastChoose(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] \
-            + self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
+        DS, self.rn = fastChoose(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] + \
+            self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
         nhi = self.Mutate(ohi, mi, DS)
 
         if self.memory_optimization:
@@ -666,12 +675,13 @@ cdef class BirthDeathModel:
             double p_accept
 
         tpi, self.rn = fastChoose(self.migPopRate, self.totalMigrationRate, self.rn)
-        spi, self.rn = fastChoose_skip(self.totalInfectious, self.globalInfectious-self.totalInfectious[tpi], self.rn, skip=tpi)
+        spi, self.rn = fastChoose_skip(self.totalInfectious, \
+            self.globalInfectious - self.totalInfectious[tpi], self.rn, skip=tpi)
         hi, self.rn = fastChoose(self.infectious[spi], self.totalInfectious[spi], self.rn) # hi - program number
         si, self.rn = fastChoose(self.susceptible[tpi], self.totalSusceptible[tpi], self.rn)
 
-        p_accept = self.effectiveMigration[spi, tpi] * self.bRate[self.numToHap[hi]] * self.susceptibility[self.numToHap[hi], si] / \
-        self.maxEffectiveBirthMigration[tpi]
+        p_accept = self.effectiveMigration[spi, tpi] * self.bRate[self.numToHap[hi]] * \
+            self.susceptibility[self.numToHap[hi], si] / self.maxEffectiveBirthMigration[tpi]
         if self.rn < p_accept:
             self.NewInfections(tpi, si, hi)
             self.UpdateRates(tpi, True, True, True)
@@ -686,13 +696,13 @@ cdef class BirthDeathModel:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void CheckLockdown(self, Py_ssize_t pi):
-        if self.totalInfectious[pi] > self.startLD[pi]*self.sizes[pi] and self.lockdownON[pi] == 0:
+        if self.totalInfectious[pi] > self.startLD[pi] * self.sizes[pi] and self.lockdownON[pi] == 0:
             self.contactDensity[pi] = self.contactDensityAfterLockdown[pi]
             self.swapLockdown += 1
             self.lockdownON[pi] = 1
             self.UpdateAllRates()
             self.loc.AddLockdown(True, pi, self.currentTime)
-        if self.totalInfectious[pi] < self.endLD[pi]*self.sizes[pi] and self.lockdownON[pi] == 1:
+        if self.totalInfectious[pi] < self.endLD[pi] * self.sizes[pi] and self.lockdownON[pi] == 1:
             self.contactDensity[pi] = self.contactDensityBeforeLockdown[pi]
             self.swapLockdown += 1
             self.lockdownON[pi] = 0
