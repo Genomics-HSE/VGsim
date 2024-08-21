@@ -35,7 +35,7 @@ class Simulator:
     :type recombination_probability: float
     """
     def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
-        sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0):
+        sampling_probability=False, memory_optimization=False, genome_length=1000000, recombination_probability=0.0):
         self.fig = None
         if seed == None:
             seed = int(randrange(sys.maxsize))
@@ -863,6 +863,9 @@ class Simulator:
         """
 
         self.simulation.Debug()
+
+    def checkRecombination(self):
+        self.simulation.checkRecombination()
 
     def get_proportion(self):
         """

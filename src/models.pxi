@@ -66,31 +66,93 @@ cdef class Lockdowns:
         self.times.push_back(time)
 
 
+cdef class RecombinationForward:
+    cdef:
+        double time
+        Py_ssize_t position
+
+    def __init__(self, double time, Py_ssize_t position):
+        self.time = time
+        self.position = position
+
+# cdef class RecombinationBackward:
+#     cdef:
+#         Py_ssize_t child, parent, position, haplotype_left, haplotype_right
+
+#     def __init__(self, Py_ssize_t child, Py_ssize_t parent, Py_ssize_t position, Py_ssize_t left, Py_ssize_t right):
+#         self.child = child
+#         self.parent = parent
+#         self.position = position
+#         self.haplotype_left = left
+#         self.haplotype_right = right
+
 cdef class Recombination:
     cdef:
-        vector[Py_ssize_t] positions
-        # vector[Py_ssize_t] positions, hi1s, hi2s
-        # vector[double] times
+        Py_ssize_t counter
 
-        vector[Py_ssize_t] idevents, his, hi2s, nhis, posRecombs
+        vector[double] time
+        vector[Py_ssize_t] position
+
+        vector[Py_ssize_t] child
+        vector[Py_ssize_t] parent
+        vector[Py_ssize_t] position_back
+        vector[Py_ssize_t] left_haplotype
+        vector[Py_ssize_t] right_haplotype
 
     def __init__(self):
-        pass
+        self.counter = 0
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void AddRecombination_forward(self, Py_ssize_t Id, Py_ssize_t hi, Py_ssize_t hi2, Py_ssize_t posRecomb, Py_ssize_t nhi):
-        self.idevents.push_back(Id)
-        self.his.push_back(hi)
-        self.hi2s.push_back(hi2)
-        self.nhis.push_back(nhi)
-        self.posRecombs.push_back(posRecomb)
+    cdef void addForward(self, double time, Py_ssize_t position):
+        self.time.push_back(time)
+        self.position.push_back(position)
+        self.counter += 1
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cdef void AddRecombination(self, Py_ssize_t position):
-    # cdef void AddRecombination(self, Py_ssize_t position, Py_ssize_t hi1, Py_ssize_t hi2, double time):
-        self.positions.push_back(position)
-        # self.hi1s.push_back(hi1)
-        # self.hi2s.push_back(hi2)
-        # self.times.push_back(time)
+    cdef Py_ssize_t getForward(self):
+        self.counter -= 1
+        # result = RecombinationForward(self.time[self.counter], self.position[self.counter])
+        # return result
+        return self.position[self.counter]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef float getPosition(self, double time):
+        for i in range(self.time.size()):
+            if self.time[i].time == time:
+                return self.positions[i]
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void addBackward(self, Py_ssize_t child, Py_ssize_t parent, Py_ssize_t position, Py_ssize_t left, Py_ssize_t right):
+        self.child.push_back(child)
+        self.parent.push_back(parent)
+        self.position.push_back(position)
+        self.left_haplotype.push_back(left)
+        self.right_haplotype.push_back(right)
+
+    def print_edges(self):
+        for i in range(self.child.size()):
+            print(f"Edge - {i}, child - {self.child[i]}, parent - {self.parent[i]}")
+
+
+
+    # @cython.boundscheck(False)
+    # @cython.wraparound(False)
+    # cdef void AddRecombination_forward(self, Py_ssize_t Id, Py_ssize_t hi, Py_ssize_t hi2, Py_ssize_t posRecomb, Py_ssize_t nhi):
+    #     self.idevents.push_back(Id)
+    #     self.his.push_back(hi)
+    #     self.hi2s.push_back(hi2)
+    #     self.nhis.push_back(nhi)
+    #     self.posRecombs.push_back(posRecomb)
+
+    # @cython.boundscheck(False)
+    # @cython.wraparound(False)
+    # cdef void AddRecombination(self, Py_ssize_t position):
+    # # cdef void AddRecombination(self, Py_ssize_t position, Py_ssize_t hi1, Py_ssize_t hi2, double time):
+    #     self.positions.push_back(position)
+    #     self.hi1s.push_back(hi1)
+    #     self.hi2s.push_back(hi2)
+    #     self.times.push_back(time)
