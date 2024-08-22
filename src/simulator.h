@@ -12,7 +12,6 @@ public:
     void Debug();
 
     void Simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);
-
     void SetAttempts(uint64_t attempts);
     void SetIterations(uint64_t iterations);
 
@@ -24,10 +23,12 @@ public:
     // Getters
 
 private:
-    uint64_t number_of_sites_;
-    uint64_t number_of_haplotypes_;
-    uint64_t number_of_populations_;
-    uint64_t number_of_susceptible_groups_;
+    inline uint64_t getNumberSites() const;
+    inline uint64_t getNumberHaplotypes() const;
+    inline uint64_t getNumberPopulations() const;
+    inline uint64_t getNumberSusceptibleGroups() const;
+
+    Numbers numbers_;
     uint64_t seed_;
 
     Counters counters_;

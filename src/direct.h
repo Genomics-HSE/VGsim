@@ -5,7 +5,7 @@
 
 class Direct {
 public:
-    Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, uint64_t sites, uint64_t haplotypes, uint64_t populations, uint64_t susceptible_groups);
+    Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers);
     ~Direct();
     void Debug();
 
@@ -34,10 +34,7 @@ private:
     inline uint64_t getIndexHap4(uint64_t first, uint64_t second, uint64_t third) const;
     inline uint64_t getIndexHapSus(uint64_t first, uint64_t second, uint64_t third) const;
 
-    uint64_t number_of_sites_;
-    uint64_t number_of_haplotypes_;
-    uint64_t number_of_populations_;
-    uint64_t number_of_susceptible_groups_;
+    Numbers numbers_;
 
     double rn_;
     double rate_;

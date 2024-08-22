@@ -5,7 +5,7 @@
 
 class Tau {
 public:
-    Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, uint64_t sites, uint64_t haplotypes, uint64_t populations, uint64_t susceptible_groups);
+    Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, Numbers numbers);
     ~Tau();
     void Debug();
 
@@ -27,10 +27,7 @@ private:
     inline uint64_t getIndexSus(uint64_t first, uint64_t second) const;
     inline uint64_t getIndexSit(uint64_t first, uint64_t second) const;
 
-    uint64_t number_of_sites_;
-    uint64_t number_of_haplotypes_;
-    uint64_t number_of_populations_;
-    uint64_t number_of_susceptible_groups_;
+    Numbers numbers_;
 
     int64_t* infectious_delta_;
     int64_t* susceptibles_delta_;

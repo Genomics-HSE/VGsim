@@ -1,5 +1,6 @@
 #pragma once
 
+#include "numbers.cpp"
 #include "utils.cpp"
 #include "chain.cpp"
 #include "population_pool.cpp"
@@ -16,28 +17,25 @@
 constexpr double kTime = 1'000'000;
 
 Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, uint64_t number_of_susceptible_groups, uint64_t seed, uint64_t number_attempts)
-    : number_of_sites_(number_of_sites)
-    , number_of_haplotypes_(std::pow(4, number_of_sites))
-    , number_of_populations_(number_of_populations)
-    , number_of_susceptible_groups_(number_of_susceptible_groups)
+    : numbers_({number_of_sites, static_cast<uint64_t>(std::pow(4, number_of_sites)), number_of_populations, number_of_susceptible_groups})
     , seed_(seed)
     
     , counters_(Counters())
-    , pool_(PopulationPool(number_of_populations_, number_of_haplotypes_, number_of_susceptible_groups_))
-    , infectious_data_(Infectious(number_of_sites_, number_of_susceptible_groups_))
-    , susceptibles_data_(Susceptibles(number_of_susceptible_groups_)) 
+    , pool_(PopulationPool(getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups()))
+    , infectious_data_(Infectious(getNumberSites(), getNumberSusceptibleGroups()))
+    , susceptibles_data_(Susceptibles(getNumberSusceptibleGroups())) 
     , chain_(Chain())
     , generator_(RandomGenerator(seed_))
     , stopper_(ConditionStop())
-    , direct_(Direct(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, number_of_sites_, number_of_haplotypes_, number_of_populations_, number_of_susceptible_groups_))
-    , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, number_of_sites_, number_of_haplotypes_, number_of_populations_, number_of_susceptible_groups_)) {
+    , direct_(Direct(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_))
+    , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, numbers_)) {
 }
 
 void Simulator::Debug() {
-    std::cout << "Number of sites: " << number_of_sites_ << std::endl;
-    std::cout << "Number of haplotypes: " << number_of_haplotypes_ << std::endl;
-    std::cout << "Number of populations: " << number_of_populations_ << std::endl;
-    std::cout << "Number of susceptible groups: " << number_of_susceptible_groups_ << std::endl;
+    std::cout << "Number of sites: " << getNumberSites() << std::endl;
+    std::cout << "Number of haplotypes: " << getNumberHaplotypes() << std::endl;
+    std::cout << "Number of populations: " << getNumberPopulations() << std::endl;
+    std::cout << "Number of susceptible groups: " << getNumberSusceptibleGroups() << std::endl;
     std::cout << "Seed: " << seed_ << std::endl;
     counters_.Debug();
     pool_.Debug();
@@ -72,18 +70,34 @@ void Simulator::SetIterations(uint64_t iterations) {
 // void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {
 //     try {
 //         CheckValue(rate, "immunity transition rate");
-//         CheckIndex(source, number_of_susceptible_groups_, "source susceptibility type");
-//         CheckIndex(target, number_of_susceptible_groups_, "target susceptibility type");
+//         CheckIndex(source, getNumberSusceptibleGroups(), "source susceptibility type");
+//         CheckIndex(target, getNumberSusceptibleGroups(), "target susceptibility type");
 //     } catch (const std::exception& e) {
 //         std::cout << e.what() << std::endl;
 //         return;
 //     }
 
-//     for (uint64_t si : GetIndexes(source, number_of_susceptible_groups_)) {
-//         for (uint64_t ti : GetIndexes(target, number_of_susceptible_groups_)) {
+//     for (uint64_t si : GetIndexes(source, getNumberSusceptibleGroups())) {
+//         for (uint64_t ti : GetIndexes(target, getNumberSusceptibleGroups())) {
 //             if (si != ti) {
 //                 susceptibles_data_.SetSusceptibilityTransition(rate, si, ti);
 //             }
 //         }
 //     }
 // }
+
+inline uint64_t Simulator::getNumberSites() const {
+    return numbers_.sites;
+}
+
+inline uint64_t Simulator::getNumberHaplotypes() const {
+    return numbers_.haplotypes;
+}
+
+inline uint64_t Simulator::getNumberPopulations() const {
+    return numbers_.populations;
+}
+
+inline uint64_t Simulator::getNumberSusceptibleGroups() const {
+    return numbers_.susceptible_groups;
+}

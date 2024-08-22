@@ -8,7 +8,6 @@ src/__pycache__/
 *.so
 *.c
 *.cxx
-*.cpp
 
 # Distribution / packaging
 .Python

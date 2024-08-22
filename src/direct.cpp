@@ -4,25 +4,22 @@
 
 #include "direct.h"
 
-Direct::Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, uint64_t sites, uint64_t haplotypes, uint64_t populations, uint64_t susceptible_groups)
-    : number_of_sites_(sites)
-    , number_of_haplotypes_(haplotypes)
-    , number_of_populations_(populations)
-    , number_of_susceptible_groups_(susceptible_groups)
+Direct::Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers)
+    : numbers_(numbers)
 
     , rn_(0.0)
     , rate_(0.0)
     , rate_migration_(0.0)
-    , rate_pop_(new double[number_of_populations_])
-    , rate_infection_(new double[number_of_populations_])
-    , rate_immunity_(new double[number_of_populations_])
-    , rate_pop_hap_(new double[number_of_populations_ * number_of_haplotypes_])
-    , rate_pop_total_(new double[number_of_populations_ * number_of_haplotypes_])
-    , rate_pop_sus_(new double[number_of_populations_ * number_of_susceptible_groups_])
-    , rate_pop_hap_event_(new double[number_of_populations_ * number_of_haplotypes_ * 4])
-    , suscept_hap_pop_rate_(new double[number_of_populations_ * number_of_haplotypes_ * number_of_susceptible_groups_])
-    , rate_migration_pop_(new double[number_of_populations_])
-    , max_effective_transmission_migration_(new double[number_of_populations_])
+    , rate_pop_(new double[getNumberPopulations()])
+    , rate_infection_(new double[getNumberPopulations()])
+    , rate_immunity_(new double[getNumberPopulations()])
+    , rate_pop_hap_(new double[getNumberPopulations() * getNumberHaplotypes()])
+    , rate_pop_total_(new double[getNumberPopulations() * getNumberHaplotypes()])
+    , rate_pop_sus_(new double[getNumberPopulations() * getNumberSusceptibleGroups()])
+    , rate_pop_hap_event_(new double[getNumberPopulations() * getNumberHaplotypes() * 4])
+    , suscept_hap_pop_rate_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
+    , rate_migration_pop_(new double[getNumberPopulations()])
+    , max_effective_transmission_migration_(new double[getNumberPopulations()])
     
     , counters_(counters)
     , pool_(pool)
@@ -312,19 +309,19 @@ void Direct::Migration() {
 
 
 inline uint64_t Direct::getNumberSites() const {
-    return number_of_sites_;
-}
-
-inline uint64_t Direct::getNumberPopulations() const {
-    return number_of_populations_;
+    return numbers_.sites;
 }
 
 inline uint64_t Direct::getNumberHaplotypes() const {
-    return number_of_haplotypes_;
+    return numbers_.haplotypes;
+}
+
+inline uint64_t Direct::getNumberPopulations() const {
+    return numbers_.populations;
 }
 
 inline uint64_t Direct::getNumberSusceptibleGroups() const {
-    return number_of_susceptible_groups_;
+    return numbers_.susceptible_groups;
 }
 
 inline uint64_t Direct::getIndexHap(uint64_t first, uint64_t second) const {

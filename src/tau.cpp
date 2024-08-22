@@ -4,31 +4,28 @@
 
 #include "tau.h"
 
-Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, uint64_t sites, uint64_t haplotypes, uint64_t populations, uint64_t susceptible_groups)
-    : number_of_sites_(sites)
-    , number_of_haplotypes_(haplotypes)
-    , number_of_populations_(populations)
-    , number_of_susceptible_groups_(susceptible_groups)
+Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, Numbers numbers)
+    : numbers_(numbers)
     
-    , infectious_delta_(new int64_t[number_of_populations_ * number_of_haplotypes_])
-    , susceptibles_delta_(new int64_t[number_of_populations_ * number_of_susceptible_groups_])
-    , events_transmission_(new uint64_t[number_of_populations_ * number_of_haplotypes_ * number_of_susceptible_groups_])
-    , events_recovery_(new uint64_t[number_of_populations_ * number_of_haplotypes_])
-    , events_sampling_(new uint64_t[number_of_populations_ * number_of_haplotypes_])
-    , events_mutation_(new uint64_t[number_of_populations_ * number_of_haplotypes_ * number_of_sites_ * 3])
-    , events_migration_(new uint64_t[number_of_populations_ * number_of_populations_ * number_of_haplotypes_ * number_of_susceptible_groups_])
-    , events_immunity_(new uint64_t[number_of_populations_ * number_of_susceptible_groups_ * number_of_susceptible_groups_])
+    , infectious_delta_(new int64_t[getNumberPopulations() * getNumberHaplotypes()])
+    , susceptibles_delta_(new int64_t[getNumberPopulations() * getNumberSusceptibleGroups()])
+    , events_transmission_(new uint64_t[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
+    , events_recovery_(new uint64_t[getNumberPopulations() * getNumberHaplotypes()])
+    , events_sampling_(new uint64_t[getNumberPopulations() * getNumberHaplotypes()])
+    , events_mutation_(new uint64_t[getNumberPopulations() * getNumberHaplotypes() * getNumberSites() * 3])
+    , events_migration_(new uint64_t[getNumberPopulations() * getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
+    , events_immunity_(new uint64_t[getNumberPopulations() * getNumberSusceptibleGroups() * getNumberSusceptibleGroups()])
 
     , time_step_(0.0)
 
-    , infectious_tau_(new double[number_of_populations_ * number_of_haplotypes_])
-    , susceptibles_tau_(new double[number_of_populations_ * number_of_susceptible_groups_])
-    , propensities_transmission_(new double[number_of_populations_ * number_of_haplotypes_ * number_of_susceptible_groups_])
-    , propensities_recovery_(new double[number_of_populations_ * number_of_haplotypes_])
-    , propensities_sampling_(new double[number_of_populations_ * number_of_haplotypes_])
-    , propensities_mutation_(new double[number_of_populations_ * number_of_haplotypes_ * number_of_sites_ * 3])
-    , propensities_migration_(new double[number_of_populations_ * number_of_populations_ * number_of_haplotypes_ * number_of_susceptible_groups_])
-    , propensities_immunity_(new double[number_of_populations_ * number_of_susceptible_groups_ * number_of_susceptible_groups_])
+    , infectious_tau_(new double[getNumberPopulations() * getNumberHaplotypes()])
+    , susceptibles_tau_(new double[getNumberPopulations() * getNumberSusceptibleGroups()])
+    , propensities_transmission_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
+    , propensities_recovery_(new double[getNumberPopulations() * getNumberHaplotypes()])
+    , propensities_sampling_(new double[getNumberPopulations() * getNumberHaplotypes()])
+    , propensities_mutation_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSites() * 3])
+    , propensities_migration_(new double[getNumberPopulations() * getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
+    , propensities_immunity_(new double[getNumberPopulations() * getNumberSusceptibleGroups() * getNumberSusceptibleGroups()])
 
     , counters_(counters)
     , pool_(pool)
@@ -60,23 +57,23 @@ Tau::~Tau() {
 
 void Tau::Debug() {
     std::cout << "Debug - tau!" << std::endl;
-    PrintArray2nd("Infectious delta", infectious_delta_, number_of_populations_, number_of_haplotypes_);
-    PrintArray2nd("Susceptibles delta", susceptibles_delta_, number_of_populations_, number_of_susceptible_groups_);
-    PrintArray3nd("Events Transmission", events_transmission_, number_of_populations_, number_of_haplotypes_, number_of_susceptible_groups_);
-    PrintArray2nd("Events Recovery", events_recovery_, number_of_populations_, number_of_haplotypes_);
-    PrintArray2nd("Events Sampling", events_sampling_, number_of_populations_, number_of_haplotypes_);
-    PrintArray4nd("Events Mutation", events_mutation_, number_of_populations_, number_of_haplotypes_, number_of_sites_, 3);
-    PrintArray4nd("Events Migration", events_migration_, number_of_populations_, number_of_populations_, number_of_haplotypes_, number_of_susceptible_groups_);
-    PrintArray3nd("Events Immunity", events_immunity_, number_of_populations_, number_of_susceptible_groups_, number_of_susceptible_groups_);
+    PrintArray2nd("Infectious delta", infectious_delta_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray2nd("Susceptibles delta", susceptibles_delta_, getNumberPopulations(), getNumberSusceptibleGroups());
+    PrintArray3nd("Events Transmission", events_transmission_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
+    PrintArray2nd("Events Recovery", events_recovery_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray2nd("Events Sampling", events_sampling_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray4nd("Events Mutation", events_mutation_, getNumberPopulations(), getNumberHaplotypes(), getNumberSites(), 3);
+    PrintArray4nd("Events Migration", events_migration_, getNumberPopulations(), getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
+    PrintArray3nd("Events Immunity", events_immunity_, getNumberPopulations(), getNumberSusceptibleGroups(), getNumberSusceptibleGroups());
 
-    PrintArray2nd("Infectious tau", infectious_tau_, number_of_populations_, number_of_haplotypes_);
-    PrintArray2nd("Susceptibles tau", susceptibles_tau_, number_of_populations_, number_of_susceptible_groups_);
-    PrintArray3nd("Propensities Transmission", propensities_transmission_, number_of_populations_, number_of_haplotypes_, number_of_susceptible_groups_);
-    PrintArray2nd("Propensities Recovery", propensities_recovery_, number_of_populations_, number_of_haplotypes_);
-    PrintArray2nd("Propensities Sampling", propensities_sampling_, number_of_populations_, number_of_haplotypes_);
-    PrintArray4nd("Propensities Mutation", propensities_mutation_, number_of_populations_, number_of_haplotypes_, number_of_sites_, 3);
-    PrintArray4nd("Propensities Migration", propensities_migration_, number_of_populations_, number_of_populations_, number_of_haplotypes_, number_of_susceptible_groups_);
-    PrintArray3nd("Propensities Immunity", propensities_immunity_, number_of_populations_, number_of_susceptible_groups_, number_of_susceptible_groups_);
+    PrintArray2nd("Infectious tau", infectious_tau_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray2nd("Susceptibles tau", susceptibles_tau_, getNumberPopulations(), getNumberSusceptibleGroups());
+    PrintArray3nd("Propensities Transmission", propensities_transmission_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
+    PrintArray2nd("Propensities Recovery", propensities_recovery_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray2nd("Propensities Sampling", propensities_sampling_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray4nd("Propensities Mutation", propensities_mutation_, getNumberPopulations(), getNumberHaplotypes(), getNumberSites(), 3);
+    PrintArray4nd("Propensities Migration", propensities_migration_, getNumberPopulations(), getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
+    PrintArray3nd("Propensities Immunity", propensities_immunity_, getNumberPopulations(), getNumberSusceptibleGroups(), getNumberSusceptibleGroups());
 }
 
 void Tau::Simulate(uint64_t iterations, uint64_t number_attempts) {
@@ -428,19 +425,19 @@ void Tau::UpdateCompartmentCounts() {
 }
 
 inline uint64_t Tau::getNumberSites() const {
-    return number_of_sites_;
-}
-
-inline uint64_t Tau::getNumberPopulations() const {
-    return number_of_populations_;
+    return numbers_.sites;
 }
 
 inline uint64_t Tau::getNumberHaplotypes() const {
-    return number_of_haplotypes_;
+    return numbers_.haplotypes;
+}
+
+inline uint64_t Tau::getNumberPopulations() const {
+    return numbers_.populations;
 }
 
 inline uint64_t Tau::getNumberSusceptibleGroups() const {
-    return number_of_susceptible_groups_;
+    return numbers_.susceptible_groups;
 }
 
 inline uint64_t Tau::getIndexHap(uint64_t first, uint64_t second) const {
