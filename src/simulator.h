@@ -13,6 +13,9 @@ public:
 
     void Simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);
 
+    void SetAttempts(uint64_t attempts);
+    void SetIterations(uint64_t iterations);
+
 
     // Setters
     // Susceptibles
@@ -33,6 +36,7 @@ private:
     Susceptibles susceptibles_data_;
     Chain chain_;
     RandomGenerator generator_;
+    ConditionStop stopper_;
     Direct direct_;
     Tau tau_;
 };

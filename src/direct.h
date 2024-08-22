@@ -5,15 +5,15 @@
 
 class Direct {
 public:
-    Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, uint64_t sites, uint64_t haplotypes, uint64_t populations, uint64_t susceptible_groups);
+    Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, uint64_t sites, uint64_t haplotypes, uint64_t populations, uint64_t susceptible_groups);
     ~Direct();
     void Debug();
 
-    void Simulate(uint64_t iterations = 100'000, uint64_t number_attempts = 100);
+    void Simulate();
 
 private:
     void Update();
-    void Restart(uint64_t index);
+    void Restart();
     void TimeStep();
     void GenerateEvent();
     void UpdateRates(uint64_t population, bool infection, bool immunity, bool migration);
@@ -59,4 +59,5 @@ private:
     Susceptibles* susceptibles_data_;
     Chain* chain_;
     RandomGenerator* generator_;
+    ConditionStop* stopper_;
 };
