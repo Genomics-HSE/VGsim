@@ -11,7 +11,7 @@
 int main() {
     Simulator simulator(2, 1, 3, 1239);
     simulator.SetAttempts(100);
-    simulator.SetIterations(10'000'000);
+    simulator.SetIterations(10);
     simulator.Simulate();
     simulator.Debug();
     return 0;

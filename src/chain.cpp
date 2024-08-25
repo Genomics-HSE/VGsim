@@ -31,7 +31,7 @@ void Chain::Reserve(uint64_t add_size) {
     events_ = new_events;
 }
 
-void Chain::Reset() {
+void Chain::Restart() {
     pointer_ = 0;
     size_ = 0;
     current_time_ = 0.0;
@@ -57,7 +57,7 @@ uint64_t Chain::Size() {
 void Chain::Debug() {
     std::cout << "Pointer: " << pointer_ << std::endl;
     std::cout << "Size: " << size_ << std::endl;
-    for (uint64_t i = 0; i < size_; ++i) {
+    for (uint64_t i = 0; i < pointer_; ++i) {
         switch (events_[i].type) {
             case kTRANSMISSION: DebugTransmission(times_[i], events_[i]); break;
             case kRECOVERY: DebugRecovery(times_[i], events_[i]); break;

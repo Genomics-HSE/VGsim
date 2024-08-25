@@ -22,7 +22,7 @@ public:
     ~Chain();
 
     void Reserve(uint64_t add_size);
-    void Reset();
+    void Restart();
     void AddTime(double time);
     void AddEvent(Event event);
     uint64_t Size();

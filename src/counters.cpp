@@ -26,6 +26,16 @@ void Counters::Debug() {
     std::cout << std::endl;
 }
 
+void Counters::Restart() {
+    immunyty_ = 0;
+    transmission_ = 0;
+    recovery_ = 0;
+    sampling_ = 0;
+    mutation_ = 0;
+    migration_accept_ = 0;
+    migration_reject_ = 0;
+}
+
 inline void Counters::AddImmunity(uint64_t count) {
     immunyty_ += count;
 }

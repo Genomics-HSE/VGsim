@@ -56,6 +56,8 @@ void Direct::Simulate() {
         }
         if (stopper_->CheckRestart()) {
             Restart();
+        } else {
+            break;
         }
     }
 }
@@ -137,9 +139,9 @@ void Direct::Update() {
 
 void Direct::Restart() {
     generator_->NextSeed();
-    pool_->ResetPopulation();
-    *counters_ = Counters();
-    chain_->Reset();
+    pool_->Restart();
+    counters_->Restart();
+    chain_->Restart();
 }
 
 double Direct::BirthRate(uint64_t source, uint64_t haplotype) {

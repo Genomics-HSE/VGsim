@@ -9,7 +9,7 @@ public:
 
     void SaveInfections();
     void FirstInfections();
-    void ResetPopulation();
+    void Restart();
     inline void NewInfections(uint64_t count, uint64_t haplotype, uint64_t group, uint64_t population);
     inline void NewRecoveries(uint64_t count, uint64_t haplotype, uint64_t group, uint64_t population);
     inline void NewMutation(uint64_t count, uint64_t old_haplotype, uint64_t new_haplotype, uint64_t population);

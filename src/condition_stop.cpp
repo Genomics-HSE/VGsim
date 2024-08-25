@@ -27,11 +27,11 @@ uint64_t ConditionStop::GetIterations() {
 }
 
 bool ConditionStop::CheckAttempt() {
-    return ++current_attempts_ != attempts_ && CheckRestart();
+    return current_attempts_++ != attempts_;
 }
 
 bool ConditionStop::CheckIteration() {
-    return ++current_iterations_ != iterations_;
+    return current_iterations_++ != iterations_;
 }
 
 bool ConditionStop::CheckRestart() {

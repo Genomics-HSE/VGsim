@@ -129,7 +129,7 @@ void PopulationPool::FirstInfections() {
     NewInfections(1, 0, 0, 0);
 }
 
-void PopulationPool::ResetPopulation() {
+void PopulationPool::Restart() {
     infected_ = 0;
     susceptibles_ = 0;
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {

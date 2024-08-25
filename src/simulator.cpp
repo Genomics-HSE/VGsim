@@ -39,10 +39,11 @@ void Simulator::Debug() {
     std::cout << "Seed: " << seed_ << std::endl;
     counters_.Debug();
     pool_.Debug();
-    // infectious_data_.Debug();
-    // susceptibles_data_.Debug();
-    // direct_.Debug();
+    infectious_data_.Debug();
+    susceptibles_data_.Debug();
+    direct_.Debug();
     tau_.Debug();
+    chain_.Debug();
 }
 
 void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {

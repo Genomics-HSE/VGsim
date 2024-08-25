@@ -4,6 +4,7 @@ class Counters {
 public:
     Counters();
     void Debug();
+    void Restart();
 
     inline void AddImmunity(uint64_t count);
     inline void AddTransmission(uint64_t count);
