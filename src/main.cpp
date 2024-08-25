@@ -10,9 +10,7 @@
 
 int main() {
     Simulator simulator(2, 1, 3, 1239);
-    simulator.SetAttempts(100);
-    simulator.SetIterations(10);
-    simulator.Simulate();
+    simulator.Simulate(10);
     simulator.Debug();
     return 0;
 }

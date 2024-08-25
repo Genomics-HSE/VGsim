@@ -12,8 +12,8 @@ public:
     void Debug();
 
     void Simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);
-    void SetAttempts(uint64_t attempts);
-    void SetIterations(uint64_t iterations);
+    // void SetAttempts(uint64_t attempts);
+    // void SetIterations(uint64_t iterations);
 
 
     // Setters

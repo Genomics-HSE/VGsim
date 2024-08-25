@@ -47,6 +47,8 @@ void Simulator::Debug() {
 }
 
 void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {
+    stopper_.SetIterations(iterations);
+    stopper_.SetAttempts(number_attempts);
     uint64_t start_time = clock();
     if (type == "direct") {
         direct_.Simulate();
@@ -60,13 +62,13 @@ void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
 }
 
-void Simulator::SetAttempts(uint64_t attempts) {
-    stopper_.SetAttempts(attempts);
-}
+// void Simulator::SetAttempts(uint64_t attempts) {
+//     stopper_.SetAttempts(attempts);
+// }
 
-void Simulator::SetIterations(uint64_t iterations) {
-    stopper_.SetIterations(iterations);
-}
+// void Simulator::SetIterations(uint64_t iterations) {
+//     stopper_.SetIterations(iterations);
+// }
 
 // void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {
 //     try {
