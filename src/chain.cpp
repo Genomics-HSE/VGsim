@@ -58,14 +58,7 @@ void Chain::Debug() {
     std::cout << "Pointer: " << pointer_ << std::endl;
     std::cout << "Size: " << size_ << std::endl;
     for (uint64_t i = 0; i < pointer_; ++i) {
-        switch (events_[i].type) {
-            case kTRANSMISSION: DebugTransmission(times_[i], events_[i]); break;
-            case kRECOVERY: DebugRecovery(times_[i], events_[i]); break;
-            case kSAMPLING: DebugSampling(times_[i], events_[i]); break;
-            case kMUTATION: DebugMutation(times_[i], events_[i]); break;
-            case kMIGRATION: DebugMigration(times_[i], events_[i]); break;
-            case kSUSCCHANGE: DebugSuscchange(times_[i], events_[i]); break;
-        }
+        DebugEvent(times_[i], events_[i]);
     }
 }
 
@@ -79,6 +72,17 @@ Event Chain::GetEvent(uint64_t index) {
 
 double Chain::GetTime(uint64_t index) {
     return times_[index];
+}
+
+void DebugEvent(double time, Event& event) {
+    switch (event.type) {
+        case kTRANSMISSION: DebugTransmission(time, event); break;
+        case kRECOVERY: DebugRecovery(time, event); break;
+        case kSAMPLING: DebugSampling(time, event); break;
+        case kMUTATION: DebugMutation(time, event); break;
+        case kMIGRATION: DebugMigration(time, event); break;
+        case kSUSCCHANGE: DebugSuscchange(time, event); break;
+    }
 }
 
 void DebugTransmission(double time, Event& event) {

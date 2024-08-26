@@ -40,6 +40,7 @@ private:
     Event* events_;
 };
 
+void DebugEvent(double time, Event& event);
 void DebugTransmission(double time, Event& event);
 void DebugRecovery(double time, Event& event);
 void DebugSampling(double time, Event& event);
