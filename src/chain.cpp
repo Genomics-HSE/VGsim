@@ -69,6 +69,18 @@ void Chain::Debug() {
     }
 }
 
+uint64_t Chain::GetSize() {
+    return pointer_;
+}
+
+Event Chain::GetEvent(uint64_t index) {
+    return events_[index];
+}
+
+double Chain::GetTime(uint64_t index) {
+    return times_[index];
+}
+
 void DebugTransmission(double time, Event& event) {
     std::cout << "Transmission, haplotype - " << event.parameter1
               << ", population - " << event.parameter2

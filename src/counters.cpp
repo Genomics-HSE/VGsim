@@ -52,6 +52,10 @@ inline void Counters::AddSampling(uint64_t count) {
     sampling_ += count;
 }
 
+uint64_t Counters::GetSampling() {
+    return sampling_;
+}
+
 inline void Counters::AddMutation(uint64_t count) {
     mutation_ += count;
 }

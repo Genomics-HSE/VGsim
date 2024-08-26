@@ -10,6 +10,7 @@ public:
     inline void AddTransmission(uint64_t count);
     inline void AddRecovery(uint64_t count);
     inline void AddSampling(uint64_t count);
+    uint64_t GetSampling();
     inline void AddMutation(uint64_t count);
     inline void AddMigrationAccept(uint64_t count);
     inline void AddMigrationReject(uint64_t count);

@@ -1,5 +1,18 @@
 #pragma once
 
+#include "numbers.cpp"
+#include "utils.cpp"
+#include "chain.cpp"
+#include "population_pool.cpp"
+#include "infectious.cpp"
+#include "susceptibles.cpp"
+#include "counters.cpp"
+#include "random_generator.cpp"
+#include "condition_stop.cpp"
+#include "direct.cpp"
+#include "tau.cpp"
+#include "arg.cpp"
+
 #include <iostream>
 #include <random>
 #include <cmath>
@@ -12,6 +25,7 @@ public:
     void Debug();
 
     void Simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);
+    void Genealogy();
     // void SetAttempts(uint64_t attempts);
     // void SetIterations(uint64_t iterations);
 
@@ -40,4 +54,5 @@ private:
     ConditionStop stopper_;
     Direct direct_;
     Tau tau_;
+    ARG arg_;
 };

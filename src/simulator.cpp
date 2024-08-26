@@ -1,17 +1,5 @@
 #pragma once
 
-#include "numbers.cpp"
-#include "utils.cpp"
-#include "chain.cpp"
-#include "population_pool.cpp"
-#include "infectious.cpp"
-#include "susceptibles.cpp"
-#include "counters.cpp"
-#include "random_generator.cpp"
-#include "condition_stop.cpp"
-#include "direct.cpp"
-#include "tau.cpp"
-
 #include "simulator.h"
 
 constexpr double kTime = 1'000'000;
@@ -28,22 +16,24 @@ Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, u
     , generator_(RandomGenerator(seed_))
     , stopper_(ConditionStop())
     , direct_(Direct(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_))
-    , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, numbers_)) {
+    , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, numbers_))
+    , arg_(ARG(numbers_, &chain_, &counters_, &pool_, &generator_)) {
 }
 
 void Simulator::Debug() {
-    std::cout << "Number of sites: " << getNumberSites() << std::endl;
-    std::cout << "Number of haplotypes: " << getNumberHaplotypes() << std::endl;
-    std::cout << "Number of populations: " << getNumberPopulations() << std::endl;
-    std::cout << "Number of susceptible groups: " << getNumberSusceptibleGroups() << std::endl;
-    std::cout << "Seed: " << seed_ << std::endl;
-    counters_.Debug();
-    pool_.Debug();
-    infectious_data_.Debug();
-    susceptibles_data_.Debug();
-    direct_.Debug();
-    tau_.Debug();
-    chain_.Debug();
+    // std::cout << "Number of sites: " << getNumberSites() << std::endl;
+    // std::cout << "Number of haplotypes: " << getNumberHaplotypes() << std::endl;
+    // std::cout << "Number of populations: " << getNumberPopulations() << std::endl;
+    // std::cout << "Number of susceptible groups: " << getNumberSusceptibleGroups() << std::endl;
+    // std::cout << "Seed: " << seed_ << std::endl;
+    // counters_.Debug();
+    // pool_.Debug();
+    // infectious_data_.Debug();
+    // susceptibles_data_.Debug();
+    // chain_.Debug();
+    // direct_.Debug();
+    // tau_.Debug();
+    arg_.Debug();
 }
 
 void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {
@@ -60,6 +50,10 @@ void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_
     }
     uint64_t end_time = clock();
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
+}
+
+void Simulator::Genealogy() {
+    arg_.CalculateGenealogy();
 }
 
 // void Simulator::SetAttempts(uint64_t attempts) {

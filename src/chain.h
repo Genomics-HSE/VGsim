@@ -28,6 +28,10 @@ public:
     uint64_t Size();
     void Debug();
 
+    uint64_t GetSize();
+    Event GetEvent(uint64_t index);
+    double GetTime(uint64_t index);
+
 private:
     uint64_t pointer_;
     uint64_t size_;

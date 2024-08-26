@@ -1,17 +1,10 @@
 #pragma once
 
 #include "chain.cpp"
-#include "tree.cpp"
+#include "arg.cpp"
+
 #include <vector>
 #include <random>
-
-constexpr int64_t kTRANSMISSION = 0;
-constexpr int64_t kRECOVERY = 1;
-constexpr int64_t kSAMPLING = 2;
-constexpr int64_t kMUTATION = 3;
-constexpr int64_t kMIGRATION = 4;
-constexpr int64_t kSUSCCHANGEN = 5;
-constexpr int64_t kMULTITYPE = 6;
 
 ARG Genealogy(Chain& chain, std::vector<std::vector<int64_t>> infectious, const std::vector<int64_t>& hapToNum) {
     int64_t samplingCounter = 0;

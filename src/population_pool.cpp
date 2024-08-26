@@ -203,6 +203,16 @@ void PopulationPool::CheckLockdown(uint64_t population) {
     }
 }
 
+std::vector<std::vector<uint64_t>> PopulationPool::GetInfectious() {
+    std::vector<std::vector<uint64_t>> infectious(getNumberPopulations(), std::vector<uint64_t>(getNumberHaplotypes()));
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+            infectious[population][haplotype] = GetInfectedPopHap(population, haplotype);
+        }
+    }
+    return infectious;
+}
+
 inline double PopulationPool::GetContactDensity(uint64_t population) const {
     return populations_[population].GetContactDensity();
 }

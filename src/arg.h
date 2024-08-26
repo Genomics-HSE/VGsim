@@ -1,15 +1,16 @@
 #pragma once
 
+#include "additional_information.h"
 
 #include <vector>
 #include <unordered_map>
-#include "additional_information.h"
+#include <iostream>
 
 class ARG {
 public:
-    ARG(int64_t size);
+    ARG(Numbers numbers, Chain* chain, Counters* counters, PopulationPool* pool, RandomGenerator* generator);
 
-    void AddNode(int64_t parent, int64_t population, double time, int64_t left = -1, int64_t right = -1);
+    void CalculateGenealogy();
 
     void Debug();
 
@@ -53,10 +54,19 @@ public:
     // }
 
 private:
+    void restart();
+    void addNode(int64_t population, double time, int64_t parent = -1, int64_t left = -1, int64_t right = -1);
+
     std::vector<double> time_;
     std::vector<int64_t> tree_;
     std::vector<int64_t> population_;
-    std::vector<Mutation> mutation_;
-    std::unordered_map<int64_t, Migration> migration_;
-    std::unordered_map<int64_t, Recombination> recombination_;
+    // std::vector<Mutation> mutation_;
+    // std::unordered_map<int64_t, Migration> migration_;
+    // std::unordered_map<int64_t, Recombination> recombination_;
+
+    Numbers numbers_;
+    Chain* chain_;
+    Counters* counters_;
+    PopulationPool* pool_;
+    RandomGenerator* generator_;
 };

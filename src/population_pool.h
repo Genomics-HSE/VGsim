@@ -15,6 +15,7 @@ public:
     inline void NewMutation(uint64_t count, uint64_t old_haplotype, uint64_t new_haplotype, uint64_t population);
     inline void NewImmunity(uint64_t count, uint64_t old_group, uint64_t new_group, uint64_t population);
     void CheckLockdown(uint64_t population);
+    std::vector<std::vector<uint64_t>> GetInfectious();
 
     inline uint64_t* GetSizeBegin() const;
     inline uint64_t GetInfected() const;
