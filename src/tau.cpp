@@ -4,7 +4,7 @@
 
 #include "tau.h"
 
-Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, Numbers numbers)
+Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers)
     : numbers_(numbers)
     
     , infectious_delta_(new int64_t[getNumberPopulations() * getNumberHaplotypes()])
@@ -32,7 +32,8 @@ Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, 
     , infectious_data_(infectious_data)
     , susceptibles_data_(susceptibles_data) 
     , chain_(chain)
-    , generator_(generator) {
+    , generator_(generator)
+    , stopper_(stopper) {
 }
 
 Tau::~Tau() {
@@ -56,7 +57,8 @@ Tau::~Tau() {
 }
 
 void Tau::Debug() {
-    std::cout << "Debug - tau!" << std::endl;
+    std::cout << "TAU" << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
     PrintArray2nd("Infectious delta", infectious_delta_, getNumberPopulations(), getNumberHaplotypes());
     PrintArray2nd("Susceptibles delta", susceptibles_delta_, getNumberPopulations(), getNumberSusceptibleGroups());
     PrintArray3nd("Events Transmission", events_transmission_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
@@ -79,11 +81,11 @@ void Tau::Debug() {
 void Tau::Simulate(uint64_t iterations, uint64_t number_attempts) {
     pool_->SaveInfections();
     chain_->Reserve(iterations);
-    for (uint64_t i = 1; i <= number_attempts; ++i) {
+    while (stopper_->CheckAttempt()) {
         pool_->FirstInfections();
         Update();
-        uint64_t iter = 0;
-        for (; iter < iterations; ++iter) {
+        stopper_->Restart();
+        while (stopper_->CheckIteration()) {
             Propensities();
             TimeStep();
             UpdateCompartmentCounts();
@@ -212,7 +214,6 @@ void Tau::Propensities() {
 void Tau::TimeStep() {
     ChooseTime();
     while (!GenerateEvents()) {
-        std::cout << "Check!" << std::endl;
         time_step_ /= 2;
     }
     chain_->AddTime(time_step_);
@@ -242,7 +243,6 @@ void Tau::ChooseTime() {
             time_step_ = std::min(time_step_, std::max(epsilon * susceptible[group], 1.0) / tmp);
         }
     }
-    std::cout << time_step_ << std::endl;
 }
 
 bool Tau::GenerateEvents() {
@@ -271,8 +271,8 @@ bool Tau::GenerateEvents() {
     uint64_t index_recovery_sampling = 0;
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
-            events_recovery_[index_recovery_sampling] = generator_->GetPoisson(time_step_ * propensities_recovery_[index_transmission]);
-            events_sampling_[index_recovery_sampling] = generator_->GetPoisson(time_step_ * propensities_sampling_[index_transmission]);
+            events_recovery_[index_recovery_sampling] = generator_->GetPoisson(time_step_ * propensities_recovery_[index_recovery_sampling]);
+            events_sampling_[index_recovery_sampling] = generator_->GetPoisson(time_step_ * propensities_sampling_[index_recovery_sampling]);
             
             infectious_delta_[index_recovery_sampling] -= events_recovery_[index_recovery_sampling];
             susceptibles_delta_[getIndexSus(population, infectious_data_->GetSusceptibilityTypes(haplotype))] += events_recovery_[index_recovery_sampling];
@@ -305,7 +305,7 @@ bool Tau::GenerateEvents() {
             }
             for (uint64_t group = 0; group < getNumberSusceptibleGroups(); ++group) {
                 for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
-                    events_migration_[index_migration] = generator_->GetPoisson(time_step_ * propensities_migration_[index_mutation]);
+                    events_migration_[index_migration] = generator_->GetPoisson(time_step_ * propensities_migration_[index_migration]);
 
                     infectious_delta_[getIndexHap(target, haplotype)] += events_migration_[index_migration];
                     susceptibles_delta_[getIndexSus(target, group)] -= events_migration_[index_migration];

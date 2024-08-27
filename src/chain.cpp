@@ -55,11 +55,14 @@ uint64_t Chain::Size() {
 }
 
 void Chain::Debug() {
+    std::cout << "CHAIN" << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
     std::cout << "Pointer: " << pointer_ << std::endl;
     std::cout << "Size: " << size_ << std::endl;
     for (uint64_t i = 0; i < pointer_; ++i) {
         DebugEvent(times_[i], events_[i]);
     }
+    std::cout << std::endl;
 }
 
 uint64_t Chain::GetSize() {

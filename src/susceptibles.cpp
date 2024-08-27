@@ -8,7 +8,7 @@ Susceptibles::Susceptibles(uint64_t number_of_susceptible_groups)
     : number_of_susceptible_groups_(number_of_susceptible_groups)
     , susceptibility_cumul_transition_(new double[number_of_susceptible_groups_])
     , susceptibility_transition_(new double[number_of_susceptible_groups_ * number_of_susceptible_groups_]) {
-    double transition = 0.0;
+    double transition = 0.00001;
     for (uint64_t source = 0; source < getNumberSusceptibleGroups(); ++source) {
         susceptibility_cumul_transition_[source] = transition * (getNumberSusceptibleGroups() - 1);
         for (uint64_t target = 0; target < getNumberSusceptibleGroups(); ++target) {

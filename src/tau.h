@@ -5,7 +5,7 @@
 
 class Tau {
 public:
-    Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, Numbers numbers);
+    Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers);
     ~Tau();
     void Debug();
 
@@ -56,4 +56,5 @@ private:
     Susceptibles* susceptibles_data_;
     Chain* chain_;
     RandomGenerator* generator_;
+    ConditionStop* stopper_;
 };

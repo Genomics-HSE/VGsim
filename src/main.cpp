@@ -9,10 +9,9 @@
 // clang++ wrap.cpp -std=c++17 -O2 -Wall -Werror -Wsign-compare -o fast_solution
 
 int main() {
-    Simulator simulator(2, 2, 3, 1239);
-    // simulator.Debug();
-    simulator.Simulate(50);
+    Simulator simulator(1, 2, 3, 1234);
+    simulator.Simulate(1'000, "tau");
     simulator.Genealogy();
-    // simulator.Debug();
+    simulator.Debug();
     return 0;
 }

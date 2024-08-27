@@ -27,7 +27,7 @@ PopulationPool::PopulationPool(uint64_t number_of_populations, uint64_t number_o
         infected_pop_[population] = 0;
         susceptibles_pop_[population] = 100'000;
     }
-    double probability = 0.0;
+    double probability = 0.001;
     for (uint64_t source = 0; source < getNumberPopulations(); ++source) {
         for (uint64_t target = 0; target < getNumberPopulations(); ++target) {
             migration_probability_[getIndexPop(source, target)] = source == target ? 1.0 : probability;
