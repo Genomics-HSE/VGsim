@@ -2,7 +2,7 @@
 
 class ConditionStop {
 public:
-    ConditionStop();
+    ConditionStop(PopulationPool* pool);
 
     void SetAttempts(uint64_t attempts);
     void SetIterations(uint64_t iterations);
@@ -18,4 +18,6 @@ private:
     uint64_t iterations_;
     uint64_t current_attempts_;
     uint64_t current_iterations_;
+
+    PopulationPool* pool_;
 };

@@ -86,44 +86,42 @@ void ARG::CalculateGenealogy() {
                 infectious[population][oldHaplotype] += 1;
                 break;
             }
-            // case kMIGRATION: {
-            //     uint64_t haplotype = event.parameter1;
-            //     uint64_t source_population = event.parameter2;
-            //     uint64_t target_population = event.parameter4;
+            case kMIGRATION: {
+                uint64_t haplotype = event.parameter1;
+                uint64_t source_population = event.parameter2;
+                uint64_t target_population = event.parameter4;
 
-            //     uint64_t countBranches = liveBranches[target_population][haplotype].size();
-            //     double probability = static_cast<double>(countBranches) / infectious[target_population][haplotype];
-            //     if (generator_->GetUniform() < probability) {
-            //         int64_t nt = static_cast<int64_t>(countBranches * generator_->GetUniform());
-            //         int64_t lbss = liveBranches[source_population][haplotype].size();
-            //         probability = static_cast<double>(lbss) / infectious[source_population][haplotype];
-            //         if (generator_->GetUniform() < probability) {
-            //             int64_t ns = static_cast<int64_t>(lbss * generator_->GetUniform());
-            //             int64_t idt = liveBranches[target_population][haplotype][nt];
-            //             int64_t ids = liveBranches[source_population][haplotype][ns];
-            //             liveBranches[source_population][haplotype][ns] = currentNode++;
-            //             liveBranches[target_population][haplotype][nt] = liveBranches[target_population][haplotype][lbs - 1];
-            //             liveBranches[target_population][haplotype].pop_back();
-                        
-            //             // addNode(id3, source_population, time, idt, ids);
-            //             // self.mig.AddMigration(idt, e_time, source_population, target_population)
-            //         } else {
-            //             liveBranches[event.parameter2][haplotype].push_back(liveBranches[target_population][haplotype][nt]);
-            //             liveBranches[target_population][haplotype][nt] = liveBranches[target_population][haplotype][lbs - 1];
-            //             liveBranches[target_population][haplotype].pop_back();
-            //         }
-            //     }
-
-            //     infectious[target_population][haplotype] -= 1;
-            //     break;
-            // }
+                int64_t countBranchesTarget = liveBranches[target_population][haplotype].size();
+                int64_t countBranchesSource = liveBranches[source_population][haplotype].size();
+                double probability = static_cast<double>(countBranchesTarget) / infectious[target_population][haplotype];
+                if (generator_->GetUniform() < probability) {
+                    int64_t nodeTarget = static_cast<int64_t>(countBranchesTarget * generator_->GetUniform());
+                    probability = static_cast<double>(countBranchesSource) / infectious[source_population][haplotype];
+                    if (generator_->GetUniform() < probability) {
+                        int64_t nodeSource = static_cast<int64_t>(countBranchesSource * generator_->GetUniform());
+                        int64_t targetChild = liveBranches[target_population][haplotype][nodeTarget];
+                        int64_t sourceChild = liveBranches[source_population][haplotype][nodeSource];
+                        int64_t parent = currentNode++;
+                        liveBranches[source_population][haplotype][nodeSource] = parent;
+                        liveBranches[target_population][haplotype][nodeTarget] = liveBranches[target_population][haplotype][countBranchesTarget - 1];
+                        liveBranches[target_population][haplotype].pop_back();
+                        addNode(source_population, time, parent, targetChild, sourceChild);
+                        addMigration(targetChild, {source_population, target_population, time});
+                    } else {
+                        liveBranches[event.parameter2][haplotype].push_back(liveBranches[target_population][haplotype][nodeTarget]);
+                        liveBranches[target_population][haplotype][nodeTarget] = liveBranches[target_population][haplotype][countBranchesTarget - 1];
+                        liveBranches[target_population][haplotype].pop_back();
+                    }
+                }
+                infectious[target_population][haplotype] -= 1;
+                break;
+            }
             case kSUSCCHANGE:
                 break;
             // case kMULTITYPE:
             //     break;
         }
     }
-    Debug();
     return;
 }
 
@@ -138,9 +136,19 @@ void ARG::Debug() {
         std::cout << " " << node;
     }
     std::cout << std::endl;
+    std::cout << "Population:";
+    for (int64_t population : population_) {
+        std::cout << " " << population;
+    }
+    std::cout << std::endl;
     std::cout << "Mutations\n";
     for (const Mutation& mutation : mutations_) {
         PrintMutation(mutation);
+    }
+    std::cout << std::endl;
+    std::cout << "Mutations\n";
+    for (auto migration : migrations_) {
+        PrintMigration(migration.first, migration.second);
     }
     std::cout << std::endl;
 }
@@ -183,4 +191,8 @@ void ARG::addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotyp
     }
 
     mutations_.push_back({node, site, derivedState, ancestralState, time});
+}
+
+void ARG::addMigration(uint64_t node, Migration migration) {
+    migrations_.insert({node, migration});
 }

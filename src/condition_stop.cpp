@@ -2,11 +2,12 @@
 
 #include "condition_stop.h"
 
-ConditionStop::ConditionStop()
+ConditionStop::ConditionStop(PopulationPool* pool)
     : attempts_(0)
     , iterations_(0)
     , current_attempts_(0)
-    , current_iterations_(0) {
+    , current_iterations_(0)
+    , pool_(pool) {
 }
 
 void ConditionStop::SetAttempts(uint64_t attempts) {
@@ -31,7 +32,7 @@ bool ConditionStop::CheckAttempt() {
 }
 
 bool ConditionStop::CheckIteration() {
-    return current_iterations_++ != iterations_;
+    return current_iterations_++ != iterations_ && pool_->GetInfected() != 0;
 }
 
 bool ConditionStop::CheckRestart() {

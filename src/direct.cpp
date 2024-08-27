@@ -63,6 +63,8 @@ void Direct::Simulate() {
 }
 
 void Direct::Debug() {
+    std::cout << "DIRECT" << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
     std::cout << "Rn: " << rn_ << std::endl;
     std::cout << "Rate: " << rate_ << std::endl;
     std::cout << "Rate migration: " << rate_migration_ << std::endl;

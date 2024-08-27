@@ -97,6 +97,14 @@ void PrintMutation(const Mutation& mutation) {
               << "\n";
 }
 
+void PrintMigration(uint64_t node, const Migration& migration) {
+    std::cout << "Node: " << node
+              << ", old: " << migration.oldPopulation
+              << ", new: " << migration.newPopulation
+              << ", time: " << migration.time
+              << "\n";
+}
+
 uint64_t GetNewHaplotype(uint64_t haplotype, uint64_t site, uint64_t DS, uint64_t sites) {
     uint64_t digit4 = 0;
     uint64_t AS = 0;

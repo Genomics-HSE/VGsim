@@ -14,7 +14,7 @@ Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, u
     , susceptibles_data_(Susceptibles(getNumberSusceptibleGroups())) 
     , chain_(Chain())
     , generator_(RandomGenerator(seed_))
-    , stopper_(ConditionStop())
+    , stopper_(ConditionStop(&pool_))
     , direct_(Direct(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_))
     , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, numbers_))
     , arg_(ARG(numbers_, &chain_, &counters_, &pool_, &generator_)) {

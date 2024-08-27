@@ -26,6 +26,7 @@ template<class T>
 void PrintArray4nd(std::string text, T* array, uint64_t size1, uint64_t size2, uint64_t size3, uint64_t size4);
 
 void PrintMutation(const Mutation& mutation);
+void PrintMingration(uint64_t node, const Migration& migration);
 
 // Some
 uint64_t GetNewHaplotype(uint64_t haplotype, uint64_t site, uint64_t DS, uint64_t sites);

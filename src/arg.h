@@ -23,9 +23,7 @@ public:
         
     // }
 
-    // void addMigration(int64_t node, int64_t oldPopulation, int64_t newPopulation, double time) {
-    //     migration.insert({node, {oldPopulation, newPopulation, time}});
-    // }
+    void addMigration(uint64_t node, Migration migration);
 
     // Migration getMigration() {
     //     return migration[node];
@@ -56,7 +54,7 @@ private:
     std::vector<int64_t> tree_;
     std::vector<int64_t> population_;
     std::vector<Mutation> mutations_;
-    // std::unordered_map<int64_t, Migration> migration_;
+    std::unordered_map<uint64_t, Migration> migrations_;
     // std::unordered_map<int64_t, Recombination> recombination_;
 
     Numbers numbers_;
