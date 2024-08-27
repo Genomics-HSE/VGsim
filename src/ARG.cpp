@@ -72,53 +72,53 @@ void ARG::CalculateGenealogy() {
                 uint64_t population = event.parameter2;
                 uint64_t newHaplotype = event.parameter3;
 
-                int64_t countBranches = liveBranches[population][newHaplotype].size();
+                uint64_t countBranches = liveBranches[population][newHaplotype].size();
                 double probability = static_cast<double>(countBranches) / infectious[population][newHaplotype];
                 if (generator_->GetUniform() < probability) {
-                    int64_t nodeIndex = static_cast<int64_t>(countBranches * generator_->GetUniform());
-                    int64_t node = liveBranches[population][newHaplotype][nodeIndex];
+                    uint64_t nodeIndex = static_cast<uint64_t>(countBranches * generator_->GetUniform());
+                    uint64_t node = liveBranches[population][newHaplotype][nodeIndex];
                     liveBranches[population][newHaplotype][nodeIndex] = liveBranches[population][newHaplotype][countBranches - 1];
                     liveBranches[population][newHaplotype].pop_back();
                     liveBranches[population][oldHaplotype].push_back(node);
-                    // addMutation({node, oldHaplotype, newHaplotype, time});
+                    addMutation(node, oldHaplotype, newHaplotype, time);
                 }
                 infectious[population][newHaplotype] -= 1;
                 infectious[population][oldHaplotype] += 1;
                 break;
             }
             // case kMIGRATION: {
-            //     int64_t lbs = liveBranches[event.parameter4][event.parameter1].size();
-            //     double probability = static_cast<double>(lbs) / infectious[event.parameter4][event.parameter1];
+            //     uint64_t haplotype = event.parameter1;
+            //     uint64_t source_population = event.parameter2;
+            //     uint64_t target_population = event.parameter4;
+
+            //     uint64_t countBranches = liveBranches[target_population][haplotype].size();
+            //     double probability = static_cast<double>(countBranches) / infectious[target_population][haplotype];
             //     if (generator_->GetUniform() < probability) {
-            //         int64_t nt = static_cast<int64_t>(lbs * generator_->GetUniform());
-            //         int64_t lbss = liveBranches[event.parameter2][event.parameter1].size();
-            //         double probability1 = static_cast<double>(lbss) / infectious[event.parameter2][event.parameter1];
-            //         if (generator_->GetUniform() < probability1) {
+            //         int64_t nt = static_cast<int64_t>(countBranches * generator_->GetUniform());
+            //         int64_t lbss = liveBranches[source_population][haplotype].size();
+            //         probability = static_cast<double>(lbss) / infectious[source_population][haplotype];
+            //         if (generator_->GetUniform() < probability) {
             //             int64_t ns = static_cast<int64_t>(lbss * generator_->GetUniform());
-            //             int64_t idt = liveBranches[event.parameter4][event.parameter1][nt];
-            //             int64_t ids = liveBranches[event.parameter2][event.parameter1][ns];
-            //             int64_t id3 = currentNode;
-            //             liveBranches[event.parameter2][event.parameter1][ns] = id3;
-            //             liveBranches[event.parameter4][event.parameter1][nt] =
-            //                 liveBranches[event.parameter4][event.parameter1][lbs - 1];
-            //             liveBranches[event.parameter4][event.parameter1].pop_back();
+            //             int64_t idt = liveBranches[target_population][haplotype][nt];
+            //             int64_t ids = liveBranches[source_population][haplotype][ns];
+            //             liveBranches[source_population][haplotype][ns] = currentNode++;
+            //             liveBranches[target_population][haplotype][nt] = liveBranches[target_population][haplotype][lbs - 1];
+            //             liveBranches[target_population][haplotype].pop_back();
                         
-            //             addNode(id3, event.parameter2, time, idt, ids);
-            //             ++currentNode;
-            //             // self.mig.AddMigration(idt, e_time, event.parameter2, event.parameter4)
+            //             // addNode(id3, source_population, time, idt, ids);
+            //             // self.mig.AddMigration(idt, e_time, source_population, target_population)
             //         } else {
-            //             liveBranches[event.parameter2][event.parameter1].push_back(liveBranches[event.parameter4][event.parameter1][nt]);
-            //             liveBranches[event.parameter4][event.parameter1][nt] =
-            //                 liveBranches[event.parameter4][event.parameter1][lbs - 1];
-            //             liveBranches[event.parameter4][event.parameter1].pop_back();
+            //             liveBranches[event.parameter2][haplotype].push_back(liveBranches[target_population][haplotype][nt]);
+            //             liveBranches[target_population][haplotype][nt] = liveBranches[target_population][haplotype][lbs - 1];
+            //             liveBranches[target_population][haplotype].pop_back();
             //         }
             //     }
 
-            //     infectious[event.parameter4][event.parameter1] -= 1;
+            //     infectious[target_population][haplotype] -= 1;
             //     break;
             // }
-            // case kSUSCCHANGEN:
-            //     break;
+            case kSUSCCHANGE:
+                break;
             // case kMULTITYPE:
             //     break;
         }
@@ -138,6 +138,11 @@ void ARG::Debug() {
         std::cout << " " << node;
     }
     std::cout << std::endl;
+    std::cout << "Mutations\n";
+    for (const Mutation& mutation : mutations_) {
+        PrintMutation(mutation);
+    }
+    std::cout << std::endl;
 }
 
 void ARG::restart() {
@@ -151,50 +156,31 @@ void ARG::restart() {
 }
 
 void ARG::addNode(int64_t population, double time, int64_t parent, int64_t left, int64_t right) {
+    tree_.push_back(-1);
+    population_.push_back(population);
+    time_.push_back(time);
+
     if (left != -1 && right != -1) {
         tree_[left] = parent;
         tree_[right] = parent;
     }
-    tree_.push_back(-1);
-    population_.push_back(population);
-    time_.push_back(time);
 }
 
-    // void printTree() {
-    //     for (uint64_t index = 0; index < tree_.size(); ++index) {
-    //         std::cout << tree_[index] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+void ARG::addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotype, double time) {
+    uint64_t site = 0;
+    uint64_t derivedState = 0;
+    uint64_t ancestralState = 0;
 
-    // void addMutation() {
-    //     mutation.push_back({node, });
-    // }
+    uint64_t del = 1;
+    for (uint64_t index = 0; index < numbers_.sites; ++index) {
+        if (oldHaplotype % (4 * del) / del != newHaplotype % (4 * del) / del) {
+            site = index;
+            derivedState = oldHaplotype % (4 * del) / del;
+            ancestralState = newHaplotype % (4 * del) / del;
+            break;
+        }
+        del *= 4;
+    }
 
-    // Mutation getMutation() {
-        
-    // }
-
-    // void addMigration(int64_t node, int64_t oldPopulation, int64_t newPopulation, double time) {
-    //     migration.insert({node, {oldPopulation, newPopulation, time}});
-    // }
-
-    // Migration getMigration() {
-    //     return migration[node];
-    // }
-
-    // bool isMigration(int64_t node) {
-    //     return migration.contains(node);
-    // }
-
-    // void addRecombination(int64_t child, int64_t parent, int64_t position, int64_t left_haplotype, int64_t right_haplotype) {
-    //     recombinations.insert({child, {parent, position, left_haplotype, right_haplotype}});
-    // }
-
-    // Recombination getRecombination(int64_t node) {
-    //     return recombination[node];
-    // }
-
-    // bool isRecombination(int64_t node) {
-    //     return recombination.contains(node);
-    // }
+    mutations_.push_back({node, site, derivedState, ancestralState, time});
+}

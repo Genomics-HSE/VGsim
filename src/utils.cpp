@@ -88,6 +88,15 @@ void PrintArray4nd(std::string text, T* array, uint64_t size1, uint64_t size2, u
     }
 }
 
+void PrintMutation(const Mutation& mutation) {
+    std::cout << "Node: " << mutation.node
+              << ", site: " << mutation.site
+              << ", derived: " << mutation.derivedState
+              << ", ancestral: " << mutation.ancestralState
+              << ", time: " << mutation.time
+              << "\n";
+}
+
 uint64_t GetNewHaplotype(uint64_t haplotype, uint64_t site, uint64_t DS, uint64_t sites) {
     uint64_t digit4 = 0;
     uint64_t AS = 0;

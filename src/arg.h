@@ -1,7 +1,5 @@
 #pragma once
 
-#include "additional_information.h"
-
 #include <vector>
 #include <unordered_map>
 #include <iostream>
@@ -19,10 +17,6 @@ public:
     //         std::cout << tree_[index] << " ";
     //     }
     //     std::cout << std::endl;
-    // }
-
-    // void addMutation() {
-    //     mutation.push_back({node, });
     // }
 
     // Mutation getMutation() {
@@ -56,11 +50,12 @@ public:
 private:
     void restart();
     void addNode(int64_t population, double time, int64_t parent = -1, int64_t left = -1, int64_t right = -1);
+    void addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotype, double time);
 
     std::vector<double> time_;
     std::vector<int64_t> tree_;
     std::vector<int64_t> population_;
-    // std::vector<Mutation> mutation_;
+    std::vector<Mutation> mutations_;
     // std::unordered_map<int64_t, Migration> migration_;
     // std::unordered_map<int64_t, Recombination> recombination_;
 

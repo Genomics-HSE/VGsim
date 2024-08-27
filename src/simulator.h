@@ -1,7 +1,8 @@
 #pragma once
 
-#include "numbers.cpp"
+#include "additional_information.cpp"
 #include "utils.cpp"
+#include "numbers.cpp"
 #include "chain.cpp"
 #include "population_pool.cpp"
 #include "infectious.cpp"

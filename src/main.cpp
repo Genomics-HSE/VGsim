@@ -12,6 +12,6 @@ int main() {
     Simulator simulator(2, 1, 3, 1239);
     simulator.Simulate(100);
     simulator.Genealogy();
-    simulator.Debug();
+    // simulator.Debug();
     return 0;
 }
