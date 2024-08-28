@@ -12,7 +12,7 @@ Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, u
     , pool_(PopulationPool(getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups()))
     , infectious_data_(Infectious(getNumberSites(), getNumberSusceptibleGroups()))
     , susceptibles_data_(Susceptibles(getNumberSusceptibleGroups())) 
-    , chain_(Chain())
+    , chain_(Chain(numbers_))
     , generator_(RandomGenerator(seed_))
     , stopper_(ConditionStop(&pool_))
     , direct_(Direct(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_))
@@ -33,7 +33,7 @@ void Simulator::Debug() {
     // chain_.Debug();
     // direct_.Debug();
     // tau_.Debug();
-    // arg_.Debug();
+    arg_.Debug();
 }
 
 void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {

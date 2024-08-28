@@ -10,8 +10,9 @@
 
 int main() {
     Simulator simulator(1, 2, 3, 1234);
-    simulator.Simulate(1'000, "tau");
-    simulator.Genealogy();
+    // simulator.Simulate(10'000);
+    simulator.Simulate(200, "tau");
+    // simulator.Genealogy();
     simulator.Debug();
     return 0;
 }

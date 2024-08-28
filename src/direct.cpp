@@ -177,11 +177,14 @@ void Direct::GenerateEvent() {
             rn_ = (choose - rate_immunity_[population]) / rate_infection_[population];
             uint64_t haplotype = fastChoose(&rate_pop_hap_[getIndexHap(population, 0)], rate_infection_[population], &rn_);
             uint64_t event = fastChoose(&rate_pop_hap_event_[getIndexHap4(population, haplotype, 0)], rate_pop_total_[getIndexHap(population, haplotype)], &rn_);
-            switch (event) {
-                case kTRANSMISSION: Transmission(population, haplotype); break;
-                case kRECOVERY: Recovery(population, haplotype); break;
-                case kSAMPLING: Sampling(population, haplotype); break;
-                case kMUTATION: Mutation(population, haplotype); break;
+            switch (static_cast<TypeEvents>(event)) {
+                case TypeEvents::kTRANSMISSION: Transmission(population, haplotype); break;
+                case TypeEvents::kRECOVERY: Recovery(population, haplotype); break;
+                case TypeEvents::kSAMPLING: Sampling(population, haplotype); break;
+                case TypeEvents::kMUTATION: Mutation(population, haplotype); break;
+                case TypeEvents::kMIGRATION: break;
+                case TypeEvents::kSUSCCHANGE: break;
+                case TypeEvents::kMULTITYPE: break;
             }
         }
     } else {
@@ -249,7 +252,7 @@ void Direct::ImmunityTransition(uint64_t population) {
 
     UpdateRates(population, false, true, false);
     counters_->AddImmunity(1);
-    chain_->AddEvent({kSUSCCHANGE, source_type, population, target_type, 0});
+    chain_->AddEvent({TypeEvents::kSUSCCHANGE, source_type, population, target_type, 0});
 }
 
 void Direct::Transmission(uint64_t population, uint64_t haplotype) {
@@ -262,7 +265,7 @@ void Direct::Transmission(uint64_t population, uint64_t haplotype) {
 
     UpdateRates(population, true, true, true);
     counters_->AddTransmission(1);
-    chain_->AddEvent({kTRANSMISSION, haplotype, population, group, 0});
+    chain_->AddEvent({TypeEvents::kTRANSMISSION, haplotype, population, group, 0});
 }
 
 void Direct::Recovery(uint64_t population, uint64_t haplotype) {
@@ -271,7 +274,7 @@ void Direct::Recovery(uint64_t population, uint64_t haplotype) {
 
     UpdateRates(population, true, true, true);
     counters_->AddRecovery(1);
-    chain_->AddEvent({kRECOVERY, haplotype, population, infectious_data_->GetSusceptibilityTypes(haplotype), 0});
+    chain_->AddEvent({TypeEvents::kRECOVERY, haplotype, population, infectious_data_->GetSusceptibilityTypes(haplotype), 0});
 }
 
 void Direct::Sampling(uint64_t population, uint64_t haplotype) {
@@ -280,7 +283,7 @@ void Direct::Sampling(uint64_t population, uint64_t haplotype) {
 
     UpdateRates(population, true, true, true);
     counters_->AddSampling(1);
-    chain_->AddEvent({kSAMPLING, haplotype, population, infectious_data_->GetSusceptibilityTypes(haplotype), 0});
+    chain_->AddEvent({TypeEvents::kSAMPLING, haplotype, population, infectious_data_->GetSusceptibilityTypes(haplotype), 0});
 }
 
 void Direct::Mutation(uint64_t population, uint64_t haplotype) {
@@ -291,7 +294,7 @@ void Direct::Mutation(uint64_t population, uint64_t haplotype) {
 
     UpdateRates(population, true, false, false);
     counters_->AddMutation(1);
-    chain_->AddEvent({kMUTATION, haplotype, population, new_haplotype, 0});
+    chain_->AddEvent({TypeEvents::kMUTATION, haplotype, population, new_haplotype, 0});
 }
 
 void Direct::Migration() {
@@ -305,7 +308,7 @@ void Direct::Migration() {
         pool_->NewInfections(1, haplotype, group, target_population);
         UpdateRates(target_population, true, true, true);
         counters_->AddMigrationAccept(1);
-        chain_->AddEvent({kMIGRATION, haplotype, source_population, group, target_population});
+        chain_->AddEvent({TypeEvents::kMIGRATION, haplotype, source_population, group, target_population});
     } else {
         counters_->AddMigrationReject(1);
     }

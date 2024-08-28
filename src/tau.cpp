@@ -352,13 +352,18 @@ bool Tau::GenerateEvents() {
 }
 
 void Tau::UpdateCompartmentCounts() {
+    uint64_t count_event = 0;
+
     uint64_t index_transmission = 0;
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
             for (uint64_t group = 0; group < getNumberSusceptibleGroups(); ++group) {
-                pool_->NewInfections(events_transmission_[index_transmission], haplotype, group, population);
-                // self.multievents.AddEvents(event_num, self.currentTime, BIRTH, hn, pn, sn, 0)
-                counters_->AddTransmission(events_transmission_[index_transmission]);
+                if (events_transmission_[index_transmission] != 0) {
+                    pool_->NewInfections(events_transmission_[index_transmission], haplotype, group, population);
+                    chain_->AddMultievent({{TypeEvents::kTRANSMISSION, haplotype, population, group, 0}, events_transmission_[index_transmission]});
+                    counters_->AddTransmission(events_transmission_[index_transmission]);
+                    ++count_event;
+                }
                 ++index_transmission;
             }
         }
@@ -366,13 +371,20 @@ void Tau::UpdateCompartmentCounts() {
 
     uint64_t index_recovery_sampling = 0;
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
-        for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {            
-            pool_->NewRecoveries(events_recovery_[index_recovery_sampling], haplotype, infectious_data_->GetSusceptibilityTypes(haplotype), population);
-            pool_->NewRecoveries(events_sampling_[index_recovery_sampling], haplotype, infectious_data_->GetSusceptibilityTypes(haplotype), population);
-            // self.multievents.AddEvents(event_num, self.currentTime, DEATH, hn, pn, self.suscType[hn], 0)
-            // self.multievents.AddEvents(event_num, self.currentTime, SAMPLING, hn, pn, self.suscType[hn], 0)
-            counters_->AddRecovery(events_recovery_[index_recovery_sampling]);
-            counters_->AddSampling(events_sampling_[index_recovery_sampling]);
+        for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+            if (events_recovery_[index_recovery_sampling] != 0) {
+                pool_->NewRecoveries(events_recovery_[index_recovery_sampling], haplotype, infectious_data_->GetSusceptibilityTypes(haplotype), population);
+                chain_->AddMultievent({{TypeEvents::kRECOVERY, haplotype, population, infectious_data_->GetSusceptibilityTypes(haplotype), 0}, events_recovery_[index_recovery_sampling]});
+                counters_->AddRecovery(events_recovery_[index_recovery_sampling]);
+                ++count_event;
+            
+            }
+            if (events_sampling_[index_recovery_sampling] != 0) {
+                pool_->NewRecoveries(events_sampling_[index_recovery_sampling], haplotype, infectious_data_->GetSusceptibilityTypes(haplotype), population);
+                chain_->AddMultievent({{TypeEvents::kSAMPLING, haplotype, population, infectious_data_->GetSusceptibilityTypes(haplotype), 0}, events_sampling_[index_recovery_sampling]});
+                counters_->AddSampling(events_sampling_[index_recovery_sampling]);
+                ++count_event;
+            }
             ++index_recovery_sampling;
         }
     }
@@ -382,9 +394,12 @@ void Tau::UpdateCompartmentCounts() {
         for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
             for (uint64_t site = 0; site < getNumberSites(); ++site) {
                 for (uint64_t i = 0; i < 3; ++i) {
-                    pool_->NewMutation(events_mutation_[index_mutation], haplotype, GetNewHaplotype(haplotype, site, i, getNumberSites()), population);
-                    // self.multievents.AddEvents(event_num, self.currentTime, MUTATION, hn, pn, nhn, 0)
-                    counters_->AddMutation(events_mutation_[index_mutation]);
+                    if (events_mutation_[index_mutation] != 0) {
+                        pool_->NewMutation(events_mutation_[index_mutation], haplotype, GetNewHaplotype(haplotype, site, i, getNumberSites()), population);
+                        chain_->AddMultievent({{TypeEvents::kMUTATION, haplotype, population, GetNewHaplotype(haplotype, site, i, getNumberSites()), 0}, events_mutation_[index_mutation]});
+                        counters_->AddMutation(events_mutation_[index_mutation]);
+                        ++count_event;
+                    }
                     ++index_mutation;
                 }
             }
@@ -399,9 +414,12 @@ void Tau::UpdateCompartmentCounts() {
             }
             for (uint64_t group = 0; group < getNumberSusceptibleGroups(); ++group) {
                 for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
-                    pool_->NewInfections(events_migration_[index_migration], haplotype, group, target);
-                    // self.multievents.AddEvents(event_num, self.currentTime, MIGRATION, hn, spn, sn, tpn)
-                    counters_->AddMigrationAccept(events_migration_[index_migration]);
+                    if (events_migration_[index_migration] != 0) {
+                        pool_->NewInfections(events_migration_[index_migration], haplotype, group, target);
+                        chain_->AddMultievent({{TypeEvents::kMIGRATION, haplotype, source, group, target}, events_migration_[index_migration]});
+                        counters_->AddMigrationAccept(events_migration_[index_migration]);
+                        ++count_event;
+                    }
                     ++index_migration;
                 }
             }
@@ -415,13 +433,18 @@ void Tau::UpdateCompartmentCounts() {
                 if (source == target) {
                     continue;
                 }
-                pool_->NewImmunity(events_immunity_[index_immunity], source, target, population);
-                // self.multievents.AddEvents(event_num, self.currentTime, SUSCCHANGE, ssn, pn, tsn, 0)
-                counters_->AddImmunity(events_immunity_[index_immunity]);
+                if (events_immunity_[index_immunity] != 0) {
+                    pool_->NewImmunity(events_immunity_[index_immunity], source, target, population);
+                    chain_->AddMultievent({{TypeEvents::kSUSCCHANGE, source, population, target, 0}, events_immunity_[index_immunity]});
+                    counters_->AddImmunity(events_immunity_[index_immunity]);
+                    ++count_event;
+                }
                 ++index_immunity;
             }
         }
     }
+
+    chain_->AddEvent({TypeEvents::kMULTITYPE, chain_->GetLastMultievent(), count_event, 0, 0});
 }
 
 inline uint64_t Tau::getNumberSites() const {

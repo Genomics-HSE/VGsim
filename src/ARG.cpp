@@ -12,24 +12,38 @@ ARG::ARG(Numbers numbers, Chain* chain, Counters* counters, PopulationPool* pool
 
 void ARG::CalculateGenealogy() {
     restart();
-    std::vector<std::vector<std::vector<uint64_t>>> liveBranches(numbers_.populations, std::vector<std::vector<uint64_t>>(numbers_.haplotypes));
+    std::vector<std::vector<std::vector<uint64_t>>> liveBranches(getNumberPopulations(), std::vector<std::vector<uint64_t>>(getNumberHaplotypes()));
     std::vector<std::vector<uint64_t>> infectious = pool_->GetInfectious();
     uint64_t currentNode = 0;
 
-    std::vector<uint64_t> haplotypeToIndex(numbers_.haplotypes);
-    for (uint64_t i = 0; i < numbers_.haplotypes; ++i) {
+    std::vector<uint64_t> haplotypeToIndex(getNumberHaplotypes());
+    for (uint64_t i = 0; i < getNumberHaplotypes(); ++i) {
         haplotypeToIndex[i] = i;
     }
 
-    uint64_t size = chain_->GetSize();
+    std::vector<std::vector<std::vector<uint64_t>>> newLineages(getNumberPopulations(), std::vector<std::vector<uint64_t>>(getNumberHaplotypes()));
+    std::vector<uint64_t> infectiousDelta(getNumberPopulations() * getNumberHaplotypes(), 0);
 
+
+    uint64_t haplotype;
+    uint64_t population;
+    uint64_t oldHaplotype;
+    uint64_t newHaplotype;
+    uint64_t source_population;
+    uint64_t target_population;
+    uint64_t start;
+    uint64_t count;
+    uint64_t countBranches;
+    uint64_t mt_ev_num;
+
+    uint64_t size = chain_->GetSize();
     for (uint64_t index = 1; index <= size; ++index) {
         Event event = chain_->GetEvent(size - index);
         double time = chain_->GetTime(size - index);
-        switch (event.type) {
-            case kTRANSMISSION: {
-                uint64_t haplotype = event.parameter1;
-                uint64_t population = event.parameter2;
+        switch (static_cast<TypeEvents>(event.type)) {
+            case TypeEvents::kTRANSMISSION: {
+                haplotype = event.parameter1;
+                population = event.parameter2;
 
                 int64_t countBranches = liveBranches[population][haplotype].size();
                 int64_t countInfectious = infectious[population][haplotypeToIndex[haplotype]];
@@ -51,26 +65,26 @@ void ARG::CalculateGenealogy() {
                 infectious[population][haplotypeToIndex[haplotype]] -= 1;
                 break;
             }
-            case kRECOVERY: {
-                uint64_t haplotype = event.parameter1;
-                uint64_t population = event.parameter2;
+            case TypeEvents::kRECOVERY: {
+                haplotype = event.parameter1;
+                population = event.parameter2;
 
                 infectious[population][haplotypeToIndex[haplotype]] += 1;
                 break;
             }
-            case kSAMPLING: {
-                uint64_t haplotype = event.parameter1;
-                uint64_t population = event.parameter2;
+            case TypeEvents::kSAMPLING: {
+                haplotype = event.parameter1;
+                population = event.parameter2;
 
                 addNode(population, time);
                 liveBranches[population][haplotype].push_back(currentNode++);
                 infectious[population][haplotypeToIndex[haplotype]] += 1;
                 break;
             }
-            case kMUTATION: {
-                uint64_t oldHaplotype = event.parameter1;
-                uint64_t population = event.parameter2;
-                uint64_t newHaplotype = event.parameter3;
+            case TypeEvents::kMUTATION: {
+                oldHaplotype = event.parameter1;
+                population = event.parameter2;
+                newHaplotype = event.parameter3;
 
                 uint64_t countBranches = liveBranches[population][newHaplotype].size();
                 double probability = static_cast<double>(countBranches) / infectious[population][newHaplotype];
@@ -86,10 +100,10 @@ void ARG::CalculateGenealogy() {
                 infectious[population][oldHaplotype] += 1;
                 break;
             }
-            case kMIGRATION: {
-                uint64_t haplotype = event.parameter1;
-                uint64_t source_population = event.parameter2;
-                uint64_t target_population = event.parameter4;
+            case TypeEvents::kMIGRATION: {
+                haplotype = event.parameter1;
+                source_population = event.parameter2;
+                target_population = event.parameter4;
 
                 int64_t countBranchesTarget = liveBranches[target_population][haplotype].size();
                 int64_t countBranchesSource = liveBranches[source_population][haplotype].size();
@@ -116,10 +130,105 @@ void ARG::CalculateGenealogy() {
                 infectious[target_population][haplotype] -= 1;
                 break;
             }
-            case kSUSCCHANGE:
+            case TypeEvents::kSUSCCHANGE:
                 break;
-            // case kMULTITYPE:
-            //     break;
+            case TypeEvents::kMULTITYPE:
+                start = event.parameter1;
+                count = event.parameter2;
+
+                for (uint64_t index_m = start; index_m < start + count; ++index_m) {
+                    Multievent event_m = chain_->GetMultievent(index_m);
+                    switch (event_m.type) {
+                        case TypeEvents::kTRANSMISSION:
+                            // lbs = liveBranchesS[me_population][me_haplotype].size()
+                            // lbs_e = self.infectious[me_population, me_haplotype]
+                            // if me_num == 0 or lbs == 0:
+                            //     mt_ev_num = 0
+                            // else:
+                            //     mt_ev_num = random_hypergeometric(self.seed.rng, int(lbs*(lbs-1.0)/2.0), int(lbs_e*(lbs_e-1)/2-lbs*(lbs-1)/2), me_num)
+                            // for i in range(mt_ev_num):
+                            //     n1 = int(floor( lbs*self.seed.uniform() ))
+                            //     n2 = int(floor( (lbs-1)*self.seed.uniform() ))
+                            //     if n2 >= n1:
+                            //         n2 += 1
+                            //     id1 = liveBranchesS[me_population][me_haplotype][n1]
+                            //     id2 = liveBranchesS[me_population][me_haplotype][n2]
+                            //     id3 = ptrTreeAndTime
+                            //     newLineages[me_population][me_haplotype].push_back(id3)
+                            //     if n1 == lbs-1:#TODO: need to check if we really need these if and elif. Most likely - no!
+                            //         liveBranchesS[me_population][me_haplotype].pop_back()
+                            //         liveBranchesS[me_population][me_haplotype][n2] = liveBranchesS[me_population][me_haplotype][lbs-2]
+                            //         liveBranchesS[me_population][me_haplotype].pop_back()
+                            //     elif n2 == lbs-1:
+                            //         liveBranchesS[me_population][me_haplotype].pop_back()
+                            //         liveBranchesS[me_population][me_haplotype][n1] = liveBranchesS[me_population][me_haplotype][lbs-2]
+                            //         liveBranchesS[me_population][me_haplotype].pop_back()
+                            //     else:
+                            //         liveBranchesS[me_population][me_haplotype][n1] = liveBranchesS[me_population][me_haplotype][lbs-1]
+                            //         liveBranchesS[me_population][me_haplotype].pop_back()
+                            //         liveBranchesS[me_population][me_haplotype][n2] = liveBranchesS[me_population][me_haplotype][lbs-2]
+                            //         liveBranchesS[me_population][me_haplotype].pop_back()
+                            //     self.tree[id1] = id3
+                            //     self.tree[id2] = id3
+                            //     self.tree[ptrTreeAndTime] = -1
+                            //     self.tree_pop[ptrTreeAndTime] = me_population
+                            //     self.times[ptrTreeAndTime] = me_time
+                            //     ptrTreeAndTime += 1
+                            //     lbs -= 2
+                            // self.infectiousDelta[me_population, me_haplotype] -= me_num
+
+
+                            break;
+                        case TypeEvents::kRECOVERY:
+                            haplotype = event_m.parameter1;
+                            population = event_m.parameter2;
+
+                            infectiousDelta[getIndexHap(population, haplotype)] += event_m.count;
+                            break;
+                        case TypeEvents::kSAMPLING:
+                            haplotype = event_m.parameter1;
+                            population = event_m.parameter2;
+
+                            for (uint64_t _ = 0; _ < event_m.count; ++_) {
+                                addNode(population, time);
+                                newLineages[population][haplotype].push_back(currentNode++);
+                            }
+                            infectiousDelta[getIndexHap(population, haplotype)] += event_m.count;
+                            break;
+                        case TypeEvents::kMUTATION:
+                            oldHaplotype = event_m.parameter1;
+                            population = event_m.parameter2;
+                            newHaplotype = event_m.parameter3;
+
+                            countBranches = liveBranches[population][newHaplotype].size();
+                            mt_ev_num = 0;
+                            // if (countBranches != 0) {
+                            //     mt_ev_num = generator_->GetHypergeometric(countBranches, infectious[population][newHaplotype] - countBranches, event_m.count);
+                            // }
+
+                            for (uint64_t _ = 0; _ < mt_ev_num; ++_) {
+                                uint64_t nodeIndex = static_cast<uint64_t>(countBranches * generator_->GetUniform());
+                                uint64_t node = liveBranches[population][newHaplotype][nodeIndex];
+                                liveBranches[population][newHaplotype][nodeIndex] = liveBranches[population][newHaplotype][countBranches - 1];
+                                liveBranches[population][newHaplotype].pop_back();
+                                newLineages[population][oldHaplotype].push_back(node);
+                                addMutation(node, oldHaplotype, newHaplotype, time);
+                                --countBranches;
+                            }
+                            infectiousDelta[getIndexHap(population, oldHaplotype)] += event_m.count;
+                            infectiousDelta[getIndexHap(population, newHaplotype)] -= event_m.count;
+                            break;
+                        case TypeEvents::kMIGRATION:
+                            
+                            break;
+                        case TypeEvents::kSUSCCHANGE:
+                            break;
+                        case TypeEvents::kMULTITYPE:
+                            break;
+                    }
+                }
+
+                break;
         }
     }
     return;
@@ -180,7 +289,7 @@ void ARG::addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotyp
     uint64_t ancestralState = 0;
 
     uint64_t del = 1;
-    for (uint64_t index = 0; index < numbers_.sites; ++index) {
+    for (uint64_t index = 0; index < getNumberSites(); ++index) {
         if (oldHaplotype % (4 * del) / del != newHaplotype % (4 * del) / del) {
             site = index;
             derivedState = oldHaplotype % (4 * del) / del;
@@ -195,4 +304,24 @@ void ARG::addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotyp
 
 void ARG::addMigration(uint64_t node, Migration migration) {
     migrations_.insert({node, migration});
+}
+
+inline uint64_t ARG::getNumberSites() const {
+    return numbers_.sites;
+}
+
+inline uint64_t ARG::getNumberHaplotypes() const {
+    return numbers_.haplotypes;
+}
+
+inline uint64_t ARG::getNumberPopulations() const {
+    return numbers_.populations;
+}
+
+inline uint64_t ARG::getNumberSusceptibleGroups() const {
+    return numbers_.susceptible_groups;
+}
+
+inline uint64_t ARG::getIndexHap(uint64_t first, uint64_t second) const {
+    return first * getNumberHaplotypes() + second;
 }
