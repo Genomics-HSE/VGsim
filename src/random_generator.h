@@ -11,6 +11,7 @@ public:
     void NextSeed();
     double GetUniform();
     uint64_t GetPoisson(double lambda);
+    uint64_t GetHypergeometric(uint64_t n, uint64_t K, uint64_t N);
 
 private:
     uint64_t seed_;

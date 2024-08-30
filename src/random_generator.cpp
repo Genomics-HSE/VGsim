@@ -26,3 +26,20 @@ uint64_t RandomGenerator::GetPoisson(double lambda) {
     std::poisson_distribution<> poisson(lambda);
     return poisson(generator_);
 }
+
+uint64_t RandomGenerator::GetHypergeometric(uint64_t n, uint64_t K, uint64_t N) {
+    uint64_t k = 0;
+    double probability = GetUniform();
+    double current_probability = 1.0;
+
+    for (uint64_t i = 0; i < n; ++i) {
+        current_probability *= (N - K - i) / (N - i);
+    }
+
+    while (current_probability < probability) {
+        current_probability *= (K - k) * (n - k) / (k + 1) / (N - K - n + k + 1);
+        ++k;
+    }
+
+    return k;
+}

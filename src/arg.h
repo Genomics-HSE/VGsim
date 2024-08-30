@@ -23,8 +23,6 @@ public:
         
     // }
 
-    void addMigration(uint64_t node, Migration migration);
-
     // Migration getMigration() {
     //     return migration[node];
     // }
@@ -47,8 +45,11 @@ public:
 
 private:
     void restart();
-    void addNode(int64_t population, double time, int64_t parent = -1, int64_t left = -1, int64_t right = -1);
-    void addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotype, double time);
+    inline void removeBranch(std::vector<std::vector<std::vector<uint64_t>>>& branches, uint64_t population, uint64_t haplotype, uint64_t branch);
+    inline void addLeaf(int64_t population, double time);
+    inline void addNode(int64_t population, double time, int64_t parent, int64_t left, int64_t right);
+    inline void addMutation(uint64_t node, uint64_t oldHaplotype, uint64_t newHaplotype, double time);
+    inline void addMigration(uint64_t node, Migration migration);
 
     inline uint64_t getNumberSites() const;
     inline uint64_t getNumberHaplotypes() const;
