@@ -250,7 +250,6 @@ void ARG::CalculateGenealogy() {
                             break;
                     }
                 }
-
                 for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
                     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
                         infectious[population][haplotype] += infectiousDelta[getIndexHap(population, haplotype)];
@@ -259,14 +258,6 @@ void ARG::CalculateGenealogy() {
                         newLineages[population][haplotype].clear();
                     }
                 }
-
-                // for pi in range(self.popNum):
-                //     for hi in range(self.hapNum):
-                //         self.infectious[pi, hi] += self.infectiousDelta[pi, hi]
-                //         self.infectiousDelta[pi, hi] = 0
-                //         while newLineages[pi][hi].size() > 0:
-                //             liveBranchesS[pi][hi].push_back( newLineages[pi][hi][newLineages[pi][hi].size()-1] )
-                //             newLineages[pi][hi].pop_back()
                 break;
         }
     }
