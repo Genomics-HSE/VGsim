@@ -22,7 +22,7 @@
 
 class Simulator {
 public:
-    Simulator(uint64_t number_of_sites = 0, uint64_t number_of_populations = 1, uint64_t number_of_susceptible_groups = 1, uint64_t seed = 1234, uint64_t number_attempts = 100);
+    Simulator(uint64_t number_of_sites = 0, uint64_t number_of_populations = 1, uint64_t number_of_susceptible_groups = 1, uint64_t seed = 1234);
     void Debug();
 
     void Simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);

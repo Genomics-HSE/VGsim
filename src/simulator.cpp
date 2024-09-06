@@ -4,7 +4,7 @@
 
 constexpr double kTime = 1'000'000;
 
-Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, uint64_t number_of_susceptible_groups, uint64_t seed, uint64_t number_attempts)
+Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, uint64_t number_of_susceptible_groups, uint64_t seed)
     : numbers_({number_of_sites, static_cast<uint64_t>(std::pow(4, number_of_sites)), number_of_populations, number_of_susceptible_groups})
     , seed_(seed)
     
@@ -33,7 +33,7 @@ void Simulator::Debug() {
     // chain_.Debug();
     // direct_.Debug();
     // tau_.Debug();
-    arg_.Debug();
+    // arg_.Debug();
 }
 
 void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {
@@ -50,6 +50,7 @@ void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_
     }
     uint64_t end_time = clock();
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
+    Debug();
 }
 
 void Simulator::Genealogy() {
