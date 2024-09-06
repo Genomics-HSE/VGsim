@@ -50,7 +50,6 @@ void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_
     }
     uint64_t end_time = clock();
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
-    Debug();
 }
 
 void Simulator::Genealogy() {
