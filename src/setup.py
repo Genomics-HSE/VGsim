@@ -14,5 +14,5 @@ example_module = Extension('VGsim_test', sources=['wrap.cpp'],
 
 setup(name='VGsim_test',
       version='1.0',
-      description='Example module built using Boost.Python',
+      description='VGsim is the fast viral genealogy simulator for world-wide pandemic scenarios.',
       ext_modules=[example_module])
