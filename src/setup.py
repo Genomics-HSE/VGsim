@@ -5,14 +5,14 @@ import sysconfig
 boost_include = '/usr/local/include'  # или путь, где установлен Boost
 boost_library = '/usr/local/lib'  # или путь, где установлен Boost
 
-example_module = Extension('VGsim_test', sources=['wrap.cpp'],
+example_module = Extension('VGsim', sources=['wrap.cpp'],
                             include_dirs=[boost_include],
                             library_dirs=[boost_library],
                             libraries=['boost_python312'],  # Убедитесь, что используете правильное имя библиотеки
                             extra_compile_args=['-std=c++17', '-O2'],
                             )
 
-setup(name='VGsim_test',
+setup(name='VGsim',
       version='1.0',
       description='VGsim is the fast viral genealogy simulator for world-wide pandemic scenarios.',
       ext_modules=[example_module])
