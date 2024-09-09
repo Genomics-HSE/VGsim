@@ -30,8 +30,10 @@ jobs:
     # Actually build it
     - name: Build
       run: |
+        sudo apt-get install libboost-all-dev
         ./script.sh
     - name: Run an test 1
       run: |
+        sudo apt-get install libboost-all-dev
         ./script.sh
         python ./test_c.py
