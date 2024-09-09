@@ -37,9 +37,6 @@ jobs:
     - name: Build
       run: |
         sudo apt-get install libboost-all-dev
-        ./script.sh
-    - name: Run an test 1
-      run: |
-        sudo apt-get install libboost-all-dev
+        sudo apt-get install python3-setuptools
         ./script.sh
         python ./test_c.py
