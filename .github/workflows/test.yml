@@ -3,12 +3,6 @@
 
 name: test
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 jobs:
   build:
 
@@ -34,6 +28,7 @@ jobs:
     # Actually build it
     - name: Build
       run: |
+
         ./script.sh
     - name: Run an test 1
       run: |
