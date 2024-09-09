@@ -30,8 +30,8 @@ jobs:
     # Actually build it
     - name: Build
       run: |
-
         ./script.sh
     - name: Run an test 1
       run: |
+        ./script.sh
         python ./test_c.py
