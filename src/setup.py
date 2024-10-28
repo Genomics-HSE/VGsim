@@ -3,8 +3,8 @@ import sysconfig
 import sys
 
 # Найти путь к Boost
-boost_include = '/usr/local/include'  # или путь, где установлен Boost
-boost_library = '/usr/local/lib'  # или путь, где установлен Boost
+boost_include = '/usr/local/include'
+boost_library = '/usr/local/lib'
 python_version = sys.version_info
 boost_version = f'boost_python{python_version.major}{python_version.minor}'
 
