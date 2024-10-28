@@ -1,5 +1,6 @@
 from setuptools import setup, Extension
 import sysconfig
+import sys
 
 # Найти путь к Boost
 boost_include = '/usr/local/include'  # или путь, где установлен Boost
