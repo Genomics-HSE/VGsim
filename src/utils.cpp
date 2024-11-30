@@ -136,42 +136,8 @@ void CheckValue(double rate, std::string smth) {
     }
 }
 
-// def check_value(self, value, smth, edge=None, none=False):
-//     if none:
-//         if isinstance(value, (int, float)) == False and value is not None:
-//             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float or None.')
-//     else:
-//         if isinstance(value, (int, float)) == False:
-//             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
-            
-//     if edge is None:
-//         if isinstance(value, (int, float)):
-//             if value < 0:
-//                 raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
-//     else:
-//         if isinstance(value, (int, float)):
-//             if value < 0 or value > edge:
-//                 raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less ' + str(edge) + '.')
-
 void CheckIndex(int64_t index, uint64_t max_index, std::string smth) {
     if (!(index == -1 || (index >= 0 && static_cast<uint64_t>(index) < max_index))) {
         throw std::runtime_error("There are no such " + smth + "!");
     }
 }
-
-// def check_index(self, index, edge, smth, hap=False, none=True):
-//     if none == False and index is None:
-//         raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
-//     elif isinstance(index, int):
-//         if index < 0 or index >= edge:
-//             raise IndexError('There are no such ' + smth + '!')
-//     elif isinstance(index, str) and hap:
-//         if index.count("A") + index.count("T") + index.count("C") + index.count("G") + index.count("*") \
-//         != self.sites:
-//             raise ValueError('Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"*\" and length of haplotype should be equal number of mutations sites.')
-//     elif index is not None:
-//         if hap:
-//             raise TypeError('Incorrect type of haplotype. Type should be int or str or None.')
-//         else:
-//             raise TypeError('Incorrect type of ' + smth + '. Type should be int or None.')
-
