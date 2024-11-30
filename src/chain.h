@@ -27,6 +27,7 @@ public:
     void AddMultievent(Multievent event);
     uint64_t Size();
     void Debug();
+    void LastTime();
 
     uint64_t GetSize();
     uint64_t GetLastMultievent();

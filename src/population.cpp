@@ -24,7 +24,7 @@ void Population::SetParameters(uint64_t number_of_haplotypes, uint64_t number_of
     infected_save_ = new uint64_t[number_of_haplotypes];
     susceptibles_save_ = new uint64_t[number_of_susceptible_groups];
     lockdown_ = Lockdown(false, 1.0, 0.0, 1.0, 0.0);
-    SetSize(100'000);
+    SetSize(1'000'000);
 }
 
 inline void Population::NewInfections(uint64_t count, uint64_t haplotype, uint64_t group) {

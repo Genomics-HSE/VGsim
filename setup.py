@@ -10,7 +10,7 @@ boost_version = f'boost_python{python_version.major}{python_version.minor}'
 # boost_version = f'boost_python{python_version.major}'
 
 
-example_module = Extension('VGsim',
+example_module = Extension('VGsim_new',
                             sources=['src/wrap.cpp'],
                             # include_dirs=[boost_include],
                             # library_dirs=[boost_library],
@@ -18,7 +18,7 @@ example_module = Extension('VGsim',
                             extra_compile_args=['-std=c++17', '-O2'],
                             )
 
-setup(name='VGsim',
+setup(name='VGsim_new',
       version='1.0',
       description='VGsim is the fast viral genealogy simulator for world-wide pandemic scenarios.',
       ext_modules=[example_module])

@@ -18,7 +18,7 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
     , total_sites_rates_(new double[number_of_haplotypes_ * number_of_sites_])
     , susceptibility_(new double[number_of_haplotypes_ * number_of_susceptible_groups_])
     , sites_rates_(new double[number_of_haplotypes_ * number_of_sites_ * 3]) {
-    double mutation = 0.001;
+    double mutation = 0.01;
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         susceptibility_types_[haplotype] = 0;
         transmission_rates_[haplotype] = 2.0;
@@ -28,7 +28,7 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
         for (uint64_t site = 0; site < getNumberSites(); ++site) {
             mutation_rates_[getIndexSite(haplotype, site)] = mutation;
             for (uint64_t index = 0; index < 3; ++index) {
-                sites_rates_[getIndexSite3(haplotype, site, index)] = 1;
+                sites_rates_[getIndexSite3(haplotype, site, index)] = 1.0;
             }
             total_sites_rates_[getIndexSite(haplotype, site)] = 3.0;
         }

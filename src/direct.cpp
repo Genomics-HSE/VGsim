@@ -50,7 +50,7 @@ void Direct::Simulate() {
         pool_->FirstInfections();
         Update();
         stopper_->Restart();
-        Debug();
+        // Debug();
         while (stopper_->CheckIteration()) {
             TimeStep();
             GenerateEvent();
