@@ -36,6 +36,6 @@ jobs:
     # Actually build it
     - name: Build
       run: |
-        sudo apt-get install -y libboost-python3-dev
+        sudo apt-get install libboost-python3-dev
         pip install .
         python3 ./test_c.py
