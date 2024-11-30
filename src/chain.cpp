@@ -76,7 +76,13 @@ void Chain::Debug() {
     std::cout << "Pointer: " << pointer_ << std::endl;
     std::cout << "Size: " << size_ << std::endl;
     for (uint64_t i = 0; i < pointer_; ++i) {
-        DebugEvent(times_[i], events_[i]);
+        std::cout << static_cast<int64_t>(events_[i].type) << ", "
+                  << events_[i].parameter1 << ", "
+                  << events_[i].parameter2 << ", "
+                  << events_[i].parameter3 << ", "
+                  << events_[i].parameter4 << ", "
+                  << times_[i] << std::endl;
+        // DebugEvent(times_[i], events_[i]);
     }
     std::cout << std::endl;
 }

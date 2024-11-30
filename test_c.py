@@ -1,4 +1,9 @@
 import VGsim
 
-simulator = VGsim.Simulator(2, 2, 3, 1234)
-simulator.simulate(1000000, "direct", 100)
+# pip install --editable .
+
+simulator = VGsim.Simulator(0, 1, 1, 1234)
+simulator.Debug()
+simulator.Simulate(10)
+simulator.Debug()
+# simulator.Genealogy()

@@ -26,11 +26,11 @@ void Simulator::Debug() {
     // std::cout << "Number of populations: " << getNumberPopulations() << std::endl;
     // std::cout << "Number of susceptible groups: " << getNumberSusceptibleGroups() << std::endl;
     // std::cout << "Seed: " << seed_ << std::endl;
-    counters_.Debug();
+    // counters_.Debug();
     // pool_.Debug();
     // infectious_data_.Debug();
     // susceptibles_data_.Debug();
-    // chain_.Debug();
+    chain_.Debug();
     // direct_.Debug();
     // tau_.Debug();
     // arg_.Debug();
