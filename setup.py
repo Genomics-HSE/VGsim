@@ -6,7 +6,8 @@ import sys
 boost_include = '/usr/local/include'
 boost_library = '/usr/local/lib'
 python_version = sys.version_info
-boost_version = f'boost_python{python_version.major}{python_version.minor}'
+# boost_version = f'boost_python{python_version.major}{python_version.minor}'
+boost_version = f'boost_python{python_version.major}'
 
 
 example_module = Extension('VGsim',
