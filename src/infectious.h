@@ -9,6 +9,9 @@ public:
     void Debug();
     void Update();
 
+    void set_transmission_rate(double rate, uint64_t index);
+    PyObject* get_transmission_rate();
+
     inline double GetMaxEffectiveTransmission() const;
     inline double GetTransmissionSusceptibility(uint64_t haplotype, uint64_t group) const;
 

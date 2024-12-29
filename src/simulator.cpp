@@ -37,7 +37,7 @@ void Simulator::Debug() {
     // arg_.Debug();
 }
 
-void Simulator::Simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {
+void Simulator::simulate(uint64_t iterations, std::string type, uint64_t number_attempts) {
     stopper_.SetIterations(iterations);
     stopper_.SetAttempts(number_attempts);
     uint64_t start_time = clock();
@@ -64,6 +64,29 @@ void Simulator::Genealogy() {
 // void Simulator::SetIterations(uint64_t iterations) {
 //     stopper_.SetIterations(iterations);
 // }
+
+PyObject* Simulator::get_flat_chain() {
+    boost::python::list ret;
+
+    for (uint64_t index = 0; index < chain_.GetSize(); ++index) {
+        Event event = chain_.GetEvent(index);
+        ret.append(boost::python::object(static_cast<uint64_t>(event.type)));
+        ret.append(boost::python::object(event.parameter1));
+        ret.append(boost::python::object(event.parameter2));
+        ret.append(boost::python::object(event.parameter3));
+        ret.append(boost::python::object(event.parameter4));
+    }
+
+    return boost::python::incref(ret.ptr());
+}
+
+void Simulator::set_transmission_rate(double rate, uint64_t haplotype) {
+    infectious_data_.set_transmission_rate(rate, haplotype);
+}
+
+PyObject* Simulator::get_transmission_rate() {
+    return infectious_data_.get_transmission_rate();
+}
 
 // void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {
 //     try {

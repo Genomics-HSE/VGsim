@@ -89,6 +89,21 @@ void Infectious::Update() {
 }
 
 
+void Infectious::set_transmission_rate(double rate, uint64_t index) {
+    transmission_rates_[index] = rate;
+}
+
+PyObject* Infectious::get_transmission_rate() {
+    boost::python::list data;
+
+    for (uint64_t index = 0; index < getNumberHaplotypes(); ++index) {
+        data.append(boost::python::object(transmission_rates_[index]));
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
+
 inline double Infectious::GetMaxEffectiveTransmission() const {
     return max_effective_transmission_;
 }

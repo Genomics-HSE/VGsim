@@ -1,6 +1,13 @@
 #pragma once
 
-enum class TypeEvents {kTRANSMISSION, kRECOVERY, kSAMPLING, kMUTATION, kMIGRATION, kSUSCCHANGE, kMULTITYPE};
+enum class TypeEvents {kTRANSMISSION = 0,
+                       kRECOVERY,
+                       kSAMPLING,
+                       kMUTATION,
+                       kMIGRATION,
+                       kSUSCCHANGE,
+                       kMULTITYPE
+                      };
 
 struct Event {
     TypeEvents type;

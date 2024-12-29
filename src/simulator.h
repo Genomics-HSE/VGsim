@@ -25,13 +25,16 @@ public:
     Simulator(uint64_t number_of_sites = 0, uint64_t number_of_populations = 1, uint64_t number_of_susceptible_groups = 1, uint64_t seed = 1234);
     void Debug();
 
-    void Simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);
+    void simulate(uint64_t iterations = 100'000, std::string type = "direct", uint64_t number_attempts = 100);
     void Genealogy();
+
     // void SetAttempts(uint64_t attempts);
     // void SetIterations(uint64_t iterations);
-
+    PyObject* get_flat_chain();
 
     // Setters
+    void set_transmission_rate(double rate, uint64_t haplotype);
+    PyObject* get_transmission_rate();
     // Susceptibles
     // void SetSusceptibilityTransition(double rate, int64_t source = -1, int64_t target = -1);
 
