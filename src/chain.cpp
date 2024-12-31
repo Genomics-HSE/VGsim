@@ -87,6 +87,10 @@ void Chain::Debug() {
     std::cout << std::endl;
 }
 
+double Chain::GetLastTime() {
+    return current_time_;
+}
+
 void Chain::LastTime() {
     std::cout << "Epidemic time: " << times_[pointer_ - 1] << std::endl;
 }

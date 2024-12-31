@@ -4,15 +4,18 @@ class Simulator:
     def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None):
         if seed == None:
             seed = int(randrange(sys.maxsize))
-        self.obj = source_VGsim.Simulator(number_of_sites, populations_number, number_of_susceptible_groups, seed)  # инициализация C++ класса
+        self.simulator = source_VGsim.Simulator(number_of_sites, populations_number, number_of_susceptible_groups, seed)  # инициализация C++ класса
         self.hapNum = 4**number_of_sites
         self.sites = number_of_sites
 
-    def simulate(self, count):
-        self.obj.simulate(count)
+    def simulate(self, iterations=1000, sample_size=None, epidemic_time=0.0, method='direct', attempts=200):
+        if sample_size is None:
+            sample_size = iterations
+        self.simulator.simulate(iterations, sample_size, epidemic_time, method, attempts)
+        self.simulator.Debug()
 
     def get_flat_chain(self):
-        return self.obj.get_flat_chain()
+        return self.simulator.get_flat_chain()
 
     def set_transmission_rate(self, rate, haplotype=None):
         """
@@ -30,10 +33,10 @@ class Simulator:
         self._check_indexes(haplotype, self.hapNum, 'haplotype', True)
         haplotypes = self._calculate_indexes(haplotype, self.hapNum)
         for hn in haplotypes:
-            self.obj.set_transmission_rate(rate, hn)
+            self.simulator.set_transmission_rate(rate, hn)
 
     def get_transmission_rate(self):
-        return self.obj.get_transmission_rate()
+        return self.simulator.get_transmission_rate()
 
     def _check_value(self, value, smth, edge=None, none=False):
         if none and isinstance(value, (int, float)) == False and value is not None:
