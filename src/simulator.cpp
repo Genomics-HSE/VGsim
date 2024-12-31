@@ -59,14 +59,6 @@ void Simulator::Genealogy() {
     arg_.CalculateGenealogy();
 }
 
-// void Simulator::SetAttempts(uint64_t attempts) {
-//     stopper_.SetAttempts(attempts);
-// }
-
-// void Simulator::SetIterations(uint64_t iterations) {
-//     stopper_.SetIterations(iterations);
-// }
-
 PyObject* Simulator::get_flat_chain() {
     boost::python::list ret;
 
@@ -88,6 +80,38 @@ void Simulator::set_transmission_rate(double rate, uint64_t haplotype) {
 
 PyObject* Simulator::get_transmission_rate() {
     return infectious_data_.get_transmission_rate();
+}
+
+void Simulator::set_recovery_rate(double rate, uint64_t haplotype) {
+    infectious_data_.set_recovery_rate(rate, haplotype);
+}
+
+PyObject* Simulator::get_recovery_rate() {
+    return infectious_data_.get_recovery_rate();
+}
+
+void Simulator::set_sampling_rate(double rate, uint64_t haplotype) {
+    infectious_data_.set_sampling_rate(rate, haplotype);
+}
+
+PyObject* Simulator::get_sampling_rate() {
+    return infectious_data_.get_sampling_rate();
+}
+
+void Simulator::set_mutation_rate(double rate, uint64_t haplotype, uint64_t mutation) {
+    infectious_data_.set_mutation_rate(rate, haplotype, mutation);
+}
+
+PyObject* Simulator::get_mutation_rate() {
+    return infectious_data_.get_mutation_rate();
+}
+
+void Simulator::set_mutation_probabilities(double rate, uint64_t haplotype, uint64_t mutation, uint64_t index) {
+    infectious_data_.set_mutation_probabilities(rate, haplotype, mutation, index);
+}
+
+PyObject* Simulator::get_mutation_probabilities() {
+    return infectious_data_.get_mutation_probabilities();
 }
 
 // void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {

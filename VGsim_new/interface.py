@@ -1,3 +1,6 @@
+from random import randrange
+import sys
+
 import source_VGsim
 
 class Simulator:
@@ -38,10 +41,113 @@ class Simulator:
     def get_transmission_rate(self):
         return self.simulator.get_transmission_rate()
 
+    def set_recovery_rate(self, rate, haplotype=None):
+        """
+        .. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
+
+        Transmission rate is the the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when all but one of the hosts are susceptible. See `Wikipedia`_ - that is parameter beta in SIR model.
+
+        :param rate: transmission rate value.
+        :type rate: float
+
+        :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+        :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
+        """
+        self._check_value(rate, 'recovery rate')
+        self._check_indexes(haplotype, self.hapNum, 'haplotype', True)
+        haplotypes = self._calculate_indexes(haplotype, self.hapNum)
+        for hn in haplotypes:
+            self.simulator.set_recovery_rate(rate, hn)
+
+    def get_recovery_rate(self):
+        return self.simulator.get_recovery_rate()
+
+    def set_sampling_rate(self, rate, haplotype=None):
+        """
+        .. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
+
+        Transmission rate is the the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when all but one of the hosts are susceptible. See `Wikipedia`_ - that is parameter beta in SIR model.
+
+        :param rate: transmission rate value.
+        :type rate: float
+
+        :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+        :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
+        """
+        self._check_value(rate, 'sampling rate')
+        self._check_indexes(haplotype, self.hapNum, 'haplotype', True)
+        haplotypes = self._calculate_indexes(haplotype, self.hapNum)
+        for hn in haplotypes:
+            self.simulator.set_sampling_rate(rate, hn)
+
+    def get_sampling_rate(self):
+        return self.simulator.get_sampling_rate()
+
+    def set_mutation_rate(self, rate, haplotype=None, mutation=None):
+        """
+        .. _Wikipedia: https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
+
+        Transmission rate is the the expected number of new infections from a single infected individual per time unit in the beginning of the epidemics when all but one of the hosts are susceptible. See `Wikipedia`_ - that is parameter beta in SIR model.
+
+        :param rate: transmission rate value.
+        :type rate: float
+
+        :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+        :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
+        """
+        self._check_value(rate, 'mutation rate')
+        self._check_indexes(haplotype, self.hapNum, 'haplotype', True)
+        self._check_indexes(mutation, self.sites, 'mutation site')
+        haplotypes = self._calculate_indexes(haplotype, self.hapNum)
+        sites = self._calculate_indexes(mutation, self.sites)
+
+        for hn in haplotypes:
+            for s in sites:
+                self.simulator.set_mutation_rate(rate, hn, s)
+
+    def get_mutation_rate(self):
+        return self.simulator.get_mutation_rate()
+
+    def set_mutation_probabilities(self, probabilities, haplotype, mutation):
+        """
+        This method allows setting the weights for each single nucleotide substitution (given the mutation happened).
+
+        :param probabilities: weights of each single nucleotide substitution given mutation occured (None would not change the old values). `See for example <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+        :type probabilities: list of four non-negative integers or None
+
+        :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+        :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
+
+        :param mutation: the id of position on the haplotype where mutation arises.
+        :type mutation: int or None
+        """
+        self._check_list(probabilities, 'probabilities list', 4)
+        if isinstance(probabilities, list):
+            for i in range(4):
+                self._check_value(probabilities[i], 'mutation probabilities')
+        self._check_indexes(haplotype, self.hapNum, 'haplotype', True)
+        self._check_indexes(mutation, self.sites, 'mutation site')
+        haplotypes = self._calculate_indexes(haplotype, self.hapNum)
+        sites = self._calculate_indexes(mutation, self.sites)
+
+        for hn in haplotypes:
+            for s in sites:
+                probabilities_allele = list(probabilities)
+                del probabilities_allele[self._calculate_allele(hn, s)]
+                if sum(probabilities_allele) == 0:
+                    raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
+                for i in range(3):
+                    self.simulator.set_mutation_probabilities(probabilities_allele[i], hn, s, i)
+
+
+    def get_mutation_probabilities(self):
+        return self.simulator.get_mutation_probabilities()
+
+
     def _check_value(self, value, smth, edge=None, none=False):
         if none and isinstance(value, (int, float)) == False and value is not None:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float or None.')
-        elif none and isinstance(value, (int, float)) == False:
+        elif not none and isinstance(value, (int, float)) == False:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
 
         if edge is None and isinstance(value, (int, float)) and value < 0:
@@ -71,6 +177,19 @@ class Simulator:
                 raise TypeError('Incorrect type of haplotype. Type should be int or str or None.')
             else:
                 raise TypeError('Incorrect type of ' + smth + '. Type should be int or None.')
+
+    def _check_list(self, data, smth, length):
+        if isinstance(data, list):
+            if len(data) != length:
+                raise ValueError('Incorrect length of ' + smth + '. Length should be equal ' + str(length) + '.')
+        else:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be list.')
+
+    def _calculate_allele(self, haplotype, site):
+        for _ in range(self.sites-site):
+            allele = haplotype % 4
+            haplotype = haplotype // 4
+        return allele
 
     def _calculate_indexes(self, indexes_list, edge):
         if isinstance(indexes_list, list):

@@ -28,17 +28,19 @@ public:
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
     void Genealogy();
 
-    // void SetAttempts(uint64_t attempts);
-    // void SetIterations(uint64_t iterations);
     PyObject* get_flat_chain();
 
-    // Setters
+    // Infectious
     void set_transmission_rate(double rate, uint64_t haplotype);
     PyObject* get_transmission_rate();
-    // Susceptibles
-    // void SetSusceptibilityTransition(double rate, int64_t source = -1, int64_t target = -1);
-
-    // Getters
+    void set_recovery_rate(double rate, uint64_t haplotype);
+    PyObject* get_recovery_rate();
+    void set_sampling_rate(double rate, uint64_t haplotype);
+    PyObject* get_sampling_rate();
+    void set_mutation_rate(double rate, uint64_t haplotype, uint64_t mutation);
+    PyObject* get_mutation_rate();
+    void set_mutation_probabilities(double rate, uint64_t haplotype, uint64_t mutation, uint64_t index);
+    PyObject* get_mutation_probabilities();
 
 private:
     inline uint64_t getNumberSites() const;
