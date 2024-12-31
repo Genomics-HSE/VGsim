@@ -46,6 +46,10 @@ public:
     void set_susceptibility(double rate, uint64_t haplotype, uint64_t group);
     PyObject* get_susceptibility();
 
+    // Susceptibles
+    void set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group);
+    PyObject* get_immunity_transition();
+
 private:
     inline uint64_t getNumberSites() const;
     inline uint64_t getNumberHaplotypes() const;

@@ -28,5 +28,9 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         .def( "get_mutation_probabilities", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_mutation_probabilities ))
         .def( "set_susceptibility", static_cast< void (Simulator::*)(double, uint64_t, uint64_t) > ( &Simulator::set_susceptibility ), args("rate", "haplotype", "group"))
         .def( "get_susceptibility", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_susceptibility ))
+
+        // Susceptibles
+        .def( "set_immunity_transition", static_cast< void (Simulator::*)(double, uint64_t, uint64_t) > ( &Simulator::set_immunity_transition ), args("rate", "source_group", "target_group"))
+        .def( "get_immunity_transition", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_immunity_transition ))
     ;
 }

@@ -194,6 +194,34 @@ class Simulator:
     def get_susceptibility(self):
         return self.simulator.get_susceptibility()
 
+    def set_immunity_transition(self, rate, source=None, target=None):
+        """
+        The change of immunity without infection (e.g. due to vaccination or immunity loss with time).
+
+        :param rate: transition rate value.
+        :type rate: float
+
+        :param source: source immunity group id (None means that the new value will be set to all immunity groups as source).
+        :type source: int or None
+
+        :param target: target immunity group id (None means that the new value will be set to all immunity groups as source).
+        :type target: int or None
+        """
+        self._check_value(rate, 'immunity transition rate')
+        self._check_indexes(source, self.number_of_susceptible_groups, 'susceptibility group')
+        self._check_indexes(target, self.number_of_susceptible_groups, 'susceptibility group')
+        sus_types_1 = self._calculate_indexes(source, self.number_of_susceptible_groups)
+        sus_types_2 = self._calculate_indexes(target, self.number_of_susceptible_groups)
+
+        for sn1 in sus_types_1:
+            for sn2 in sus_types_2:
+                if sn1 == sn2:
+                    continue
+                self.simulator.set_immunity_transition(rate, sn1, sn2)
+
+    def get_immunity_transition(self):
+        return self.simulator.get_immunity_transition()
+
 
     def _check_value(self, value, smth, edge=None, none=False):
         if none and isinstance(value, (int, float)) == False and value is not None:

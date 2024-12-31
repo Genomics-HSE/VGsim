@@ -130,6 +130,14 @@ PyObject* Simulator::get_susceptibility() {
     return infectious_data_.get_susceptibility();
 }
 
+void Simulator::set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group) {
+    susceptibles_data_.set_immunity_transition(rate, source_group, target_group);
+}
+
+PyObject* Simulator::get_immunity_transition() {
+    return susceptibles_data_.get_immunity_transition();
+}
+
 // void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {
 //     try {
 //         CheckValue(rate, "immunity transition rate");

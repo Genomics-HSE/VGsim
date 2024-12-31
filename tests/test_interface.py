@@ -608,30 +608,30 @@ def test_set_susceptibility_err(rate, haplotype, susceptibility_group, error, te
         model.set_susceptibility(rate=rate, haplotype=haplotype, susceptibility_group=susceptibility_group)
 
 
-# #IMMUNITY TRANSITION
-# @pytest.mark.parametrize('rate, source, target, answer',
-#                         [(1   , None  , None  , [[0, 1, 1], [1, 0, 1], [1, 1, 0]]),
-#                          (2   , 1     , None  , [[0, 0, 0], [2, 0, 2], [0, 0, 0]]),
-#                          (3   , None  , 2     , [[0, 0, 3], [0, 0, 3], [0, 0, 0]]),
-#                          (4   , 0     , 2     , [[0, 0, 4], [0, 0, 0], [0, 0, 0]])])
-# def test_set_immunity_transition(rate, source, target, answer):
-#     model = Simulator(number_of_susceptible_groups=3)
-#     model.set_immunity_transition(rate=rate, source=source, target=target)
-#     assert_allclose(model.immunity_transition, np.asarray(answer), atol=1e-14)
+#IMMUNITY TRANSITION
+@pytest.mark.parametrize('rate, source, target, answer',
+                        [(1   , None  , None  , [[0, 1, 1], [1, 0, 1], [1, 1, 0]]),
+                         (2   , 1     , None  , [[0, 0, 0], [2, 0, 2], [0, 0, 0]]),
+                         (3   , None  , 2     , [[0, 0, 3], [0, 0, 3], [0, 0, 0]]),
+                         (4   , 0     , 2     , [[0, 0, 4], [0, 0, 0], [0, 0, 0]])])
+def test_set_immunity_transition(rate, source, target, answer):
+    model = Simulator(number_of_susceptible_groups=3)
+    model.set_immunity_transition(rate=rate, source=source, target=target)
+    assert_allclose(model.get_immunity_transition(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('rate , source, target, error     , text',
-#                         [(None , None  , None  , TypeError , 'Incorrect type of immunity transition rate. Type should be int or float.'),
-#                          ('str', None  , None  , TypeError , 'Incorrect type of immunity transition rate. Type should be int or float.'),
-#                          (-1   , None  , None  , ValueError, 'Incorrect value of immunity transition rate. Value should be more or equal 0.'),
-#                          (2    , -2    , None  , IndexError, 'There are no such susceptibility group!'),
-#                          (2    , 5     , None  , IndexError, 'There are no such susceptibility group!'),
-#                          (2    , 1.5   , None  , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
-#                          (2    , 'str' , None  , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
-#                          (2    , None  , -2    , IndexError, 'There are no such susceptibility group!'),
-#                          (2    , None  , 5     , IndexError, 'There are no such susceptibility group!'),
-#                          (2    , None  , 1.5   , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
-#                          (2    , None  , 'str' , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.')])
-# def test_set_immunity_transition_err(rate, source, target, error, text):
-#     model = Simulator(number_of_susceptible_groups=3)
-#     with pytest.raises(error, match=text):
-#         model.set_immunity_transition(rate=rate, source=source, target=target)
+@pytest.mark.parametrize('rate , source, target, error     , text',
+                        [(None , None  , None  , TypeError , 'Incorrect type of immunity transition rate. Type should be int or float.'),
+                         ('str', None  , None  , TypeError , 'Incorrect type of immunity transition rate. Type should be int or float.'),
+                         (-1   , None  , None  , ValueError, 'Incorrect value of immunity transition rate. Value should be more or equal 0.'),
+                         (2    , -2    , None  , IndexError, 'There are no such susceptibility group!'),
+                         (2    , 5     , None  , IndexError, 'There are no such susceptibility group!'),
+                         (2    , 1.5   , None  , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
+                         (2    , 'str' , None  , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
+                         (2    , None  , -2    , IndexError, 'There are no such susceptibility group!'),
+                         (2    , None  , 5     , IndexError, 'There are no such susceptibility group!'),
+                         (2    , None  , 1.5   , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
+                         (2    , None  , 'str' , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.')])
+def test_set_immunity_transition_err(rate, source, target, error, text):
+    model = Simulator(number_of_susceptible_groups=3)
+    with pytest.raises(error, match=text):
+        model.set_immunity_transition(rate=rate, source=source, target=target)
