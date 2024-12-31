@@ -5,22 +5,39 @@ import source_VGsim
 
 class Simulator:
     def __init__(self, number_of_sites=0, number_of_populations=1, number_of_susceptible_groups=1, seed=None):
+        self._check_amount(number_of_sites, 'number of sites', zero=False)
+        self._check_amount(number_of_populations, 'populations number')
+        self._check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         if seed == None:
             seed = int(randrange(sys.maxsize))
-        self.simulator = source_VGsim.Simulator(number_of_sites, number_of_populations, number_of_susceptible_groups, seed)  # инициализация C++ класса
-        self.number_of_sites = number_of_sites
-        self.number_of_haplotypes = 4**number_of_sites
-        self.number_of_populations = number_of_populations
-        self.number_of_susceptible_groups = number_of_susceptible_groups
+
+        self._simulator = source_VGsim.Simulator(number_of_sites, number_of_populations, number_of_susceptible_groups, seed)  # инициализация C++ класса
+        self._number_of_sites = number_of_sites
+        self._number_of_haplotypes = 4**number_of_sites
+        self._number_of_populations = number_of_populations
+        self._number_of_susceptible_groups = number_of_susceptible_groups
 
     def simulate(self, iterations=1000, sample_size=None, epidemic_time=0.0, method='direct', attempts=200):
         if sample_size is None:
             sample_size = iterations
-        self.simulator.simulate(iterations, sample_size, epidemic_time, method, attempts)
-        self.simulator.Debug()
+        self._simulator.simulate(iterations, sample_size, epidemic_time, method, attempts)
+        self._simulator.Debug()
 
     def get_flat_chain(self):
-        return self.simulator.get_flat_chain()
+        return self._simulator.get_flat_chain()
+
+
+    def get_number_of_sites(self):
+        return self._number_of_sites
+
+    def get_number_of_haplotypes(self):
+        return self._number_of_haplotypes
+
+    def get_number_of_populations(self):
+        return self._number_of_populations
+
+    def get_number_of_susceptible_groups(self):
+        return self._number_of_susceptible_groups
 
     def set_susceptibility_group(self, susceptibility_group, haplotype=None):
         """
@@ -34,16 +51,16 @@ class Simulator:
         """
         if isinstance(susceptibility_group, int) == False:
             raise TypeError('Incorrect type of susceptibility group. Type should be int.')
-        elif susceptibility_group < 0 or susceptibility_group >= self.number_of_susceptible_groups:
+        elif susceptibility_group < 0 or susceptibility_group >= self._number_of_susceptible_groups:
             raise IndexError('There are no such susceptibility group!')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
 
         for hn in haplotypes:
-            self.simulator.set_susceptibility_group(susceptibility_group, hn)
+            self._simulator.set_susceptibility_group(susceptibility_group, hn)
 
     def get_susceptibility_group(self):
-        return self.simulator.get_susceptibility_group()
+        return self._simulator.get_susceptibility_group()
 
     def set_transmission_rate(self, rate, haplotype=None):
         """
@@ -58,13 +75,13 @@ class Simulator:
         :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
         """
         self._check_value(rate, 'transmission rate')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
         for hn in haplotypes:
-            self.simulator.set_transmission_rate(rate, hn)
+            self._simulator.set_transmission_rate(rate, hn)
 
     def get_transmission_rate(self):
-        return self.simulator.get_transmission_rate()
+        return self._simulator.get_transmission_rate()
 
     def set_recovery_rate(self, rate, haplotype=None):
         """
@@ -79,13 +96,13 @@ class Simulator:
         :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
         """
         self._check_value(rate, 'recovery rate')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
         for hn in haplotypes:
-            self.simulator.set_recovery_rate(rate, hn)
+            self._simulator.set_recovery_rate(rate, hn)
 
     def get_recovery_rate(self):
-        return self.simulator.get_recovery_rate()
+        return self._simulator.get_recovery_rate()
 
     def set_sampling_rate(self, rate, haplotype=None):
         """
@@ -100,13 +117,13 @@ class Simulator:
         :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
         """
         self._check_value(rate, 'sampling rate')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
         for hn in haplotypes:
-            self.simulator.set_sampling_rate(rate, hn)
+            self._simulator.set_sampling_rate(rate, hn)
 
     def get_sampling_rate(self):
-        return self.simulator.get_sampling_rate()
+        return self._simulator.get_sampling_rate()
 
     def set_mutation_rate(self, rate, haplotype=None, mutation=None):
         """
@@ -121,17 +138,17 @@ class Simulator:
         :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
         """
         self._check_value(rate, 'mutation rate')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        self._check_indexes(mutation, self.number_of_sites, 'mutation site')
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
-        sites = self._calculate_indexes(mutation, self.number_of_sites)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        self._check_indexes(mutation, self._number_of_sites, 'mutation site')
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
+        sites = self._calculate_indexes(mutation, self._number_of_sites)
 
         for hn in haplotypes:
             for s in sites:
-                self.simulator.set_mutation_rate(rate, hn, s)
+                self._simulator.set_mutation_rate(rate, hn, s)
 
     def get_mutation_rate(self):
-        return self.simulator.get_mutation_rate()
+        return self._simulator.get_mutation_rate()
 
     def set_mutation_probabilities(self, probabilities, haplotype, mutation):
         """
@@ -150,10 +167,10 @@ class Simulator:
         if isinstance(probabilities, list):
             for i in range(4):
                 self._check_value(probabilities[i], 'mutation probabilities')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        self._check_indexes(mutation, self.number_of_sites, 'mutation site')
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
-        sites = self._calculate_indexes(mutation, self.number_of_sites)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        self._check_indexes(mutation, self._number_of_sites, 'mutation site')
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
+        sites = self._calculate_indexes(mutation, self._number_of_sites)
 
         for hn in haplotypes:
             for s in sites:
@@ -162,11 +179,11 @@ class Simulator:
                 if sum(probabilities_allele) == 0:
                     raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
                 for i in range(3):
-                    self.simulator.set_mutation_probabilities(probabilities_allele[i], hn, s, i)
+                    self._simulator.set_mutation_probabilities(probabilities_allele[i], hn, s, i)
 
 
     def get_mutation_probabilities(self):
-        return self.simulator.get_mutation_probabilities()
+        return self._simulator.get_mutation_probabilities()
 
     def set_susceptibility(self, rate, haplotype=None, susceptibility_group=None):
         """
@@ -182,17 +199,17 @@ class Simulator:
         :type susceptibility_group: int or None
         """
         self._check_value(rate, 'susceptibility rate')
-        self._check_indexes(haplotype, self.number_of_haplotypes, 'haplotype', True)
-        self._check_indexes(susceptibility_group, self.number_of_susceptible_groups, 'susceptibility group')
-        haplotypes = self._calculate_indexes(haplotype, self.number_of_haplotypes)
-        sus_types = self._calculate_indexes(susceptibility_group, self.number_of_susceptible_groups)
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
+        self._check_indexes(susceptibility_group, self._number_of_susceptible_groups, 'susceptibility group')
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
+        sus_types = self._calculate_indexes(susceptibility_group, self._number_of_susceptible_groups)
 
         for hn in haplotypes:
             for sn in sus_types:
-                self.simulator.set_susceptibility(rate, hn, sn)
+                self._simulator.set_susceptibility(rate, hn, sn)
 
     def get_susceptibility(self):
-        return self.simulator.get_susceptibility()
+        return self._simulator.get_susceptibility()
 
     def set_immunity_transition(self, rate, source=None, target=None):
         """
@@ -208,31 +225,27 @@ class Simulator:
         :type target: int or None
         """
         self._check_value(rate, 'immunity transition rate')
-        self._check_indexes(source, self.number_of_susceptible_groups, 'susceptibility group')
-        self._check_indexes(target, self.number_of_susceptible_groups, 'susceptibility group')
-        sus_types_1 = self._calculate_indexes(source, self.number_of_susceptible_groups)
-        sus_types_2 = self._calculate_indexes(target, self.number_of_susceptible_groups)
+        self._check_indexes(source, self._number_of_susceptible_groups, 'susceptibility group')
+        self._check_indexes(target, self._number_of_susceptible_groups, 'susceptibility group')
+        sus_types_1 = self._calculate_indexes(source, self._number_of_susceptible_groups)
+        sus_types_2 = self._calculate_indexes(target, self._number_of_susceptible_groups)
 
         for sn1 in sus_types_1:
             for sn2 in sus_types_2:
                 if sn1 == sn2:
                     continue
-                self.simulator.set_immunity_transition(rate, sn1, sn2)
+                self._simulator.set_immunity_transition(rate, sn1, sn2)
 
     def get_immunity_transition(self):
-        return self.simulator.get_immunity_transition()
+        return self._simulator.get_immunity_transition()
 
-
-    def _check_value(self, value, smth, edge=None, none=False):
-        if none and isinstance(value, (int, float)) == False and value is not None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float or None.')
-        elif not none and isinstance(value, (int, float)) == False:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
-
-        if edge is None and isinstance(value, (int, float)) and value < 0:
+    def _check_amount(self, amount, smth, zero=True):
+        if isinstance(amount, int) == False:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
+        elif amount <= 0 and zero:
+            raise ValueError('Incorrect value of ' + smth + '. Value should be more 0.')
+        elif amount < 0 and zero == False:
             raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
-        elif edge is not None and isinstance(value, (int, float)) and (value < 0 or value > edge):
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less ' + str(edge) + '.')
 
     def _check_indexes(self, index, edge, smth, hap=False, none=True):
         if isinstance(index, list):
@@ -249,7 +262,7 @@ class Simulator:
                 raise IndexError('There are no such ' + smth + '!')
         elif isinstance(index, str) and hap:
             if index.count("A") + index.count("T") + index.count("C") + index.count("G") + index.count("*") \
-            != self.number_of_sites:
+            != self._number_of_sites:
                 raise ValueError('Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"*\" and length of haplotype should be equal number of mutations sites.')
         elif index is not None:
             if hap:
@@ -264,11 +277,34 @@ class Simulator:
         else:
             raise TypeError('Incorrect type of ' + smth + '. Type should be list.')
 
+    def _check_value(self, value, smth, edge=None, none=False):
+        if none and isinstance(value, (int, float)) == False and value is not None:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float or None.')
+        elif not none and isinstance(value, (int, float)) == False:
+            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
+
+        if edge is None and isinstance(value, (int, float)) and value < 0:
+            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
+        elif edge is not None and isinstance(value, (int, float)) and (value < 0 or value > edge):
+            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less ' + str(edge) + '.')
+
     def _calculate_allele(self, haplotype, site):
-        for _ in range(self.number_of_sites-site):
+        for _ in range(self._number_of_sites-site):
             allele = haplotype % 4
             haplotype = haplotype // 4
         return allele
+
+    def _calculate_haplotype_from_string(self, string):
+        string = string[::-1]
+        haplotype = 0
+        for s in range(self._number_of_sites):
+            if string[s] == "T":
+                haplotype += (4**s)
+            elif string[s] == "C":
+                haplotype += 2*(4**s)
+            elif string[s] == "G":
+                haplotype += 3*(4**s)
+        return haplotype
 
     def _calculate_indexes(self, indexes_list, edge):
         if isinstance(indexes_list, list):
@@ -283,7 +319,7 @@ class Simulator:
         if isinstance(index, str):
             haplotypes = [index]
             letters = ["A", "T", "C", "G"]
-            for s in range(self.number_of_sites):
+            for s in range(self._number_of_sites):
                 for i in range(len(haplotypes)):
                     haplotype_old = haplotypes[i]
                     if haplotype_old[s] == "*":
@@ -301,15 +337,3 @@ class Simulator:
             return [index]
         else:
             return range(edge)
-
-    def _calculate_haplotype_from_string(self, string):
-        string = string[::-1]
-        haplotype = 0
-        for s in range(self.number_of_sites):
-            if string[s] == "T":
-                haplotype += (4**s)
-            elif string[s] == "C":
-                haplotype += 2*(4**s)
-            elif string[s] == "G":
-                haplotype += 3*(4**s)
-        return haplotype
