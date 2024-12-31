@@ -30,12 +30,3 @@ void PrintMingration(uint64_t node, const Migration& migration);
 
 // Some
 uint64_t GetNewHaplotype(uint64_t haplotype, uint64_t site, uint64_t DS, uint64_t sites);
-
-// Calculate indexes
-std::vector<uint64_t> GetIndexes(int64_t index, uint64_t max_index);
-
-// Validate data
-void CheckValue(double value, std::string smth);
-
-void CheckIndex(int64_t index, uint64_t max_index, std::string smth);
-

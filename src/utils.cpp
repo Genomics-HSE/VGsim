@@ -116,28 +116,3 @@ uint64_t GetNewHaplotype(uint64_t haplotype, uint64_t site, uint64_t DS, uint64_
     }
     return haplotype + (DS - AS) * digit4;
 }
-
-std::vector<uint64_t> GetIndexes(int64_t index, uint64_t max_index) {
-    std::vector<uint64_t> indexes;
-    if (index == -1) {
-        indexes.reserve(max_index);
-        for (uint64_t i = 0; i < max_index; ++i) {
-            indexes.push_back(i);
-        }
-    } else {
-        indexes.push_back(static_cast<uint64_t>(index));
-    }
-    return indexes;
-}
-
-void CheckValue(double rate, std::string smth) {
-    if (rate < 0) {
-        throw std::runtime_error("Incorrect value of " + smth + ". Value should be more or equal 0.");
-    }
-}
-
-void CheckIndex(int64_t index, uint64_t max_index, std::string smth) {
-    if (!(index == -1 || (index >= 0 && static_cast<uint64_t>(index) < max_index))) {
-        throw std::runtime_error("There are no such " + smth + "!");
-    }
-}
