@@ -8,7 +8,7 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
     : number_of_sites_(number_of_sites)
     , number_of_haplotypes_(std::pow(4, number_of_sites))
     , number_of_susceptible_groups_(number_of_susceptible_groups)
-    , susceptibility_types_(new uint64_t[number_of_haplotypes_])
+    , susceptibility_groups_(new uint64_t[number_of_haplotypes_])
     , max_effective_transmission_(2.5)
     , transmission_rates_(new double[number_of_haplotypes_])
     , recovery_rates_(new double[number_of_haplotypes_])
@@ -20,7 +20,7 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
     , sites_rates_(new double[number_of_haplotypes_ * number_of_sites_ * 3]) {
     double mutation = 0.01;
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
-        susceptibility_types_[haplotype] = 0;
+        susceptibility_groups_[haplotype] = 0;
         transmission_rates_[haplotype] = 2.0;
         recovery_rates_[haplotype] = 1.0;
         sampling_rates_[haplotype] = 0.01;
@@ -41,7 +41,7 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
 }
 
 Infectious::~Infectious() {
-    delete[] susceptibility_types_;
+    delete[] susceptibility_groups_;
     delete[] transmission_rates_;
     delete[] recovery_rates_;
     delete[] sampling_rates_;
@@ -55,7 +55,7 @@ Infectious::~Infectious() {
 void Infectious::Debug() {
     std::cout << "INFECTIOUS" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
-    PrintArray1nd("Susceptibility types:", susceptibility_types_, getNumberHaplotypes());
+    PrintArray1nd("Susceptibility types:", susceptibility_groups_, getNumberHaplotypes());
     PrintArray1nd("Transmission rates:", transmission_rates_, getNumberHaplotypes());
     PrintArray1nd("Recovery rates:", recovery_rates_, getNumberHaplotypes());
     PrintArray1nd("Sampling rates:", sampling_rates_, getNumberHaplotypes());
@@ -89,6 +89,20 @@ void Infectious::Update() {
 }
 
 
+void Infectious::set_susceptibility_group(uint64_t group, uint64_t haplotype) {
+    susceptibility_groups_[haplotype] = group;
+}
+
+PyObject* Infectious::get_susceptibility_group() {
+    boost::python::list data;
+
+    for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+        data.append(boost::python::object(susceptibility_groups_[haplotype]));
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
 void Infectious::set_transmission_rate(double rate, uint64_t haplotype) {
     transmission_rates_[haplotype] = rate;
 }
@@ -96,8 +110,8 @@ void Infectious::set_transmission_rate(double rate, uint64_t haplotype) {
 PyObject* Infectious::get_transmission_rate() {
     boost::python::list data;
 
-    for (uint64_t index = 0; index < getNumberHaplotypes(); ++index) {
-        data.append(boost::python::object(transmission_rates_[index]));
+    for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+        data.append(boost::python::object(transmission_rates_[haplotype]));
     }
 
     return boost::python::incref(data.ptr());
@@ -110,8 +124,8 @@ void Infectious::set_recovery_rate(double rate, uint64_t haplotype) {
 PyObject* Infectious::get_recovery_rate() {
     boost::python::list data;
 
-    for (uint64_t index = 0; index < getNumberHaplotypes(); ++index) {
-        data.append(boost::python::object(recovery_rates_[index]));
+    for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+        data.append(boost::python::object(recovery_rates_[haplotype]));
     }
 
     return boost::python::incref(data.ptr());
@@ -124,8 +138,8 @@ void Infectious::set_sampling_rate(double rate, uint64_t haplotype) {
 PyObject* Infectious::get_sampling_rate() {
     boost::python::list data;
 
-    for (uint64_t index = 0; index < getNumberHaplotypes(); ++index) {
-        data.append(boost::python::object(sampling_rates_[index]));
+    for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+        data.append(boost::python::object(sampling_rates_[haplotype]));
     }
 
     return boost::python::incref(data.ptr());
@@ -171,6 +185,24 @@ PyObject* Infectious::get_mutation_probabilities() {
     return boost::python::incref(data.ptr());
 }
 
+void Infectious::set_susceptibility(double rate, uint64_t haplotype, uint64_t group) {
+    susceptibility_[getIndexSus(haplotype, group)] = rate;
+}
+
+PyObject* Infectious::get_susceptibility() {
+    boost::python::list data;
+
+    for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+        boost::python::list str_data;
+        for (uint64_t group = 0; group < getNumberSusceptibleGroups(); ++group) {
+            str_data.append(boost::python::object(susceptibility_[getIndexSus(haplotype, group)]));
+        }
+        data.append(str_data);
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
 
 inline double Infectious::GetMaxEffectiveTransmission() const {
     return max_effective_transmission_;
@@ -182,11 +214,11 @@ inline double Infectious::GetTransmissionSusceptibility(uint64_t haplotype, uint
 
 
 // void Infectious::SetSusceptibilityTypes(uint64_t type, uint64_t haplotype) {
-//     susceptibility_types_[haplotype] = type;
+//     susceptibility_groups_[haplotype] = type;
 // }
 
 inline uint64_t Infectious::GetSusceptibilityTypes(uint64_t haplotype) const {
-    return susceptibility_types_[haplotype];
+    return susceptibility_groups_[haplotype];
 }
 
 // void Infectious::SetTransmissionRate(double rate, uint64_t haplotype) {

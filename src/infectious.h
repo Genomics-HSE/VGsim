@@ -9,6 +9,8 @@ public:
     void Debug();
     void Update();
 
+    void set_susceptibility_group(uint64_t group, uint64_t haplotype);
+    PyObject* get_susceptibility_group();
     void set_transmission_rate(double rate, uint64_t haplotype);
     PyObject* get_transmission_rate();
     void set_recovery_rate(double rate, uint64_t haplotype);
@@ -19,6 +21,8 @@ public:
     PyObject* get_mutation_rate();
     void set_mutation_probabilities(double rate, uint64_t haplotype, uint64_t mutation, uint64_t index);
     PyObject* get_mutation_probabilities();
+    void set_susceptibility(double rate, uint64_t haplotype, uint64_t group);
+    PyObject* get_susceptibility();
 
     inline double GetMaxEffectiveTransmission() const;
     inline double GetTransmissionSusceptibility(uint64_t haplotype, uint64_t group) const;
@@ -60,7 +64,7 @@ private:
     uint64_t number_of_haplotypes_;
     uint64_t number_of_susceptible_groups_;
 
-    uint64_t* susceptibility_types_;
+    uint64_t* susceptibility_groups_;
     double max_effective_transmission_;
     double* transmission_rates_;
     double* recovery_rates_;

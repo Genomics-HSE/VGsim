@@ -1,4 +1,4 @@
-import VGsim
+import VGsim_new as VGsim
 import sys
 import os
 import numpy as np

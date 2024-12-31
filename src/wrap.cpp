@@ -14,6 +14,8 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         .def( "get_flat_chain", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_flat_chain ))
 
         // Infectious
+        .def( "set_susceptibility_group", static_cast< void (Simulator::*)(uint64_t, uint64_t) > ( &Simulator::set_susceptibility_group ), args("group", "haplotype"))
+        .def( "get_susceptibility_group", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_susceptibility_group ))
         .def( "set_transmission_rate", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_transmission_rate ), args("rate", "haplotype"))
         .def( "get_transmission_rate", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_transmission_rate ))
         .def( "set_recovery_rate", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_recovery_rate ), args("rate", "haplotype"))
@@ -24,5 +26,7 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         .def( "get_mutation_rate", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_mutation_rate ))
         .def( "set_mutation_probabilities", static_cast< void (Simulator::*)(double, uint64_t, uint64_t, uint64_t) > ( &Simulator::set_mutation_probabilities ), args("rate", "haplotype", "mutation", "index"))
         .def( "get_mutation_probabilities", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_mutation_probabilities ))
+        .def( "set_susceptibility", static_cast< void (Simulator::*)(double, uint64_t, uint64_t) > ( &Simulator::set_susceptibility ), args("rate", "haplotype", "group"))
+        .def( "get_susceptibility", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_susceptibility ))
     ;
 }

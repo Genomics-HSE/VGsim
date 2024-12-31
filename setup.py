@@ -11,7 +11,7 @@ example_module = Extension('source_VGsim',
                             include_dirs=[boost_include],
                             library_dirs=[boost_library],
                             libraries=[boost_version],
-                            extra_compile_args=['-std=c++17', '-O2', '-L/usr/local/lib', '-L/path/to/boost/libs', '-L/usr/local/include'],
+                            extra_compile_args=['-std=c++17', '-O2'],
                             )
 
 setup(name='VGsim_new',

@@ -74,6 +74,14 @@ PyObject* Simulator::get_flat_chain() {
     return boost::python::incref(ret.ptr());
 }
 
+void Simulator::set_susceptibility_group(uint64_t group, uint64_t haplotype) {
+    infectious_data_.set_susceptibility_group(group, haplotype);
+}
+
+PyObject* Simulator::get_susceptibility_group() {
+    return infectious_data_.get_susceptibility_group();
+}
+
 void Simulator::set_transmission_rate(double rate, uint64_t haplotype) {
     infectious_data_.set_transmission_rate(rate, haplotype);
 }
@@ -112,6 +120,14 @@ void Simulator::set_mutation_probabilities(double rate, uint64_t haplotype, uint
 
 PyObject* Simulator::get_mutation_probabilities() {
     return infectious_data_.get_mutation_probabilities();
+}
+
+void Simulator::set_susceptibility(double rate, uint64_t haplotype, uint64_t group) {
+    infectious_data_.set_susceptibility(rate, haplotype, group);
+}
+
+PyObject* Simulator::get_susceptibility() {
+    return infectious_data_.get_susceptibility();
 }
 
 // void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {

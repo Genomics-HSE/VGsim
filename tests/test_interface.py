@@ -551,61 +551,61 @@ def test_set_mutation_probabilities_err(probabilities, haplotype, mutation, erro
 
 
 
-# #SUSCEPTIBILITY TYPE
-# @pytest.mark.parametrize('susceptibility_type, haplotype, answer',
-#                         [(1                  , None     , [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-#                          (1                  , 'A*'     , [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-#                          (1                  , 'AT'     , [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-#                          (1                  , 0        , [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-#                          (1                  , 15       , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])])
-# def test_set_susceptibility_type(susceptibility_type, haplotype, answer):
-#     model = Simulator(number_of_sites=2, number_of_susceptible_groups=4)
-#     model.set_susceptibility_type(susceptibility_type=susceptibility_type, haplotype=haplotype)
-#     assert_allclose(model.susceptibility_type, np.asarray(answer), atol=1e-14)
+#SUSCEPTIBILITY GROUP
+@pytest.mark.parametrize('susceptibility_group, haplotype, answer',
+                        [(1                  , None     , [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
+                         (1                  , 'A*'     , [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (1                  , 'AT'     , [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (1                  , 0        , [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (1                  , 15       , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])])
+def test_set_susceptibility_group(susceptibility_group, haplotype, answer):
+    model = Simulator(number_of_sites=2, number_of_susceptible_groups=4)
+    model.set_susceptibility_group(susceptibility_group=susceptibility_group, haplotype=haplotype)
+    assert_allclose(model.get_susceptibility_group(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('susceptibility_type, haplotype, error     , text',
-#                         [(None               , None     , TypeError , 'Incorrect type of susceptibility type. Type should be int.'),
-#                          ('str'              , None     , TypeError , 'Incorrect type of susceptibility type. Type should be int.'),
-#                          (-1                 , None     , IndexError, 'There are no such susceptibility type!'),
-#                          (4                  , None     , IndexError, 'There are no such susceptibility type!'),
-#                          (2                  , -1       , IndexError, 'There are no such haplotype!'),
-#                          (2                  , 16       , IndexError, 'There are no such haplotype!'),
-#                          (2                  , 'str'    , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
-#                          (2                  , 'AAA'    , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.')])
-# def test_set_susceptibility_type_err(susceptibility_type, haplotype, error, text):
-#     model = Simulator(number_of_sites=2, number_of_susceptible_groups=4)
-#     with pytest.raises(error, match=text):
-#         model.set_susceptibility_type(susceptibility_type=susceptibility_type, haplotype=haplotype)
+@pytest.mark.parametrize('susceptibility_group, haplotype, error     , text',
+                        [(None               , None     , TypeError , 'Incorrect type of susceptibility group. Type should be int.'),
+                         ('str'              , None     , TypeError , 'Incorrect type of susceptibility group. Type should be int.'),
+                         (-1                 , None     , IndexError, 'There are no such susceptibility group!'),
+                         (4                  , None     , IndexError, 'There are no such susceptibility group!'),
+                         (2                  , -1       , IndexError, 'There are no such haplotype!'),
+                         (2                  , 16       , IndexError, 'There are no such haplotype!'),
+                         (2                  , 'str'    , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
+                         (2                  , 'AAA'    , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.')])
+def test_set_susceptibility_group_err(susceptibility_group, haplotype, error, text):
+    model = Simulator(number_of_sites=2, number_of_susceptible_groups=4)
+    with pytest.raises(error, match=text):
+        model.set_susceptibility_group(susceptibility_group=susceptibility_group, haplotype=haplotype)
 
 
-# #SUSCEPTIBILITY
-# @pytest.mark.parametrize('rate, haplotype, susceptibility_type, answer',
-#                         [(2   , None     , None               , [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]]),
-#                          (3   , 'A*'     , None               , [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]),
-#                          (4   , 'AT'     , None               , [[1, 0, 0], [4, 4, 4], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]),
-#                          (5   , 0        , None               , [[5, 5, 5], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]),
-#                          (6   , 15       , None               , [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [6, 6, 6]]),
-#                          (7   , None     , 2                  , [[1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7]])])
-# def test_set_susceptibility(rate, haplotype, susceptibility_type, answer):
-#     model = Simulator(number_of_sites=2, number_of_susceptible_groups=3)
-#     model.set_susceptibility(rate=rate, haplotype=haplotype, susceptibility_type=susceptibility_type)
-#     assert_allclose(model.susceptibility, np.asarray(answer), atol=1e-14)
+#SUSCEPTIBILITY
+@pytest.mark.parametrize('rate, haplotype, susceptibility_group, answer',
+                        [(2   , None     , None               , [[2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]]),
+                         (3   , 'A*'     , None               , [[3, 3, 3], [3, 3, 3], [3, 3, 3], [3, 3, 3], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]),
+                         (4   , 'AT'     , None               , [[1, 0, 0], [4, 4, 4], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]),
+                         (5   , 0        , None               , [[5, 5, 5], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]),
+                         (6   , 15       , None               , [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [6, 6, 6]]),
+                         (7   , None     , 2                  , [[1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7], [1, 0, 7]])])
+def test_set_susceptibility(rate, haplotype, susceptibility_group, answer):
+    model = Simulator(number_of_sites=2, number_of_susceptible_groups=3)
+    model.set_susceptibility(rate=rate, haplotype=haplotype, susceptibility_group=susceptibility_group)
+    assert_allclose(model.get_susceptibility(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('rate , haplotype, susceptibility_type, error     , text',
-#                         [(None , None     , None               , TypeError , 'Incorrect type of susceptibility rate. Type should be int or float.'),
-#                          ('str', None     , None               , TypeError , 'Incorrect type of susceptibility rate. Type should be int or float.'),
-#                          (-1   , None     , None               , ValueError, 'Incorrect value of susceptibility rate. Value should be more or equal 0.'),
-#                          (2    , -1       , None               , IndexError, 'There are no such haplotype!'),
-#                          (2    , 16       , None               , IndexError, 'There are no such haplotype!'),
-#                          (2    , 'str'    , None               , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
-#                          (2    , 'AAA'    , None               , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
-#                          (2    , None     , 'str'              , TypeError , 'Incorrect type of susceptibility type. Type should be int or None.'), 
-#                          (2    , None     , -1                 , IndexError, 'There are no such susceptibility type!'),
-#                          (2    , None     , 4                  , IndexError, 'There are no such susceptibility type!')])
-# def test_set_susceptibility_err(rate, haplotype, susceptibility_type, error, text):
-#     model = Simulator(number_of_sites=2, number_of_susceptible_groups=4)
-#     with pytest.raises(error, match=text):
-#         model.set_susceptibility(rate=rate, haplotype=haplotype, susceptibility_type=susceptibility_type)
+@pytest.mark.parametrize('rate , haplotype, susceptibility_group, error     , text',
+                        [(None , None     , None               , TypeError , 'Incorrect type of susceptibility rate. Type should be int or float.'),
+                         ('str', None     , None               , TypeError , 'Incorrect type of susceptibility rate. Type should be int or float.'),
+                         (-1   , None     , None               , ValueError, 'Incorrect value of susceptibility rate. Value should be more or equal 0.'),
+                         (2    , -1       , None               , IndexError, 'There are no such haplotype!'),
+                         (2    , 16       , None               , IndexError, 'There are no such haplotype!'),
+                         (2    , 'str'    , None               , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
+                         (2    , 'AAA'    , None               , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
+                         (2    , None     , 'str'              , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'), 
+                         (2    , None     , -1                 , IndexError, 'There are no such susceptibility group!'),
+                         (2    , None     , 4                  , IndexError, 'There are no such susceptibility group!')])
+def test_set_susceptibility_err(rate, haplotype, susceptibility_group, error, text):
+    model = Simulator(number_of_sites=2, number_of_susceptible_groups=4)
+    with pytest.raises(error, match=text):
+        model.set_susceptibility(rate=rate, haplotype=haplotype, susceptibility_group=susceptibility_group)
 
 
 # #IMMUNITY TRANSITION
@@ -623,14 +623,14 @@ def test_set_mutation_probabilities_err(probabilities, haplotype, mutation, erro
 #                         [(None , None  , None  , TypeError , 'Incorrect type of immunity transition rate. Type should be int or float.'),
 #                          ('str', None  , None  , TypeError , 'Incorrect type of immunity transition rate. Type should be int or float.'),
 #                          (-1   , None  , None  , ValueError, 'Incorrect value of immunity transition rate. Value should be more or equal 0.'),
-#                          (2    , -2    , None  , IndexError, 'There are no such susceptibility type!'),
-#                          (2    , 5     , None  , IndexError, 'There are no such susceptibility type!'),
-#                          (2    , 1.5   , None  , TypeError , 'Incorrect type of susceptibility type. Type should be int or None.'),
-#                          (2    , 'str' , None  , TypeError , 'Incorrect type of susceptibility type. Type should be int or None.'),
-#                          (2    , None  , -2    , IndexError, 'There are no such susceptibility type!'),
-#                          (2    , None  , 5     , IndexError, 'There are no such susceptibility type!'),
-#                          (2    , None  , 1.5   , TypeError , 'Incorrect type of susceptibility type. Type should be int or None.'),
-#                          (2    , None  , 'str' , TypeError , 'Incorrect type of susceptibility type. Type should be int or None.')])
+#                          (2    , -2    , None  , IndexError, 'There are no such susceptibility group!'),
+#                          (2    , 5     , None  , IndexError, 'There are no such susceptibility group!'),
+#                          (2    , 1.5   , None  , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
+#                          (2    , 'str' , None  , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
+#                          (2    , None  , -2    , IndexError, 'There are no such susceptibility group!'),
+#                          (2    , None  , 5     , IndexError, 'There are no such susceptibility group!'),
+#                          (2    , None  , 1.5   , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.'),
+#                          (2    , None  , 'str' , TypeError , 'Incorrect type of susceptibility group. Type should be int or None.')])
 # def test_set_immunity_transition_err(rate, source, target, error, text):
 #     model = Simulator(number_of_susceptible_groups=3)
 #     with pytest.raises(error, match=text):
