@@ -37,5 +37,6 @@ jobs:
     - name: Build
       run: |
         sudo apt-get install libboost-all-dev
+        sudo apt-get install libboost-python-dev
         pip install .
         python3 -m pytest ./tests/test_interface.py
