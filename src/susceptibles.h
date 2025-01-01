@@ -10,11 +10,9 @@ public:
     void set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group);
     PyObject* get_immunity_transition();
 
-    void SetSusceptibilityTransition(double rate, uint64_t source, uint64_t target);
     inline double GetSusceptibilityTransition(uint64_t source, uint64_t target) const;
     inline double* GetSusceptibilityTransitionBegin(uint64_t group) const;
     inline double GetSusceptibilityCumulTransition(uint64_t group) const;
-    inline double* GetSusceptibilityCumulTransitionBegin() const;
     
 private:
     inline uint64_t getNumberSusceptibleGroups() const;

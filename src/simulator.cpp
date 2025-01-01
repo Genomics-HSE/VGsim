@@ -138,24 +138,6 @@ PyObject* Simulator::get_immunity_transition() {
     return susceptibles_data_.get_immunity_transition();
 }
 
-// void Simulator::SetSusceptibilityTransition(double rate, int64_t source, int64_t target) {
-//     try {
-//         CheckValue(rate, "immunity transition rate");
-//         CheckIndex(source, getNumberSusceptibleGroups(), "source susceptibility type");
-//         CheckIndex(target, getNumberSusceptibleGroups(), "target susceptibility type");
-//     } catch (const std::exception& e) {
-//         std::cout << e.what() << std::endl;
-//         return;
-//     }
-
-//     for (uint64_t si : GetIndexes(source, getNumberSusceptibleGroups())) {
-//         for (uint64_t ti : GetIndexes(target, getNumberSusceptibleGroups())) {
-//             if (si != ti) {
-//                 susceptibles_data_.SetSusceptibilityTransition(rate, si, ti);
-//             }
-//         }
-//     }
-// }
 
 inline uint64_t Simulator::getNumberSites() const {
     return numbers_.sites;

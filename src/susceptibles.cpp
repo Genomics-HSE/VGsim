@@ -61,10 +61,6 @@ PyObject* Susceptibles::get_immunity_transition() {
     return boost::python::incref(data.ptr());
 }
 
-void Susceptibles::SetSusceptibilityTransition(double rate, uint64_t source, uint64_t target) {
-    susceptibility_transition_[getIndexSus(source, target)] = rate;
-}
-
 
 inline double Susceptibles::GetSusceptibilityTransition(uint64_t source, uint64_t target) const {
     return susceptibility_transition_[getIndexSus(source, target)];
@@ -76,10 +72,6 @@ inline double* Susceptibles::GetSusceptibilityTransitionBegin(uint64_t group) co
 
 inline double Susceptibles::GetSusceptibilityCumulTransition(uint64_t group) const {
     return susceptibility_cumul_transition_[group];
-}
-
-inline double* Susceptibles::GetSusceptibilityCumulTransitionBegin() const {
-    return susceptibility_cumul_transition_;
 }
 
 
