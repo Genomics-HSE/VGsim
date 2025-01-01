@@ -32,5 +32,18 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         // Susceptibles
         .def( "set_immunity_transition", static_cast< void (Simulator::*)(double, uint64_t, uint64_t) > ( &Simulator::set_immunity_transition ), args("rate", "source_group", "target_group"))
         .def( "get_immunity_transition", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_immunity_transition ))
+
+        // Population pool
+        .def( "set_population_size", static_cast< void (Simulator::*)(uint64_t, uint64_t) > ( &Simulator::set_population_size ), args("size", "population"))
+        .def( "get_population_size", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_population_size ))
+        .def( "set_contact_density", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_contact_density ), args("value", "population"))
+        .def( "get_contact_density", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_contact_density ))
+        .def( "set_npi", static_cast< void (Simulator::*)(double, double, double, uint64_t) > ( &Simulator::set_npi ), args("after", "start", "end", "population"))
+        .def( "get_npi", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_npi ))
+        .def( "set_sampling_multiplier", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_sampling_multiplier ), args("multiplier", "source_group"))
+        .def( "get_sampling_multiplier", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_sampling_multiplier ))
+        .def( "set_migration_probability", static_cast< void (Simulator::*)(double, uint64_t, uint64_t) > ( &Simulator::set_migration_probability ), args("probability", "source_population", "target_population"))
+        .def( "get_migration_probability", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_migration_probability ))
+        .def( "check_migration_probability", static_cast< uint64_t (Simulator::*)() > ( &Simulator::check_migration_probability ))
     ;
 }

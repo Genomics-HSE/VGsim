@@ -18,13 +18,11 @@ void Population::SetParameters(uint64_t number_of_haplotypes, uint64_t number_of
     size_ = 0;
     number_of_haplotypes_ = number_of_haplotypes;
     number_of_susceptible_groups_ = number_of_susceptible_groups;
-    sampling_multiplier_ = 1.0;
     infected_ = new uint64_t[number_of_haplotypes];
     susceptibles_ = new uint64_t[number_of_susceptible_groups];
     infected_save_ = new uint64_t[number_of_haplotypes];
     susceptibles_save_ = new uint64_t[number_of_susceptible_groups];
-    lockdown_ = Lockdown(false, 1.0, 0.0, 1.0, 0.0);
-    SetSize(1'000'000);
+    lockdown_ = Lockdown(false, 1.0, 0.0, 1.0, 1.0);
 }
 
 inline void Population::NewInfections(uint64_t count, uint64_t haplotype, uint64_t group) {
@@ -96,14 +94,6 @@ inline uint64_t Population::GetInfected(uint64_t haplotype) const {
 
 inline uint64_t* Population::GetInfectedBegin() const {
     return infected_;
-}
-
-inline void Population::SetSamplingMultiplier(double sampling_multiplier) {
-    sampling_multiplier_ = sampling_multiplier;
-}
-
-inline double Population::GetSamplingMultiplier() const {
-    return sampling_multiplier_;
 }
 
 

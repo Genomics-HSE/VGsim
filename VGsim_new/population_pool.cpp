@@ -10,24 +10,28 @@ PopulationPool::PopulationPool(uint64_t number_of_populations, uint64_t number_o
     , number_of_populations_(number_of_populations)
     , number_of_susceptible_groups_(number_of_susceptible_groups)
     , infected_(0)
-    , susceptibles_(100'000 * number_of_populations_)
+    , susceptibles_(1'000'000 * number_of_populations_)
     , sizes_(new uint64_t[number_of_populations_])
     , infected_pop_(new uint64_t[number_of_populations_])
     , susceptibles_pop_(new uint64_t[number_of_populations_])
     , actual_sizes_(new double[number_of_populations_])
     , max_effective_migration_(new double[number_of_populations_])
+    , sampling_multiplier_(new double[number_of_populations_])
     , migration_probability_(new double[number_of_populations_ * number_of_populations])
     , effective_migration_probability_(new double[number_of_populations_ * number_of_populations])
     , multiplier_migration_probability_(new double[number_of_populations_ * number_of_populations_])
     , populations_(new Population[number_of_populations_]) {
+    uint64_t base_size = 1'000'000;
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         populations_[population].SetParameters(number_of_haplotypes_, number_of_susceptible_groups_);
-        actual_sizes_[population] = 100'000.0;
-        sizes_[population] = 100'000;
+        populations_[population].SetSize(base_size);
+        actual_sizes_[population] = base_size;
+        sizes_[population] = base_size;
         infected_pop_[population] = 0;
-        susceptibles_pop_[population] = 100'000;
+        susceptibles_pop_[population] = base_size;
+        sampling_multiplier_[population] = 1.0;
     }
-    double probability = 0.001;
+    double probability = 0.0;
     for (uint64_t source = 0; source < getNumberPopulations(); ++source) {
         for (uint64_t target = 0; target < getNumberPopulations(); ++target) {
             migration_probability_[getIndexPop(source, target)] = source == target ? 1.0 : probability;
@@ -42,6 +46,7 @@ PopulationPool::~PopulationPool() {
 
     delete[] actual_sizes_;
     delete[] max_effective_migration_;
+    delete[] sampling_multiplier_;
     delete[] migration_probability_;
     delete[] effective_migration_probability_;
     delete[] multiplier_migration_probability_;
@@ -67,7 +72,7 @@ void PopulationPool::Debug() {
     std::cout << std::endl;
     std::cout << "Sampling multiplier:";
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
-        std::cout << " " << populations_[population].GetSamplingMultiplier();
+        std::cout << " " << GetSamplingMultiplier(population);
     }
     std::cout << std::endl;
     std::cout << "Susceptibles population" << std::endl;
@@ -113,6 +118,120 @@ void PopulationPool::Debug() {
     }
     std::cout << std::endl;
     std::cout << std::endl;
+}
+
+void PopulationPool::set_population_size(uint64_t size, uint64_t population) {
+    sizes_[population] = size;
+    populations_[population].SetSize(size);
+}
+
+PyObject* PopulationPool::get_population_size() {
+    boost::python::list data;
+
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        data.append(boost::python::object(sizes_[population]));
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
+void PopulationPool::set_contact_density(double value, uint64_t population) {
+    populations_[population].SetContactDensityBefore(value);
+}
+
+PyObject* PopulationPool::get_contact_density() {
+    boost::python::list data;
+
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        data.append(boost::python::object(populations_[population].GetContactDensity()));
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
+void PopulationPool::set_npi(double after, double start, double end, uint64_t population) {
+    populations_[population].SetContactDensityAfter(after);
+    populations_[population].SetStart(start);
+    populations_[population].SetEnd(end);
+}
+
+PyObject* PopulationPool::get_npi() {
+    boost::python::list data;
+
+    boost::python::list str_data;
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        str_data.append(boost::python::object(populations_[population].GetContactDensityAfter()));
+    }
+    data.append(str_data);
+
+    boost::python::list str_data_2;
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        str_data_2.append(boost::python::object(populations_[population].GetStart()));
+    }
+    data.append(str_data_2);
+
+    boost::python::list str_data_3;
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        str_data_3.append(boost::python::object(populations_[population].GetEnd()));
+    }
+    data.append(str_data_3);
+
+    return boost::python::incref(data.ptr());
+}
+
+void PopulationPool::set_sampling_multiplier(double multiplier, uint64_t population) {
+    sampling_multiplier_[population] = multiplier;
+}
+
+PyObject* PopulationPool::get_sampling_multiplier() {
+    boost::python::list data;
+
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        data.append(boost::python::object(sampling_multiplier_[population]));
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
+void PopulationPool::set_migration_probability(double probability, uint64_t source_population, uint64_t target_population) {
+    migration_probability_[getIndexPop(source_population, target_population)] = probability;
+}
+
+PyObject* PopulationPool::get_migration_probability() {
+    boost::python::list data;
+
+    for (uint64_t source = 0; source < getNumberPopulations(); ++source) {
+        boost::python::list str_data;
+        for (uint64_t target = 0; target < getNumberPopulations(); ++target) {
+            str_data.append(boost::python::object(migration_probability_[getIndexPop(source, target)]));
+        }
+        data.append(str_data);
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
+uint64_t PopulationPool::check_migration_probability() {
+    for (uint64_t source = 0; source < getNumberPopulations(); ++source) {
+        double summa = 0.0;
+        migration_probability_[getIndexPop(source, source)] = 1.0;
+        for (uint64_t target = 0; target < getNumberPopulations(); ++target) {
+            if (source == target) {
+                continue;
+            }
+            summa += migration_probability_[getIndexPop(source, target)];
+            migration_probability_[getIndexPop(source, source)] -= migration_probability_[getIndexPop(source, target)];
+        }
+        if (summa > 1.0) {
+            return 1;
+        }
+    }
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        if (migration_probability_[getIndexPop(population, population)] <= 1e-15) {
+            return 2;
+        }
+    }
+    return 0;
 }
 
 
@@ -234,7 +353,7 @@ inline double PopulationPool::GetMultiplierMigrationProbability(uint64_t source,
 }
 
 inline double PopulationPool::GetSamplingMultiplier(uint64_t population) const {
-    return populations_[population].GetSamplingMultiplier();
+    return sampling_multiplier_[population];
 }
 
 inline double PopulationPool::GetActualSize(uint64_t population) const {

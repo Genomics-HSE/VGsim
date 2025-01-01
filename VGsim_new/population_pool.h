@@ -7,6 +7,18 @@ public:
     void Debug();
     void Update();
 
+    void set_population_size(uint64_t size, uint64_t population);
+    PyObject* get_population_size();
+    void set_contact_density(double value, uint64_t population);
+    PyObject* get_contact_density();
+    void set_npi(double after, double start, double end, uint64_t population);
+    PyObject* get_npi();
+    void set_sampling_multiplier(double multiplier, uint64_t population);
+    PyObject* get_sampling_multiplier();
+    void set_migration_probability(double probability, uint64_t source_population, uint64_t target_population);
+    PyObject* get_migration_probability();
+    uint64_t check_migration_probability();
+
     void SaveInfections();
     void FirstInfections();
     void Restart();
@@ -57,6 +69,7 @@ private:
 
     double* actual_sizes_;
     double* max_effective_migration_;
+    double* sampling_multiplier_;
     double* migration_probability_;
     double* effective_migration_probability_;
     double* multiplier_migration_probability_;

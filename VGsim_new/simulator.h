@@ -50,6 +50,19 @@ public:
     void set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group);
     PyObject* get_immunity_transition();
 
+    // Population pool
+    void set_population_size(uint64_t size, uint64_t population);
+    PyObject* get_population_size();
+    void set_contact_density(double value, uint64_t population);
+    PyObject* get_contact_density();
+    void set_npi(double after, double start, double end, uint64_t population);
+    PyObject* get_npi();
+    void set_sampling_multiplier(double multiplier, uint64_t population);
+    PyObject* get_sampling_multiplier();
+    void set_migration_probability(double probability, uint64_t source_population, uint64_t target_population);
+    PyObject* get_migration_probability();
+    uint64_t check_migration_probability();
+
 private:
     inline uint64_t getNumberSites() const;
     inline uint64_t getNumberHaplotypes() const;

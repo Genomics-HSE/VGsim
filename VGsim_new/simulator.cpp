@@ -138,6 +138,50 @@ PyObject* Simulator::get_immunity_transition() {
     return susceptibles_data_.get_immunity_transition();
 }
 
+void Simulator::set_population_size(uint64_t size, uint64_t population) {
+    pool_.set_population_size(size, population);
+}
+
+PyObject* Simulator::get_population_size() {
+    return pool_.get_population_size();
+}
+
+void Simulator::set_contact_density(double value, uint64_t population) {
+    pool_.set_contact_density(value, population);
+}
+
+PyObject* Simulator::get_contact_density() {
+    return pool_.get_contact_density();
+}
+
+void Simulator::set_npi(double after, double start, double end, uint64_t population) {
+    pool_.set_npi(after, start, end, population);
+}
+
+PyObject* Simulator::get_npi() {
+    return pool_.get_npi();
+}
+
+void Simulator::set_sampling_multiplier(double multiplier, uint64_t population) {
+    pool_.set_sampling_multiplier(multiplier, population);
+}
+
+PyObject* Simulator::get_sampling_multiplier() {
+    return pool_.get_sampling_multiplier();
+}
+
+void Simulator::set_migration_probability(double probability, uint64_t source_population, uint64_t target_population) {
+    pool_.set_migration_probability(probability, source_population, target_population);
+}
+
+PyObject* Simulator::get_migration_probability() {
+    return pool_.get_migration_probability();
+}
+
+uint64_t Simulator::check_migration_probability() {
+    return pool_.check_migration_probability();
+}
+
 
 inline uint64_t Simulator::getNumberSites() const {
     return numbers_.sites;

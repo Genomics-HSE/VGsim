@@ -396,159 +396,158 @@ def test_set_mutation_probabilities_err(probabilities, haplotype, mutation, erro
 #         model.set_mutation_position(mutation=mutation, position=position)
 
 
-# #POPULATION SIZES
-# @pytest.mark.parametrize('size, population, answer',
-#                         [(1000, None      , [1000, 1000, 1000, 1000]),
-#                          (1001, 2         , [1000000, 1000000, 1001, 1000000])])
-# def test_set_population_size(size, population, answer):
-#     model = Simulator(number_of_populations=4)
-#     model.set_population_size(size=size, population=population)
-#     assert_allclose(model.population_size, np.asarray(answer), atol=1e-14)
+#POPULATION SIZES
+@pytest.mark.parametrize('size, population, answer',
+                        [(1000, None      , [1000, 1000, 1000, 1000]),
+                         (1001, 2         , [1000000, 1000000, 1001, 1000000])])
+def test_set_population_size(size, population, answer):
+    model = Simulator(number_of_populations=4)
+    model.set_population_size(size=size, population=population)
+    assert_allclose(model.get_population_size(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('size , population, error     , text',
-#                         [(None , None      , TypeError , 'Incorrect type of population size. Type should be int.'),
-#                          (2.5  , None      , TypeError , 'Incorrect type of population size. Type should be int.'),
-#                          ('str', None      , TypeError , 'Incorrect type of population size. Type should be int.'),
-#                          (-1   , None      , ValueError, 'Incorrect value of population size. Value should be more 0.'),
-#                          (1000 , 1.5       , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          (1000 , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          (1000 , -2        , IndexError, 'There are no such population!'),
-#                          (1000 , 5         , IndexError, 'There are no such population!')])
-# def test_set_population_size_err(size, population, error, text):
-#     model = Simulator(number_of_populations=4)
-#     with pytest.raises(error, match=text):
-#         model.set_population_size(size=size, population=population)
-
-
-# #CONTACT DENSITY
-# @pytest.mark.parametrize('value, population, answer',
-#                         [(2    , None      , [2, 2, 2, 2]),
-#                          (3    , 2         , [1, 1, 3, 1]),
-#                          (2.5  , [2, 3]    , [1, 1, 2.5, 2.5])])
-# def test_set_contact_density(value, population, answer):
-#     model = Simulator(number_of_populations=4)
-#     model.set_contact_density(value=value, population=population)
-#     assert_allclose(model.contact_density, np.asarray(answer), atol=1e-14)
-
-# @pytest.mark.parametrize('value, population, error     , text',
-#                         [(None , None      , TypeError , 'Incorrect type of contact density. Type should be int.'),
-#                          ('str', None      , TypeError , 'Incorrect type of contact density. Type should be int.'),
-#                          (-1   , None      , ValueError, 'Incorrect value of contact density. Value should be more or equal 0.'),
-#                          (2    , 1.5       , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          (2    , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          (2    , -2        , IndexError, 'There are no such population!'),
-#                          (2    , 5         , IndexError, 'There are no such population!')])
-# def test_set_contact_density_err(value, population, error, text):
-#     model = Simulator(number_of_populations=4)
-#     with pytest.raises(error, match=text):
-#         model.set_contact_density(value=value, population=population)
+@pytest.mark.parametrize('size , population, error     , text',
+                        [(None , None      , TypeError , 'Incorrect type of population size. Type should be int.'),
+                         (2.5  , None      , TypeError , 'Incorrect type of population size. Type should be int.'),
+                         ('str', None      , TypeError , 'Incorrect type of population size. Type should be int.'),
+                         (-1   , None      , ValueError, 'Incorrect value of population size. Value should be more 0.'),
+                         (1000 , 1.5       , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         (1000 , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         (1000 , -2        , IndexError, 'There are no such population!'),
+                         (1000 , 5         , IndexError, 'There are no such population!')])
+def test_set_population_size_err(size, population, error, text):
+    model = Simulator(number_of_populations=4)
+    with pytest.raises(error, match=text):
+        model.set_population_size(size=size, population=population)
 
 
-# #SAMPLING MULTIPLIER
-# @pytest.mark.parametrize('multiplier, population, answer',
-#                         [(2         , None      , [2, 2, 2, 2]),
-#                          (3         , 2         , [1, 1, 3, 1]),
-#                          (2.5       , [2, 3]    , [1, 1, 2.5, 2.5])])
-# def test_set_sampling_multiplier(multiplier, population, answer):
-#     model = Simulator(number_of_populations=4)
-#     model.set_sampling_multiplier(multiplier=multiplier, population=population)
-#     assert_allclose(model.sampling_multiplier, np.asarray(answer), atol=1e-14)
+#CONTACT DENSITY
+@pytest.mark.parametrize('value, population, answer',
+                        [(2    , None      , [2, 2, 2, 2]),
+                         (3    , 2         , [1, 1, 3, 1]),
+                         (2.5  , [2, 3]    , [1, 1, 2.5, 2.5])])
+def test_set_contact_density(value, population, answer):
+    model = Simulator(number_of_populations=4)
+    model.set_contact_density(value=value, population=population)
+    assert_allclose(model.get_contact_density(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('multiplier, population, error     , text',
-#                         [(None      , None      , TypeError , 'Incorrect type of sampling multiplier. Type should be int.'),
-#                          ('str'     , None      , TypeError , 'Incorrect type of sampling multiplier. Type should be int.'),
-#                          (-1        , None      , ValueError, 'Incorrect value of sampling multiplier. Value should be more or equal 0.'),
-#                          (2         , 1.5       , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          (2         , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          (2         , -2        , IndexError, 'There are no such population!'),
-#                          (2         , 5         , IndexError, 'There are no such population!')])
-# def test_set_sampling_multiplier_err(multiplier, population, error, text):
-#     model = Simulator(number_of_populations=4)
-#     with pytest.raises(error, match=text):
-#         model.set_sampling_multiplier(multiplier=multiplier, population=population)
-
-# #NPI
-# @pytest.mark.parametrize('parameters   , population, answer',
-#                         [([2, 0.7, 0.3], None      , [[2, 2, 2, 2], [0.7, 0.7, 0.7, 0.7], [0.3, 0.3, 0.3, 0.3]]),
-#                          ([2, 0.7, 0.3], 2         , [[0, 0, 2, 0], [1.0, 1.0, 0.7, 1.0], [1.0, 1.0, 0.3, 1.0]]),
-#                          ([2, 0.7, 0.3], [2, 3]    , [[0, 0, 2, 2], [1.0, 1.0, 0.7, 0.7], [1.0, 1.0, 0.3, 0.3]])])
-# def test_set_npi(parameters, population, answer):
-#     model = Simulator(number_of_populations=4)
-#     model.set_npi(parameters=parameters, population=population)
-#     assert_allclose(model.npi, np.asarray(answer), atol=1e-14)
-
-# @pytest.mark.parametrize('parameters        , population, error     , text',
-#                         [(None              , None      , TypeError , 'Incorrect type of npi parameters. Type should be list.'),
-#                          ('str'             , None      , TypeError , 'Incorrect type of npi parameters. Type should be list.'),
-#                          ([2, 0.5, 0.5, 0.5], None      , ValueError, 'Incorrect length of npi parameters. Length should be equal 3.'),
-#                          ([None, 0.5, 0.5]  , None      , TypeError , 'Incorrect type of first npi parameter. Type should be int or float.'),
-#                          (['str', 0.5, 0.5] , None      , TypeError , 'Incorrect type of first npi parameter. Type should be int or float.'),
-#                          ([-2, 0.5, 0.5]    , None      , ValueError, 'Incorrect value of first npi parameter. Value should be more or equal 0.'),
-#                          ([2, None, 0.5]    , None      , TypeError , 'Incorrect type of second npi parameter. Type should be int or float.'),
-#                          ([2, 'str', 0.5]   , None      , TypeError , 'Incorrect type of second npi parameter. Type should be int or float.'),
-#                          ([2, -0.2, 0.5]    , None      , ValueError, 'Incorrect value of second npi parameter. Value should be more or equal 0 and equal or less 1.'),
-#                          ([2, 1.1, 0.5]     , None      , ValueError, 'Incorrect value of second npi parameter. Value should be more or equal 0 and equal or less 1.'),
-#                          ([2, 0.5, None]    , None      , TypeError , 'Incorrect type of third npi parameter. Type should be int or float.'),
-#                          ([2, 0.5, 'str']   , None      , TypeError , 'Incorrect type of third npi parameter. Type should be int or float.'),
-#                          ([2, 0.5, -0.2]    , None      , ValueError, 'Incorrect value of third npi parameter. Value should be more or equal 0 and equal or less 1.'),
-#                          ([2, 0.5, 1.2]     , None      , ValueError, 'Incorrect value of third npi parameter. Value should be more or equal 0 and equal or less 1.'),
-#                          ([2, 0.3, 0.3]     , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
-#                          ([2, 0.3, 0.3]     , -1        , IndexError, 'There are no such population!'),
-#                          ([2, 0.3, 0.3]     , 4         , IndexError, 'There are no such population!')])
-# def test_set_npi_err(parameters, population, error, text):
-#     model = Simulator(number_of_populations=4)
-#     with pytest.raises(error, match=text):
-#         model.set_npi(parameters=parameters, population=population)
+@pytest.mark.parametrize('value, population, error     , text',
+                        [(None , None      , TypeError , 'Incorrect type of contact density. Type should be int.'),
+                         ('str', None      , TypeError , 'Incorrect type of contact density. Type should be int.'),
+                         (-1   , None      , ValueError, 'Incorrect value of contact density. Value should be more or equal 0.'),
+                         (2    , 1.5       , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         (2    , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         (2    , -2        , IndexError, 'There are no such population!'),
+                         (2    , 5         , IndexError, 'There are no such population!')])
+def test_set_contact_density_err(value, population, error, text):
+    model = Simulator(number_of_populations=4)
+    with pytest.raises(error, match=text):
+        model.set_contact_density(value=value, population=population)
 
 
-# #MIGRATION PROBABILITY
-# @pytest.mark.parametrize('probability, source, target, answer',
-#                         [(0.1        , None  , None  , [[0.7, 0.1, 0.1, 0.1], [0.1, 0.7, 0.1, 0.1], [0.1, 0.1, 0.7, 0.1], [0.1, 0.1, 0.1, 0.7]]),
-#                          (0.2        , 2     , None  , [[1, 0, 0, 0], [0, 1, 0, 0], [0.2, 0.2, 0.4, 0.2], [0, 0, 0, 1]]),
-#                          (0.3        , None  , 3     , [[0.7, 0, 0, 0.3], [0, 0.7, 0, 0.3], [0, 0, 0.7, 0.3], [0, 0, 0, 1]]),
-#                          (0.25       , 1     , 2     , [[1, 0, 0, 0], [0, 0.75, 0.25, 0], [0, 0, 1, 0], [0, 0, 0, 1]])])
-# def test_set_migration_probability(probability, source, target, answer):
-#     model = Simulator(number_of_populations=4)
-#     model.set_migration_probability(probability=probability, source=source, target=target)
-#     assert_allclose(model.migration_probability, np.asarray(answer), atol=1e-14)
+#SAMPLING MULTIPLIER
+@pytest.mark.parametrize('multiplier, population, answer',
+                        [(2         , None      , [2, 2, 2, 2]),
+                         (3         , 2         , [1, 1, 3, 1]),
+                         (2.5       , [2, 3]    , [1, 1, 2.5, 2.5])])
+def test_set_sampling_multiplier(multiplier, population, answer):
+    model = Simulator(number_of_populations=4)
+    model.set_sampling_multiplier(multiplier=multiplier, population=population)
+    assert_allclose(model.get_sampling_multiplier(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('probability, source, target, error      , text',
-#                         [(None       , None  , None  , TypeError  , 'Incorrect type of migration probability. Type should be int or float.'),
-#                          ('str'      , None  , None  , TypeError  , 'Incorrect type of migration probability. Type should be int or float.'),
-#                          (-0.1       , None  , None  , ValueError , 'Incorrect value of migration probability. Value should be more or equal 0 and equal or less 1.'),
-#                          (0.4        , None  , None  , ValueError , 'Incorrect the sum of migration probabilities. The sum of migration probabilities from each population should be equal or less 1.'),
-#                          (1.0 / 3    , None  , None  , ValueError , 'Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.'),
-#                          (0.1        , 'str' , None  , TypeError  , 'Incorrect type of population. Type should be int or None.'),
-#                          (0.1        , -1    , None  , IndexError , 'There are no such population!'),
-#                          (0.1        , 4     , None  , IndexError , 'There are no such population!'),
-#                          (0.1        , None  , 'str' , TypeError  , 'Incorrect type of population. Type should be int or None.'),
-#                          (0.1        , None  , -1    , IndexError , 'There are no such population!'),
-#                          (0.1        , None  , 4     , IndexError , 'There are no such population!')])
-# def test_set_migration_probability_err(probability, source, target, error, text):
-#     model = Simulator(number_of_populations=4)
-#     with pytest.raises(error, match=text):
-#         model.set_migration_probability(probability=probability, source=source, target=target)
+@pytest.mark.parametrize('multiplier, population, error     , text',
+                        [(None      , None      , TypeError , 'Incorrect type of sampling multiplier. Type should be int.'),
+                         ('str'     , None      , TypeError , 'Incorrect type of sampling multiplier. Type should be int.'),
+                         (-1        , None      , ValueError, 'Incorrect value of sampling multiplier. Value should be more or equal 0.'),
+                         (2         , 1.5       , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         (2         , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         (2         , -2        , IndexError, 'There are no such population!'),
+                         (2         , 5         , IndexError, 'There are no such population!')])
+def test_set_sampling_multiplier_err(multiplier, population, error, text):
+    model = Simulator(number_of_populations=4)
+    with pytest.raises(error, match=text):
+        model.set_sampling_multiplier(multiplier=multiplier, population=population)
+
+#NPI
+@pytest.mark.parametrize('parameters   , population, answer',
+                        [([2, 0.7, 0.3], None      , [[2, 2, 2, 2], [0.7, 0.7, 0.7, 0.7], [0.3, 0.3, 0.3, 0.3]]),
+                         ([2, 0.7, 0.3], 2         , [[0, 0, 2, 0], [1.0, 1.0, 0.7, 1.0], [1.0, 1.0, 0.3, 1.0]]),
+                         ([2, 0.7, 0.3], [2, 3]    , [[0, 0, 2, 2], [1.0, 1.0, 0.7, 0.7], [1.0, 1.0, 0.3, 0.3]])])
+def test_set_npi(parameters, population, answer):
+    model = Simulator(number_of_populations=4)
+    model.set_npi(parameters=parameters, population=population)
+    assert_allclose(model.get_npi(), np.asarray(answer), atol=1e-14)
+
+@pytest.mark.parametrize('parameters        , population, error     , text',
+                        [(None              , None      , TypeError , 'Incorrect type of npi parameters. Type should be list.'),
+                         ('str'             , None      , TypeError , 'Incorrect type of npi parameters. Type should be list.'),
+                         ([2, 0.5, 0.5, 0.5], None      , ValueError, 'Incorrect length of npi parameters. Length should be equal 3.'),
+                         ([None, 0.5, 0.5]  , None      , TypeError , 'Incorrect type of first npi parameter. Type should be int or float.'),
+                         (['str', 0.5, 0.5] , None      , TypeError , 'Incorrect type of first npi parameter. Type should be int or float.'),
+                         ([-2, 0.5, 0.5]    , None      , ValueError, 'Incorrect value of first npi parameter. Value should be more or equal 0.'),
+                         ([2, None, 0.5]    , None      , TypeError , 'Incorrect type of second npi parameter. Type should be int or float.'),
+                         ([2, 'str', 0.5]   , None      , TypeError , 'Incorrect type of second npi parameter. Type should be int or float.'),
+                         ([2, -0.2, 0.5]    , None      , ValueError, 'Incorrect value of second npi parameter. Value should be more or equal 0 and equal or less 1.'),
+                         ([2, 1.1, 0.5]     , None      , ValueError, 'Incorrect value of second npi parameter. Value should be more or equal 0 and equal or less 1.'),
+                         ([2, 0.5, None]    , None      , TypeError , 'Incorrect type of third npi parameter. Type should be int or float.'),
+                         ([2, 0.5, 'str']   , None      , TypeError , 'Incorrect type of third npi parameter. Type should be int or float.'),
+                         ([2, 0.5, -0.2]    , None      , ValueError, 'Incorrect value of third npi parameter. Value should be more or equal 0 and equal or less 1.'),
+                         ([2, 0.5, 1.2]     , None      , ValueError, 'Incorrect value of third npi parameter. Value should be more or equal 0 and equal or less 1.'),
+                         ([2, 0.3, 0.3]     , 'str'     , TypeError , 'Incorrect type of population. Type should be int or None.'),
+                         ([2, 0.3, 0.3]     , -1        , IndexError, 'There are no such population!'),
+                         ([2, 0.3, 0.3]     , 4         , IndexError, 'There are no such population!')])
+def test_set_npi_err(parameters, population, error, text):
+    model = Simulator(number_of_populations=4)
+    with pytest.raises(error, match=text):
+        model.set_npi(parameters=parameters, population=population)
 
 
-# #TOTAL MIGRATION PROBABILITY
-# @pytest.mark.parametrize('total_probability, answer',
-#                         [(0.3              , [[0.7, 0.1, 0.1, 0.1], [0.1, 0.7, 0.1, 0.1], [0.1, 0.1, 0.7, 0.1], [0.1, 0.1, 0.1, 0.7]])])
-# def test_set_total_migration_probability(total_probability, answer):
-#     model = Simulator(number_of_populations=4)
-#     model.set_total_migration_probability(total_probability=total_probability)
-#     assert_allclose(model.migration_probability, np.asarray(answer), atol=1e-14)
+#MIGRATION PROBABILITY
+@pytest.mark.parametrize('probability, source, target, answer',
+                        [(0.1        , None  , None  , [[0.7, 0.1, 0.1, 0.1], [0.1, 0.7, 0.1, 0.1], [0.1, 0.1, 0.7, 0.1], [0.1, 0.1, 0.1, 0.7]]),
+                         (0.2        , 2     , None  , [[1, 0, 0, 0], [0, 1, 0, 0], [0.2, 0.2, 0.4, 0.2], [0, 0, 0, 1]]),
+                         (0.3        , None  , 3     , [[0.7, 0, 0, 0.3], [0, 0.7, 0, 0.3], [0, 0, 0.7, 0.3], [0, 0, 0, 1]]),
+                         (0.25       , 1     , 2     , [[1, 0, 0, 0], [0, 0.75, 0.25, 0], [0, 0, 1, 0], [0, 0, 0, 1]])])
+def test_set_migration_probability(probability, source, target, answer):
+    model = Simulator(number_of_populations=4)
+    model.set_migration_probability(probability=probability, source=source, target=target)
+    assert_allclose(model.get_migration_probability(), np.asarray(answer), atol=1e-14)
 
-# @pytest.mark.parametrize('total_probability, error     , text',
-#                         [(None             , TypeError , 'Incorrect type of total migration probability. Type should be int or float.'),
-#                          ('str'            , TypeError , 'Incorrect type of total migration probability. Type should be int or float.'),
-#                          (-0.1             , ValueError, 'Incorrect value of total migration probability. Value should be more or equal 0 and equal or less 1.'),
-#                          (1.2              , ValueError, 'Incorrect value of total migration probability. Value should be more or equal 0 and equal or less 1.'),
-#                          (1.0              , ValueError, 'Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.')])
-# def test_set_total_migration_probability_err(total_probability, error, text):
-#     model = Simulator(number_of_populations=4)
-#     with pytest.raises(error, match=text):
-#         model.set_total_migration_probability(total_probability=total_probability)
+@pytest.mark.parametrize('probability, source, target, error      , text',
+                        [(None       , None  , None  , TypeError  , 'Incorrect type of migration probability. Type should be int or float.'),
+                         ('str'      , None  , None  , TypeError  , 'Incorrect type of migration probability. Type should be int or float.'),
+                         (-0.1       , None  , None  , ValueError , 'Incorrect value of migration probability. Value should be more or equal 0 and equal or less 1.'),
+                         (0.4        , None  , None  , ValueError , 'Incorrect the sum of migration probabilities. The sum of migration probabilities from each population should be equal or less 1.'),
+                         (1.0 / 3    , None  , None  , ValueError , 'Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.'),
+                         (0.1        , 'str' , None  , TypeError  , 'Incorrect type of population. Type should be int or None.'),
+                         (0.1        , -1    , None  , IndexError , 'There are no such population!'),
+                         (0.1        , 4     , None  , IndexError , 'There are no such population!'),
+                         (0.1        , None  , 'str' , TypeError  , 'Incorrect type of population. Type should be int or None.'),
+                         (0.1        , None  , -1    , IndexError , 'There are no such population!'),
+                         (0.1        , None  , 4     , IndexError , 'There are no such population!')])
+def test_set_migration_probability_err(probability, source, target, error, text):
+    model = Simulator(number_of_populations=4)
+    with pytest.raises(error, match=text):
+        model.set_migration_probability(probability=probability, source=source, target=target)
 
+
+#TOTAL MIGRATION PROBABILITY
+@pytest.mark.parametrize('total_probability, answer',
+                        [(0.3              , [[0.7, 0.1, 0.1, 0.1], [0.1, 0.7, 0.1, 0.1], [0.1, 0.1, 0.7, 0.1], [0.1, 0.1, 0.1, 0.7]])])
+def test_set_total_migration_probability(total_probability, answer):
+    model = Simulator(number_of_populations=4)
+    model.set_total_migration_probability(total_probability=total_probability)
+    assert_allclose(model.get_migration_probability(), np.asarray(answer), atol=1e-14)
+
+@pytest.mark.parametrize('total_probability, error     , text',
+                        [(None             , TypeError , 'Incorrect type of total migration probability. Type should be int or float.'),
+                         ('str'            , TypeError , 'Incorrect type of total migration probability. Type should be int or float.'),
+                         (-0.1             , ValueError, 'Incorrect value of total migration probability. Value should be more or equal 0 and equal or less 1.'),
+                         (1.2              , ValueError, 'Incorrect value of total migration probability. Value should be more or equal 0 and equal or less 1.'),
+                         (1.0              , ValueError, 'Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.')])
+def test_set_total_migration_probability_err(total_probability, error, text):
+    model = Simulator(number_of_populations=4)
+    with pytest.raises(error, match=text):
+        model.set_total_migration_probability(total_probability=total_probability)
 
 
 #SUSCEPTIBILITY GROUP

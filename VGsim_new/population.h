@@ -21,8 +21,6 @@ public:
     inline uint64_t* GetSusceptiblesBegin() const;
     inline uint64_t GetInfected(uint64_t haplotype) const;
     inline uint64_t* GetInfectedBegin() const;
-    inline void SetSamplingMultiplier(double sampling_multiplier);
-    inline double GetSamplingMultiplier() const;
 
     // Lockdown
     inline void Switch();
@@ -45,7 +43,6 @@ private:
     uint64_t size_;
     uint64_t number_of_haplotypes_;
     uint64_t number_of_susceptible_groups_;
-    double sampling_multiplier_;
     uint64_t* susceptibles_;
     uint64_t* infected_;
     uint64_t* susceptibles_save_;
