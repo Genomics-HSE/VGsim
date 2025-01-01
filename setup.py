@@ -7,7 +7,7 @@ python_version = sys.version_info
 boost_version = f'boost_python{python_version.major}{python_version.minor}'
 
 example_module = Extension('source_VGsim',
-                            sources=['src/wrap.cpp'],
+                            sources=['VGsim_new/wrap.cpp'],
                             include_dirs=[boost_include],
                             library_dirs=[boost_library],
                             libraries=[boost_version],
