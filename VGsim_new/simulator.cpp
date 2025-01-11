@@ -74,6 +74,36 @@ PyObject* Simulator::get_flat_chain() {
     return boost::python::incref(ret.ptr());
 }
 
+PyObject* Simulator::export_chain_events() {
+    boost::python::list ret;
+
+    boost::python::list types;
+    boost::python::list haplotypes;
+    boost::python::list populations;
+    boost::python::list newHaplotypes;
+    boost::python::list newPopulations;
+    boost::python::list times;
+
+    for (uint64_t index = 0; index < chain_.GetSize(); ++index) {
+        Event event = chain_.GetEvent(index);
+        types.append(boost::python::object(static_cast<uint64_t>(event.type)));
+        haplotypes.append(boost::python::object(event.parameter1));
+        populations.append(boost::python::object(event.parameter2));
+        newHaplotypes.append(boost::python::object(event.parameter3));
+        newPopulations.append(boost::python::object(event.parameter4));
+        times.append(boost::python::object(event.time));
+    }
+
+    ret.append(times);
+    ret.append(types);
+    ret.append(haplotypes);
+    ret.append(populations);
+    ret.append(newHaplotypes);
+    ret.append(newPopulations);
+
+    return boost::python::incref(ret.ptr());
+}
+
 void Simulator::set_susceptibility_group(uint64_t group, uint64_t haplotype) {
     infectious_data_.set_susceptibility_group(group, haplotype);
 }

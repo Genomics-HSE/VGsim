@@ -15,6 +15,7 @@ struct Event {
     uint64_t parameter2;
     uint64_t parameter3;
     uint64_t parameter4;
+    double time = 0.0;
 };
 
 struct Multievent : public Event {
@@ -53,16 +54,15 @@ private:
     
     Numbers numbers_;
 
-    double* times_;
     Event* events_;
     Multievent* multievents_;
 };
 
-void DebugEvent(double time, Event& event);
-void DebugTransmission(double time, Event& event);
-void DebugRecovery(double time, Event& event);
-void DebugSampling(double time, Event& event);
-void DebugMutation(double time, Event& event);
-void DebugMigration(double time, Event& event);
-void DebugSuscchange(double time, Event& event);
-void DebugMultitype(double time, Event& event);
+void DebugEvent(Event& event);
+void DebugTransmission(Event& event);
+void DebugRecovery(Event& event);
+void DebugSampling(Event& event);
+void DebugMutation(Event& event);
+void DebugMigration(Event& event);
+void DebugSuscchange(Event& event);
+void DebugMultitype(Event& event);

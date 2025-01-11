@@ -29,6 +29,7 @@ public:
     void Genealogy();
 
     PyObject* get_flat_chain();
+    PyObject* export_chain_events();
 
     // Infectious
     void set_susceptibility_group(uint64_t group, uint64_t haplotype);

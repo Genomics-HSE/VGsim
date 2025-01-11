@@ -12,6 +12,7 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         .def( "Debug", static_cast< void (Simulator::*)() > ( &Simulator::Debug ))
 
         .def( "get_flat_chain", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_flat_chain ))
+        .def( "export_chain_events", static_cast< PyObject* (Simulator::*)() >( &Simulator::export_chain_events ))
 
         // Infectious
         .def( "set_susceptibility_group", static_cast< void (Simulator::*)(uint64_t, uint64_t) > ( &Simulator::set_susceptibility_group ), args("group", "haplotype"))

@@ -1,5 +1,6 @@
 from random import randrange
 import sys
+import numpy as np
 
 import source_VGsim
 
@@ -27,6 +28,10 @@ class Simulator:
 
     def get_flat_chain(self):
         return self._simulator.get_flat_chain()
+
+    def export_chain_events(self, file_name="chain_events"):
+        chain = self._simulator.export_chain_events()
+        np.save(file_name, chain)
 
 
     def get_number_of_sites(self):

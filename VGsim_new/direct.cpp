@@ -265,7 +265,7 @@ void Direct::Transmission(uint64_t population, uint64_t haplotype) {
 
     UpdateRates(population, true, true, true);
     counters_->AddTransmission(1);
-    chain_->AddEvent({TypeEvents::kTRANSMISSION, haplotype, population, group, 0});
+    chain_->AddEvent({TypeEvents::kTRANSMISSION, haplotype, population, group, getNumberHaplotypes()});
 }
 
 void Direct::Recovery(uint64_t population, uint64_t haplotype) {

@@ -8,13 +8,11 @@ Chain::Chain(Numbers numbers)
     , pointer_multievents_(0)
     , current_time_(0.0)
     , numbers_(numbers)
-    , times_(new double[size_])
     , events_(new Event[size_])
     , multievents_(new Multievent[size_]) {
 }
 
 Chain::~Chain() {
-    delete[] times_;
     delete[] events_;
     delete[] multievents_;
 }
@@ -24,19 +22,15 @@ void Chain::Reserve(uint64_t add_size) {
     if (new_memory <= 0) {
         return;
     }
-    double* new_times = new double[size_ + static_cast<uint64_t>(new_memory)];
     Event* new_events = new Event[size_ + static_cast<uint64_t>(new_memory)];
     Multievent* new_multievents = new Multievent[(size_ + static_cast<uint64_t>(new_memory)) * calculateNumberEvents()];
     for (uint64_t i = 0; i < size_; ++i) {
-        new_times[i] = times_[i];
         new_events[i] = events_[i];
         new_multievents[i] = multievents_[i];
     }
-    delete[] times_;
     delete[] events_;
     delete[] multievents_;
     size_ += static_cast<uint64_t>(new_memory);
-    times_ = new_times;
     events_ = new_events;
     multievents_ = new_multievents;
 }
@@ -45,10 +39,8 @@ void Chain::Restart() {
     pointer_ = 0;
     size_ = 0;
     current_time_ = 0.0;
-    delete[] times_;
     delete[] events_;
     delete[] multievents_;
-    times_ = new double[size_];
     events_ = new Event[size_];
     multievents_ = new Multievent[size_ * calculateNumberEvents()];
 }
@@ -58,7 +50,7 @@ void Chain::AddTime(double time) {
 }
 
 void Chain::AddEvent(Event event) {
-    times_[pointer_] = current_time_;
+    event.time = current_time_;
     events_[pointer_++] = event;
 }
 
@@ -81,7 +73,7 @@ void Chain::Debug() {
                   << events_[i].parameter2 << ", "
                   << events_[i].parameter3 << ", "
                   << events_[i].parameter4 << ", "
-                  << times_[i] << std::endl;
+                  << events_[i].time << std::endl;
         // DebugEvent(times_[i], events_[i]);
     }
     std::cout << std::endl;
@@ -92,7 +84,7 @@ double Chain::GetLastTime() {
 }
 
 void Chain::LastTime() {
-    std::cout << "Epidemic time: " << times_[pointer_ - 1] << std::endl;
+    std::cout << "Epidemic time: " << current_time_ << std::endl;
 }
 
 uint64_t Chain::GetSize() {
@@ -104,7 +96,7 @@ uint64_t Chain::GetLastMultievent() {
 }
 
 double Chain::GetTime(uint64_t index) {
-    return times_[index];
+    return events_[index].time;
 }
 
 Event Chain::GetEvent(uint64_t index) {
@@ -125,71 +117,71 @@ uint64_t Chain::calculateNumberEvents() {
     return transmission + recovery + sampling + mutation + migration + suscchange;
 }
 
-void DebugEvent(double time, Event& event) {
+void DebugEvent(Event& event) {
     switch (event.type) {
-        case TypeEvents::kTRANSMISSION: DebugTransmission(time, event); break;
-        case TypeEvents::kRECOVERY: DebugRecovery(time, event); break;
-        case TypeEvents::kSAMPLING: DebugSampling(time, event); break;
-        case TypeEvents::kMUTATION: DebugMutation(time, event); break;
-        case TypeEvents::kMIGRATION: DebugMigration(time, event); break;
-        case TypeEvents::kSUSCCHANGE: DebugSuscchange(time, event); break;
-        case TypeEvents::kMULTITYPE: DebugMultitype(time, event); break;
+        case TypeEvents::kTRANSMISSION: DebugTransmission(event); break;
+        case TypeEvents::kRECOVERY: DebugRecovery(event); break;
+        case TypeEvents::kSAMPLING: DebugSampling(event); break;
+        case TypeEvents::kMUTATION: DebugMutation(event); break;
+        case TypeEvents::kMIGRATION: DebugMigration(event); break;
+        case TypeEvents::kSUSCCHANGE: DebugSuscchange(event); break;
+        case TypeEvents::kMULTITYPE: DebugMultitype(event); break;
     }
 }
 
-void DebugTransmission(double time, Event& event) {
+void DebugTransmission(Event& event) {
     std::cout << "Transmission, haplotype - " << event.parameter1
               << ", population - " << event.parameter2
               << ", group - " << event.parameter3
               << ", second haplotype - " << event.parameter4
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
 
-void DebugRecovery(double time, Event& event) {
+void DebugRecovery(Event& event) {
     std::cout << "Recovery, haplotype - " << event.parameter1
               << ", population - " << event.parameter2
               << ", group - " << event.parameter3
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
 
-void DebugSampling(double time, Event& event) {
+void DebugSampling(Event& event) {
     std::cout << "Sampling, haplotype - " << event.parameter1
               << ", population - " << event.parameter2
               << ", group - " << event.parameter3
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
 
-void DebugMutation(double time, Event& event) {
+void DebugMutation(Event& event) {
     std::cout << "Mutation, source haplotype - " << event.parameter1
               << ", population - " << event.parameter2
               << ", target haplotype - " << event.parameter3
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
 
-void DebugMigration(double time, Event& event) {
+void DebugMigration(Event& event) {
     std::cout << "Migration, haplotype - " << event.parameter1
               << ", source population - " << event.parameter2
               << ", group - " << event.parameter3
               << ", target population - " << event.parameter4
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
 
-void DebugSuscchange(double time, Event& event) {
+void DebugSuscchange(Event& event) {
     std::cout << "Suscchange, source group - " << event.parameter1
               << ", population - " << event.parameter2
               << ", target group - " << event.parameter3
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
 
-void DebugMultitype(double time, Event& event) {
+void DebugMultitype(Event& event) {
     std::cout << "Multitype, start - " << event.parameter1
               << ", end - " << event.parameter2
-              << ", time - " << time
+              << ", time - " << event.time
               << "\n";
 }
