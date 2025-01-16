@@ -4,8 +4,8 @@ enum class TypeEvents {kTRANSMISSION = 0,
                        kRECOVERY,
                        kSAMPLING,
                        kMUTATION,
-                       kMIGRATION,
                        kSUSCCHANGE,
+                       kMIGRATION,
                        kMULTITYPE
                       };
 

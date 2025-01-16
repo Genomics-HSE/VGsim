@@ -311,6 +311,7 @@ void Direct::Migration() {
         chain_->AddEvent({TypeEvents::kMIGRATION, haplotype, source_population, group, target_population});
     } else {
         counters_->AddMigrationReject(1);
+        stopper_->RevertIteration();
     }
 }
 

@@ -55,3 +55,7 @@ bool ConditionStop::CheckRestart() {
             && current_iterations_ < 100
             && current_attempts_ != attempts_;
 }
+
+void ConditionStop::RevertIteration() {
+    --current_iterations_;
+}

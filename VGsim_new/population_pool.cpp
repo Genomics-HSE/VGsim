@@ -122,6 +122,7 @@ void PopulationPool::Debug() {
 
 void PopulationPool::set_population_size(uint64_t size, uint64_t population) {
     sizes_[population] = size;
+    susceptibles_pop_[population] = size;
     populations_[population].SetSize(size);
 }
 

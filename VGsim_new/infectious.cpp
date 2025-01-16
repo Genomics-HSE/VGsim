@@ -55,6 +55,7 @@ Infectious::~Infectious() {
 void Infectious::Debug() {
     std::cout << "INFECTIOUS" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
+    std::cout << "Max effective transmission: " << max_effective_transmission_ << std::endl;
     PrintArray1nd("Susceptibility types:", susceptibility_groups_, getNumberHaplotypes());
     PrintArray1nd("Transmission rates:", transmission_rates_, getNumberHaplotypes());
     PrintArray1nd("Recovery rates:", recovery_rates_, getNumberHaplotypes());

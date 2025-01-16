@@ -15,6 +15,8 @@ public:
     bool CheckIteration();
     bool CheckRestart();
 
+    void RevertIteration();
+
 private:
     uint64_t attempts_;
     uint64_t sampling_;

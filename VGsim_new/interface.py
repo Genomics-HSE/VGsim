@@ -157,7 +157,7 @@ class Simulator:
     def get_mutation_rate(self):
         return self._simulator.get_mutation_rate()
 
-    def set_mutation_probabilities(self, probabilities, haplotype, mutation):
+    def set_mutation_probabilities(self, probabilities, haplotype=None, mutation=None):
         """
         This method allows setting the weights for each single nucleotide substitution (given the mutation happened).
 
