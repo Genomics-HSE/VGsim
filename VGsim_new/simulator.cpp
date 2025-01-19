@@ -55,7 +55,7 @@ void Simulator::simulate(uint64_t iterations, uint64_t sampling, double epidemic
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
 }
 
-void Simulator::Genealogy() {
+void Simulator::genealogy() {
     arg_.CalculateGenealogy();
 }
 
@@ -72,6 +72,22 @@ PyObject* Simulator::get_flat_chain() {
     }
 
     return boost::python::incref(ret.ptr());
+}
+
+boost::python::tuple Simulator::get_tree() {
+    std::vector<double> time_ = arg_.get_time();
+    boost::python::list times;
+    for (const double & time : time_) {
+        times.append(boost::python::object(time));
+    }
+
+    std::vector<int64_t> tree_ = arg_.get_tree();
+    boost::python::list tree;
+    for (const int64_t & node : tree_) {
+        tree.append(boost::python::object(node));
+    }
+
+    return boost::python::make_tuple(tree, times);
 }
 
 PyObject* Simulator::export_chain_events() {

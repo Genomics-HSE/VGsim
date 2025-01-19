@@ -292,6 +292,14 @@ void ARG::Debug() {
     std::cout << std::endl;
 }
 
+std::vector<double> ARG::get_time() {
+    return time_;
+}
+
+std::vector<int64_t> ARG::get_tree() {
+    return tree_;
+}
+
 void ARG::restart() {
     uint64_t countSampling = counters_->GetSampling();
     time_.resize(0);

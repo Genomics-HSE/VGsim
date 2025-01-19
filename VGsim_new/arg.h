@@ -12,6 +12,9 @@ public:
 
     void Debug();
 
+    std::vector<double> get_time();
+    std::vector<int64_t> get_tree();
+
     // void printTree() {
     //     for (uint64_t index = 0; index < tree_.size(); ++index) {
     //         std::cout << tree_[index] << " ";

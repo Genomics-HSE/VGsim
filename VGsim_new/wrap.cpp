@@ -8,10 +8,11 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
     class_<Simulator>( "Simulator" )
         .def( init<uint64_t,uint64_t,uint64_t,uint64_t>( args( "number_of_sites", "number_of_populations", "number_of_susceptible_groups", "seed" ) ) )
         .def( "simulate", static_cast< void (Simulator::*)(uint64_t, uint64_t, double, std::string, uint64_t) >( &Simulator::simulate ), args("iterations", "sampling", "epidemic_time", "type", "number_attempts"))
-        .def( "Genealogy", static_cast< void (Simulator::*)() > ( &Simulator::Genealogy ))
+        .def( "genealogy", static_cast< void (Simulator::*)() > ( &Simulator::genealogy ))
         .def( "Debug", static_cast< void (Simulator::*)() > ( &Simulator::Debug ))
 
         .def( "get_flat_chain", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_flat_chain ))
+        .def( "get_tree", static_cast< boost::python::tuple (Simulator::*)() > ( &Simulator::get_tree ))
         .def( "export_chain_events", static_cast< PyObject* (Simulator::*)() >( &Simulator::export_chain_events ))
 
         // Infectious

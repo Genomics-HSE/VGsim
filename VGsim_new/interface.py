@@ -31,8 +31,14 @@ class Simulator:
         self._simulator.simulate(iterations, sample_size, epidemic_time, method, attempts)
         self._simulator.Debug()
 
+    def genealogy(self, seed):
+        self._simulator.genealogy()
+
     def get_flat_chain(self):
         return self._simulator.get_flat_chain()
+
+    def get_tree(self):
+        return self._simulator.get_tree()
 
     def export_chain_events(self, file_name="chain_events"):
         chain = self._simulator.export_chain_events()

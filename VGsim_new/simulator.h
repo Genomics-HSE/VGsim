@@ -26,9 +26,11 @@ public:
     void Debug();
 
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
-    void Genealogy();
+    void genealogy();
+
 
     PyObject* get_flat_chain();
+    boost::python::tuple get_tree();
     PyObject* export_chain_events();
 
     // Infectious
