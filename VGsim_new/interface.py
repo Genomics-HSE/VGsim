@@ -5,18 +5,23 @@ import numpy as np
 import source_VGsim
 
 class Simulator:
-    def __init__(self, number_of_sites=0, number_of_populations=1, number_of_susceptible_groups=1, seed=None):
+    def __init__(self, number_of_sites=0, number_of_populations=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False):
         self._check_amount(number_of_sites, 'number of sites', zero=False)
         self._check_amount(number_of_populations, 'populations number')
         self._check_amount(number_of_susceptible_groups, 'number of susceptible groups')
+        if not isinstance(sampling_probability, bool):
+            raise ValueError('Incorrect value of sampling probability. Value of sampling probability should be True or False.')
         if seed == None:
             seed = int(randrange(sys.maxsize))
+        self._check_amount(seed, 'seed', zero=False)
 
         self._simulator = source_VGsim.Simulator(number_of_sites, number_of_populations, number_of_susceptible_groups, seed)  # инициализация C++ класса
         self._number_of_sites = number_of_sites
         self._number_of_haplotypes = 4**number_of_sites
         self._number_of_populations = number_of_populations
         self._number_of_susceptible_groups = number_of_susceptible_groups
+        self._seed = seed
+        self._sampling_probability = sampling_probability
         self._first_simulation = False
 
     def simulate(self, iterations=1000, sample_size=None, epidemic_time=0.0, method='direct', attempts=200):
@@ -45,6 +50,12 @@ class Simulator:
 
     def get_number_of_susceptible_groups(self):
         return self._number_of_susceptible_groups
+
+    def get_seed(self):
+        return self._seed
+
+    def get_sampling_probability(self):
+        return self._sampling_probability
 
     def set_susceptibility_group(self, susceptibility_group, haplotype=None):
         """
@@ -123,11 +134,23 @@ class Simulator:
         :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
         :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
         """
-        self._check_value(rate, 'sampling rate')
         self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
         haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
-        for hn in haplotypes:
-            self._simulator.set_sampling_rate(rate, hn)
+
+        if self._sampling_probability == True:
+            self._check_value(rate, 'sampling probability', edge=1)
+            recovery_rate = self._simulator.get_recovery_rate()
+            sampling_rate = self._simulator.get_sampling_rate()
+
+            for hn in haplotypes:
+                deathRate = recovery_rate[hn] + sampling_rate[hn]
+                self._simulator.set_recovery_rate((1 - rate) * deathRate, hn)
+                self._simulator.set_sampling_rate(rate * deathRate, hn)
+        else:
+            self._check_value(rate, 'sampling rate')
+
+            for hn in haplotypes:
+                self._simulator.set_sampling_rate(rate, hn)
 
     def get_sampling_rate(self):
         return self._simulator.get_sampling_rate()

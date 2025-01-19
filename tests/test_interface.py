@@ -7,6 +7,13 @@ import pytest
 
 
 #SIMULATOR
+def test_simulator_base():
+    model = Simulator()
+    assert model.get_number_of_sites() == 0
+    assert model.get_number_of_populations() == 1
+    assert model.get_number_of_susceptible_groups() == 1
+    assert model.get_sampling_probability() == False
+
 @pytest.mark.parametrize('number_of_sites, answer',
                         [(2              , 2),
                          (0              , 0)])
@@ -52,34 +59,33 @@ def test_simulator_susceptible_err(number_of_susceptible_groups, error, text):
     with pytest.raises(error, match=text):
         model = Simulator(number_of_susceptible_groups=number_of_susceptible_groups)
 
-# @pytest.mark.parametrize('seed, answer',
-#                         [(15  , 15),
-#                          (0   , 0)])
-# def test_simulator_seed(seed, answer):
-#     model = Simulator(seed=seed)
-#     assert model.seed == answer
+@pytest.mark.parametrize('seed, answer',
+                        [(15  , 15),
+                         (0   , 0)])
+def test_simulator_seed(seed, answer):
+    model = Simulator(seed=seed)
+    assert model.get_seed() == answer
 
-# @pytest.mark.parametrize('seed , error     , text',
-#                         [('str', TypeError , 'Incorrect type of seed. Type should be int.'),
-#                          (-15  , ValueError, 'Incorrect value of seed. Value should be more or equal 0.')])
-# def test_simulator_seed_err(seed, error, text):
-#     with pytest.raises(error, match=text):
-#         model = Simulator(seed=seed)
+@pytest.mark.parametrize('seed , error     , text',
+                        [('str', TypeError , 'Incorrect type of seed. Type should be int.'),
+                         (-15  , ValueError, 'Incorrect value of seed. Value should be more or equal 0.')])
+def test_simulator_seed_err(seed, error, text):
+    with pytest.raises(error, match=text):
+        model = Simulator(seed=seed)
 
+@pytest.mark.parametrize('sampling_probability, answer',
+                        [(True                , True),
+                         (False               , False)])
+def test_simulator_sampling_probability(sampling_probability, answer):
+    model = Simulator(sampling_probability=sampling_probability)
+    assert model.get_sampling_probability() == answer
 
-# @pytest.mark.parametrize('sampling_probability, answer',
-#                         [(True                , True),
-#                          (False               , False)])
-# def test_simulator_sampling_probability(sampling_probability, answer):
-#     model = Simulator(sampling_probability=sampling_probability)
-#     assert model.sampling_probability == answer
-
-# @pytest.mark.parametrize('sampling_probability, error     , text',
-#                         [(None                , ValueError, 'Incorrect value of sampling probability. Value of sampling probability should be True or False.'),
-#                          ('str'               , ValueError, 'Incorrect value of sampling probability. Value of sampling probability should be True or False.')])
-# def test_simulator_sampling_probability_err(sampling_probability, error, text):
-#     with pytest.raises(error, match=text):
-#         model = Simulator(sampling_probability=sampling_probability)
+@pytest.mark.parametrize('sampling_probability, error     , text',
+                        [(None                , ValueError, 'Incorrect value of sampling probability. Value of sampling probability should be True or False.'),
+                         ('str'               , ValueError, 'Incorrect value of sampling probability. Value of sampling probability should be True or False.')])
+def test_simulator_sampling_probability_err(sampling_probability, error, text):
+    with pytest.raises(error, match=text):
+        model = Simulator(sampling_probability=sampling_probability)
 
 # @pytest.mark.parametrize('memory_optimization, answer',
 #                         [(True               , True),
@@ -241,12 +247,12 @@ def test_set_transmisstion_rate_err(rate, haplotype, error, text):
 #RECOVERY RATE
 @pytest.mark.parametrize('rate , haplotype    , answer',
                         [(0    , None         , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-                         (0.002, 'A*'         , [0.002, 0.002, 0.002, 0.002, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-                         (0.003, 'AT'         , [1, 0.003, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-                         (0.004, 0            , [0.004, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
-                         (0.005, 15           , [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.005]),
-                         (0.006, [0, 15, 'T*'], [0.006, 1, 1, 1, 0.006, 0.006, 0.006, 0.006, 1, 1, 1, 1, 1, 1, 1, 0.006]),
-                         (0.007, []           , [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])])
+                         (0.002, 'A*'         , [0.002, 0.002, 0.002, 0.002, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]),
+                         (0.003, 'AT'         , [0.99, 0.003, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]),
+                         (0.004, 0            , [0.004, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]),
+                         (0.005, 15           , [0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.005]),
+                         (0.006, [0, 15, 'T*'], [0.006, 0.99, 0.99, 0.99, 0.006, 0.006, 0.006, 0.006, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.006]),
+                         (0.007, []           , [0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99])])
 def test_set_recovery_rate(rate, haplotype, answer):
     model = Simulator(number_of_sites=2)
     model.set_recovery_rate(rate=rate, haplotype=haplotype)
@@ -278,6 +284,20 @@ def test_set_sampling_rate(rate, haplotype, answer):
     model = Simulator(number_of_sites=2)
     model.set_sampling_rate(rate=rate, haplotype=haplotype)
     assert_allclose(model.get_sampling_rate(), np.asarray(answer), atol=1e-14)
+
+@pytest.mark.parametrize('rate , haplotype    , answer1                                                       , answer2',
+                        [(0    , None         , [1 for _ in range(16)]                                        , [0 for _ in range(16)]),
+                         (0.1  , 'A*'         , [0.9 if i < 4 else 0.99 for i in range(16)]                   , [0.1 if i < 4 else 0.01 for i in range(16)]),
+                         (0.2  , 'AT'         , [0.8 if i == 1 else 0.99 for i in range(16)]                  , [0.2 if i == 1 else 0.01 for i in range(16)]),
+                         (0.3  , 0            , [0.7 if i == 0 else 0.99 for i in range(16)]                  , [0.3 if i == 0 else 0.01 for i in range(16)]),
+                         (0.4  , 15           , [0.6 if i == 15 else 0.99 for i in range(16)]                 , [0.4 if i == 15 else 0.01 for i in range(16)]),
+                         (0.5  , [0, 15, 'T*'], [0.5 if i in (0, 4, 5, 6, 7, 15) else 0.99 for i in range(16)], [0.5 if i in (0, 4, 5, 6, 7, 15) else 0.01 for i in range(16)]),
+                         (0.6  , []           , [0.99 for _ in range(16)]                                     , [0.01 for _ in range(16)])])
+def test_set_sampling_rate_with_probability(rate, haplotype, answer1, answer2):
+    model = Simulator(number_of_sites=2, sampling_probability=True)
+    model.set_sampling_rate(rate=rate, haplotype=haplotype)
+    assert_allclose(model.get_recovery_rate(), np.asarray(answer1), atol=1e-14)
+    assert_allclose(model.get_sampling_rate(), np.asarray(answer2), atol=1e-14)
 
 @pytest.mark.parametrize('rate , haplotype, error     , text',
                         [(None , None     , TypeError , 'Incorrect type of sampling rate. Type should be int or float.'),

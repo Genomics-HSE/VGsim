@@ -22,7 +22,7 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         susceptibility_groups_[haplotype] = 0;
         transmission_rates_[haplotype] = 2.0;
-        recovery_rates_[haplotype] = 1.0;
+        recovery_rates_[haplotype] = 0.99;
         sampling_rates_[haplotype] = 0.01;
 
         for (uint64_t site = 0; site < getNumberSites(); ++site) {
