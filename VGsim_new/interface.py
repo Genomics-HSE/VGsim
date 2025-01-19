@@ -1,6 +1,7 @@
 from random import randrange
 import sys
 import numpy as np
+from tabulate import tabulate
 
 import source_VGsim
 
@@ -275,14 +276,6 @@ class Simulator:
     def get_immunity_transition(self):
         return self._simulator.get_immunity_transition()
 
-
-
-
-
-
-
-
-
     def set_population_size(self, size, population=None):
         """
         Set the number of individuals in the population.
@@ -427,6 +420,243 @@ class Simulator:
     def get_migration_probability(self):
         return self._simulator.get_migration_probability()
 
+
+    def print_basic_parameters(self):
+        """
+        This methods prints the basic parameters of the epidemiological model.
+        """
+        field = ["H", "TR", "RR", "SR", "ST"]
+        for s in range(self._number_of_sites):
+            field.append(f"M{s}")
+            field.append(f"MW{s}")
+        data = [field]
+
+        transmission_rate = self.get_transmission_rate()
+        recovery_rate = self.get_recovery_rate()
+        sampling_rate = self.get_sampling_rate()
+        susceptibility_group = self.get_susceptibility_group()
+        mutation_rate = self.get_mutation_rate()
+        mutation_probabilities = self.get_mutation_probabilities()
+
+        for hn in range(self._number_of_haplotypes):
+            row = [
+                    self._calculate_string_from_haplotype(hn),
+                    transmission_rate[hn],
+                    recovery_rate[hn],
+                    sampling_rate[hn],
+                    susceptibility_group[hn]
+                   ]
+            for s in range(self._number_of_sites):
+                row.append(mutation_rate[hn][s])
+                row.append(self._calculate_colored_haplotype(mutation_probabilities, hn, s))
+            data.append(row)
+
+        print(tabulate(data, headers="firstrow", tablefmt="fancy_grid", numalign="center", stralign="center"))
+        print("Legend:")
+        print("H - haplotype")
+        print("TR - transmission rate")
+        print("RR - recovery rate")
+        print("SR - sampling rate")
+        print("ST - susceptibility type")
+        for s in range(self._number_of_sites):
+            print(f"M{s} - {s} mutation rate")
+            print(f"MW{s} - {s} mutation weights")
+        print()
+
+    def print_populations(self, population=True, susceptibles=True, infectious=True, migration=True):
+        """
+        This methods prints parameters of the population model.
+
+        :param population: print informations about populations.
+        :type population: bool
+
+        :param susceptibles: print informations about susceptibles.
+        :type susceptibles: bool
+
+        :param infectious: print informations about infectious.
+        :type infectious: bool
+
+        :param migration: print informations about migration.
+        :type migration: bool
+        """
+        if susceptibles or infectious:
+            current_susceptible, current_infectious = self._simulator.get_current_individuals()
+            print(current_susceptible, current_infectious)
+
+        # if population:
+        #     table_populations = PrettyTable()
+        #     table_populations.field_names = ["ID", "Size", 'Actual size', "CD",'CDBLC', "CDALD", "SLD", "ELD", "SM"]
+        #     for pn in range(self.popNum):
+        #         table_populations.add_row([pn, self.sizes[pn], self.actualSizes[pn], self.contactDensity[pn], \
+        #             self.contactDensityBeforeLockdown[pn], self.contactDensityAfterLockdown[pn], self.startLD[pn], self.endLD[pn], \
+        #             self.samplingMultiplier[pn]])
+
+        #     print(table_populations)
+        #     print("Legend:")
+        #     print("ID - number of population")
+        #     print("Size - size of population")
+        #     print("Actual size - actual size of population")
+        #     print("CD - contact density")
+        #     print("CDBLD - contact density without lockdown")
+        #     print("CDALD - contact density at lockdown")
+        #     print("SLD - start of lockdown")
+        #     print("ELD - end of lockdown")
+        #     print("SM - sampling multiplier")
+        #     print()
+
+        # if susceptibles:
+        #     table_susceptible = PrettyTable()
+        #     field = ["ST\\ID"]
+        #     for pn in range(self.popNum):
+        #         field.append(pn)
+        #     table_susceptible.field_names = field
+        #     for sn in range(self.susNum):
+        #         row = [sn]
+        #         for pn in range(self.popNum):
+        #             row.append(current_susceptible[pn][sn])
+        #         table_susceptible.add_row(row)
+
+        #     print(table_susceptible)
+        #     print("Legend:")
+        #     print("ID - ID population")
+        #     print("ST - susceptibility type")
+        #     print()
+
+        # if infectious:
+        #     table_infectious = PrettyTable()
+        #     field = ["H\\ID"]
+        #     for pn in range(self.popNum):
+        #         field.append(pn)
+        #     table_infectious.field_names = field
+        #     for hn in range(self.hapNum):
+        #         row = [self.calculate_string_from_haplotype(hn)]
+        #         for pn in range(self.popNum):
+        #             row.append(current_infectious[pn][hn])
+        #         table_infectious.add_row(row)
+
+        #     print(table_infectious)
+        #     print("Legend:")
+        #     print("ID - ID population")
+        #     print("H - haplotype")
+        #     print()
+
+        # if migration:
+        #     table_migration = PrettyTable()
+        #     field = ["S\\T"]
+        #     for pn in range(self.popNum):
+        #         field.append(pn)
+        #     table_migration.field_names = field
+        #     for pn1 in range(self.popNum):
+        #         row = [pn1]
+        #         for pn2 in range(self.popNum):
+        #             row.append(self.migrationRates[pn1, pn2])
+        #         table_migration.add_row(row)
+
+        #     print(table_migration)
+        #     print("Legend:")
+        #     print("S - ID source population")
+        #     print("T - ID target population")
+        #     print()
+
+    def print_immunity_model(self, immunity=True, transition=True):
+        """
+        This methods prints the basic parameters of the immunity model.
+
+        :param immunity: print informations about immunity.
+        :type immunity: bool
+
+        :param transition: print informations about immunity transition.
+        :type transition: bool
+        """
+        if immunity:
+            field = ["H\\ST"]
+            for sn in range(self._number_of_susceptible_groups):
+                field.append(f"S{sn}")
+            data = [field]
+
+            susceptibility = self.get_susceptibility()
+
+            for hn in range(self._number_of_haplotypes):
+                row = [self._calculate_string_from_haplotype(hn)]
+                for sn in range(self._number_of_susceptible_groups):
+                    row.append(susceptibility[hn][sn])
+                data.append(row)
+
+            print(tabulate(data, headers="firstrow", tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print("Legend:")
+            print("H - haplotype")
+            print("ST - susceptibility type")
+            print()
+
+        if transition:
+            field = ["ID"]
+            for sn in range(self._number_of_susceptible_groups):
+                field.append(sn)
+            data = [field]
+
+            immunity_transition = self.get_immunity_transition()
+
+            for sn1 in range(self._number_of_susceptible_groups):
+                row = [sn1]
+                for sn2 in range(self._number_of_susceptible_groups):
+                    row.append(immunity_transition[sn1][sn2])
+                data.append(row)
+
+            print(tabulate(data, headers="firstrow", tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print("Legend:")
+            print("ID - ID susceptibility type")
+            print()
+
+    # def print_mutations(self):
+    #     self.simulation.print_mutations()
+
+    # def print_migrations(self):
+    #     self.simulation.print_migrations()
+
+
+    def print_all(self, basic_parameters=False,
+                        population=False,
+                        susceptible=False,
+                        infectious=False,
+                        migration=False,
+                        immunity_model=False,
+                        immunity=False,
+                        transition=False):
+        """
+        This methods prints all the parameters of the simulation.
+
+        :param basic_parameters: whether to output the basic parameters of the epidemiological model.
+        :type basic_parameters: bool
+
+        :param population: print informations about populations.
+        :type population: bool
+
+        :param susceptibles: print informations about susceptibles.
+        :type susceptibles: bool
+
+        :param infectious: print informations about infectious.
+        :type infectious: bool
+
+        :param migration: print informations about migration.
+        :type migration: bool
+
+        :param immunity: print informations about immunity.
+        :type immunity: bool
+
+        :param transition: print informations about immunity transition.
+        :type transition: bool
+        """
+        if basic_parameters:
+            self.print_basic_parameters()
+        if population or susceptible or infectious or migration:
+            self.print_populations(population=population,
+                                   susceptibles=susceptibles,
+                                   infectious=infectious,
+                                   migration=migration)
+        if immunity or transition:
+            self.print_immunity_model(immunity=immunity,
+                                      transition=transition)
+
     def _check_amount(self, amount, smth, zero=True):
         if isinstance(amount, int) == False:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
@@ -532,3 +762,34 @@ class Simulator:
             return [index]
         else:
             return range(edge)
+
+    def _calculate_colored_haplotype(self, mutation_probabilities, haplotype, site):
+        hap = self._calculate_string_from_haplotype(haplotype)
+        haplotypes = [hap[:site] + "A" + hap[site+1:], hap[:site] + "T" + hap[site+1:], hap[:site] + "C" + hap[site+1:], \
+        hap[:site] + "G" + hap[site+1:]]
+        for i in range(4):
+            if haplotypes[i] == hap:
+                haplotypes.remove(haplotypes[i])
+                haplotypes.append(hap)
+                break
+        color_hap=[]
+        for hapl in haplotypes:
+            a = ""
+            for s in range(self._number_of_sites):
+                if s == site:
+                    a = a + "\033[31m{}\033[0m" .format(hapl[s:s+1])
+                else:
+                    a = a + hapl[s:s+1]
+            color_hap.append(a)
+        string = color_hap[3] + "->" + color_hap[0] + ": " + str(mutation_probabilities[haplotype][site][0]) + "\n" + color_hap[3] + \
+        "->" + color_hap[1] + ": " + str(mutation_probabilities[haplotype][site][1]) + "\n" + color_hap[3] + "->" + color_hap[2] + ": " + \
+        str(mutation_probabilities[haplotype][site][2]) + "\n"
+        return string
+
+    def _calculate_string_from_haplotype(self, haplotype):
+        letters = ["A", "T", "C", "G"]
+        string = ""
+        for s in range(self._number_of_sites):
+            string = letters[haplotype%4] + string
+            haplotype = haplotype // 4
+        return string

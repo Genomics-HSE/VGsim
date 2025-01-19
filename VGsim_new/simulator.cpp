@@ -59,6 +59,10 @@ void Simulator::genealogy() {
     arg_.CalculateGenealogy();
 }
 
+boost::python::tuple Simulator::get_current_individuals() {
+    return pool_.get_current_individuals();
+}
+
 PyObject* Simulator::get_flat_chain() {
     boost::python::list ret;
 

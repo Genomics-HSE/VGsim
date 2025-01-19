@@ -7,6 +7,8 @@ public:
     void Debug();
     void Update();
 
+    boost::python::tuple get_current_individuals();
+
     void set_population_size(uint64_t size, uint64_t population);
     PyObject* get_population_size();
     void set_contact_density(double value, uint64_t population);

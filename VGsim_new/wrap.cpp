@@ -10,6 +10,7 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         .def( "simulate", static_cast< void (Simulator::*)(uint64_t, uint64_t, double, std::string, uint64_t) >( &Simulator::simulate ), args("iterations", "sampling", "epidemic_time", "type", "number_attempts"))
         .def( "genealogy", static_cast< void (Simulator::*)() > ( &Simulator::genealogy ))
         .def( "Debug", static_cast< void (Simulator::*)() > ( &Simulator::Debug ))
+        .def( "get_current_individuals", static_cast< boost::python::tuple (Simulator::*)() > ( &Simulator::get_current_individuals ))
 
         .def( "get_flat_chain", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_flat_chain ))
         .def( "get_tree", static_cast< boost::python::tuple (Simulator::*)() > ( &Simulator::get_tree ))

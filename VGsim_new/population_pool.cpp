@@ -120,6 +120,12 @@ void PopulationPool::Debug() {
     std::cout << std::endl;
 }
 
+boost::python::tuple PopulationPool::get_current_individuals() {
+    boost::python::list susceptiblies;
+    boost::python::list infected;
+    return boost::python::make_tuple(susceptiblies, infected);
+}
+
 void PopulationPool::set_population_size(uint64_t size, uint64_t population) {
     sizes_[population] = size;
     susceptibles_pop_[population] = size;
