@@ -17,7 +17,7 @@ class Simulator:
             seed = int(randrange(sys.maxsize))
         self._check_amount(seed, 'seed', zero=False)
 
-        self._simulator = source_VGsim.Simulator(number_of_sites, number_of_populations, number_of_susceptible_groups, seed)  # инициализация C++ класса
+        self._simulator = source_VGsim.Simulator(number_of_sites, number_of_populations, number_of_susceptible_groups, seed)
         self._number_of_sites = number_of_sites
         self._number_of_haplotypes = 4**number_of_sites
         self._number_of_populations = number_of_populations
@@ -205,8 +205,8 @@ class Simulator:
         """
         self._check_list(probabilities, 'probabilities list', 4)
         if isinstance(probabilities, list):
-            for i in range(4):
-                self._check_value(probabilities[i], 'mutation probabilities')
+            for probability in probabilities:
+                self._check_value(probability, 'mutation probabilities')
         self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype', True)
         self._check_indexes(mutation, self._number_of_sites, 'mutation site')
         haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
@@ -214,12 +214,12 @@ class Simulator:
 
         for hn in haplotypes:
             for s in sites:
-                probabilities_allele = list(probabilities)
-                del probabilities_allele[self._calculate_allele(hn, s)]
-                if sum(probabilities_allele) == 0:
-                    raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
+                probabilities_base = list(probabilities)
+                del probabilities_base[self._calculate_base(hn, s)]
+                if sum(probabilities_base) == 0:
+                    raise ValueError('Incorrect probabilities list. The sum of three elements without mutation base should be more 0.')
                 for i in range(3):
-                    self._simulator.set_mutation_probabilities(probabilities_allele[i], hn, s, i)
+                    self._simulator.set_mutation_probabilities(probabilities_base[i], hn, s, i)
 
 
     def get_mutation_probabilities(self):
@@ -297,10 +297,6 @@ class Simulator:
 
         for pn in populations:
             self._simulator.set_population_size(size, pn)
-            # self.sizes[pn] = amount
-            # self.susceptible[pn, 0] = amount
-            # for sn in range(1, self.susNum):
-            #     self.susceptible[pn, sn] = 0
 
     def get_population_size(self):
         return self._simulator.get_population_size()
@@ -321,8 +317,6 @@ class Simulator:
 
         for pn in populations:
             self._simulator.set_contact_density(value, pn)
-            # self.contactDensity[pn] = value
-            # self.contactDensityBeforeLockdown[pn] = value
 
     def get_contact_density(self):
         return self._simulator.get_contact_density()
@@ -346,9 +340,6 @@ class Simulator:
 
         for pn in populations:
             self._simulator.set_npi(parameters[0], parameters[1], parameters[2], pn)
-            # self.contactDensityAfterLockdown[pn] = parameters[0]
-            # self.startLD[pn] = parameters[1]
-            # self.endLD[pn] = parameters[2]
 
     def get_npi(self):
         return self._simulator.get_npi()
@@ -1003,11 +994,11 @@ class Simulator:
         elif edge is not None and isinstance(value, (int, float)) and (value < 0 or value > edge):
             raise ValueError(f'Incorrect value of {text}. Value should be more or equal 0 and equal or less {edge}.')
 
-    def _calculate_allele(self, haplotype, site):
+    def _calculate_base(self, haplotype, site):
         for _ in range(self._number_of_sites-site):
-            allele = haplotype % 4
+            base = haplotype % 4
             haplotype = haplotype // 4
-        return allele
+        return base
 
     def _calculate_indexes(self, indexes_list, edge):
         if isinstance(indexes_list, list):
@@ -1021,12 +1012,12 @@ class Simulator:
     def _calculate_index(self, index, edge):
         if isinstance(index, str):
             haplotypes = [index]
-            letters = ["A", "T", "C", "G"]
+            bases = ["A", "T", "C", "G"]
             for s in range(self._number_of_sites):
                 for i in range(len(haplotypes)):
                     haplotype_old = haplotypes[i]
                     if haplotype_old[s] == "*":
-                        for j in letters:
+                        for j in bases:
                             index = haplotype_old.replace("*", j, 1)
                             haplotypes.append(index)
             for i in range(len(haplotypes)-1, -1, -1):
@@ -1047,47 +1038,40 @@ class Simulator:
         if self._number_of_sites == 0:
             return 'no sites'
 
-        letters = ["A", "T", "C", "G"]
+        bases = ["A", "T", "C", "G"]
         string = ""
-        for s in range(self._number_of_sites):
-            string = letters[haplotype%4] + string
+        for _ in range(self._number_of_sites):
+            string = bases[haplotype%4] + string
             haplotype = haplotype // 4
         return string
 
     def _calculate_number_haplotype_from_string(self, string):
         string = string[::-1]
         haplotype = 0
-        for s in range(self._number_of_sites):
-            if string[s] == "T":
-                haplotype += (4**s)
-            elif string[s] == "C":
-                haplotype += 2*(4**s)
-            elif string[s] == "G":
-                haplotype += 3*(4**s)
+        for site in range(self._number_of_sites):
+            if string[site] == "T":
+                haplotype += (4**site)
+            elif string[site] == "C":
+                haplotype += 2*(4**site)
+            elif string[site] == "G":
+                haplotype += 3*(4**site)
         return haplotype
 
     def _calculate_colored_haplotype(self, mutation_probabilities, haplotype, site):
         hap = self._calculate_string_from_number_haplotype(haplotype)
-        haplotypes = [hap[:site] + "A" + hap[site+1:], hap[:site] + "T" + hap[site+1:], hap[:site] + "C" + hap[site+1:], \
-        hap[:site] + "G" + hap[site+1:]]
-        for i in range(4):
-            if haplotypes[i] == hap:
-                haplotypes.remove(haplotypes[i])
-                haplotypes.append(hap)
-                break
+        base = self._calculate_base(haplotype, site)
+        bases = ["A", "T", "C", "G"]
+        other_base = bases[:base] + bases[base + 1:]
+
         color_hap=[]
-        for hapl in haplotypes:
-            a = ""
-            for s in range(self._number_of_sites):
-                if s == site:
-                    a = a + "\033[31m{}\033[0m" .format(hapl[s:s+1])
-                else:
-                    a = a + hapl[s:s+1]
-            color_hap.append(a)
-        string = color_hap[3] + "->" + color_hap[0] + ": " + str(mutation_probabilities[haplotype][site][0]) + "\n" + color_hap[3] + \
-        "->" + color_hap[1] + ": " + str(mutation_probabilities[haplotype][site][1]) + "\n" + color_hap[3] + "->" + color_hap[2] + ": " + \
-        str(mutation_probabilities[haplotype][site][2]) + "\n"
-        return string
+        for other in other_base:
+            color_hap.append(f'{hap[:site]}\033[31m{other}\033[0m{hap[site+1:]}')
+        color_hap.append(f'{hap[:site]}\033[31m{bases[base]}\033[0m{hap[site+1:]}')
+
+        result = f'{color_hap[3]}->{color_hap[0]}: {mutation_probabilities[haplotype][site][0]}\n' + \
+                 f'{color_hap[3]}->{color_hap[1]}: {mutation_probabilities[haplotype][site][1]}\n' + \
+                 f'{color_hap[3]}->{color_hap[2]}: {mutation_probabilities[haplotype][site][2]}\n'
+        return result
 
     def _create_base_plot(self):
         if self.fig is None:
