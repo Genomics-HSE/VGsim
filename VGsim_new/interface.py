@@ -77,7 +77,7 @@ class Simulator:
         :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
         :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
         """
-        if isinstance(susceptibility_group, int) == False:
+        if not isinstance(susceptibility_group, int):
             raise TypeError('Incorrect type of susceptibility group. Type should be int.')
         elif susceptibility_group < 0 or susceptibility_group >= self._number_of_susceptible_groups:
             raise IndexError('There are no such susceptibility group!')
@@ -962,19 +962,19 @@ class Simulator:
         elif err == 2:
             raise ValueError('Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.')
 
-    def _check_indexes(self, indexes, edge, smth, hap=False, none=True):
+    def _check_indexes(self, indexes, edge, text, hap=False, none=True):
         if isinstance(indexes, list):
             for index in indexes:
-                self._check_index(index, edge, smth, hap=hap, none=none)
+                self._check_index(index, edge, text, hap=hap, none=none)
         else:
-            self._check_index(indexes, edge, smth, hap=hap, none=none)
+            self._check_index(indexes, edge, text, hap=hap, none=none)
 
-    def _check_index(self, index, edge, smth, hap=False, none=True):
+    def _check_index(self, index, edge, text, hap=False, none=True):
         if not none and index is None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
+            raise TypeError(f'Incorrect type of {text}. Type should be int.')
         elif isinstance(index, int):
             if index < 0 or index >= edge:
-                raise IndexError('There are no such ' + smth + '!')
+                raise IndexError(f'There are no such {text}!')
         elif isinstance(index, str) and hap:
             if index.count("A") + index.count("T") + index.count("C") + index.count("G") + index.count("*") \
             != self._number_of_sites:
@@ -983,25 +983,25 @@ class Simulator:
             if hap:
                 raise TypeError('Incorrect type of haplotype. Type should be int or str or None.')
             else:
-                raise TypeError('Incorrect type of ' + smth + '. Type should be int or None.')
+                raise TypeError(f'Incorrect type of {text}. Type should be int or None.')
 
-    def _check_list(self, data, smth, length):
+    def _check_list(self, data, text, length):
         if isinstance(data, list):
             if len(data) != length:
-                raise ValueError('Incorrect length of ' + smth + '. Length should be equal ' + str(length) + '.')
+                raise ValueError(f'Incorrect length of {text}. Length should be equal {length}.')
         else:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be list.')
+            raise TypeError('Incorrect type of ' + text + '. Type should be list.')
 
-    def _check_value(self, value, smth, edge=None, none=False):
+    def _check_value(self, value, text, edge=None, none=False):
         if none and not isinstance(value, (int, float)) and value is not None:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float or None.')
+            raise TypeError(f'Incorrect type of {text}. Type should be int or float or None.')
         elif not none and not isinstance(value, (int, float)):
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
+            raise TypeError(f'Incorrect type of {text}. Type should be int or float.')
 
         if edge is None and isinstance(value, (int, float)) and value < 0:
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
+            raise ValueError(f'Incorrect value of {text}. Value should be more or equal 0.')
         elif edge is not None and isinstance(value, (int, float)) and (value < 0 or value > edge):
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0 and equal or less ' + str(edge) + '.')
+            raise ValueError(f'Incorrect value of {text}. Value should be more or equal 0 and equal or less {edge}.')
 
     def _calculate_allele(self, haplotype, site):
         for _ in range(self._number_of_sites-site):

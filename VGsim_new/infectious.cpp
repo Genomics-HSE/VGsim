@@ -94,14 +94,14 @@ void Infectious::set_susceptibility_group(uint64_t group, uint64_t haplotype) {
     susceptibility_groups_[haplotype] = group;
 }
 
-PyObject* Infectious::get_susceptibility_group() {
+boost::python::list Infectious::get_susceptibility_group() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         data.append(boost::python::object(susceptibility_groups_[haplotype]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void Infectious::set_transmission_rate(double rate, uint64_t haplotype) {
@@ -116,42 +116,41 @@ boost::python::list Infectious::get_transmission_rate() {
     }
 
     return data;
-    // return boost::python::incref(data.ptr());
 }
 
 void Infectious::set_recovery_rate(double rate, uint64_t haplotype) {
     recovery_rates_[haplotype] = rate;
 }
 
-PyObject* Infectious::get_recovery_rate() {
+boost::python::list Infectious::get_recovery_rate() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         data.append(boost::python::object(recovery_rates_[haplotype]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void Infectious::set_sampling_rate(double rate, uint64_t haplotype) {
     sampling_rates_[haplotype] = rate;
 }
 
-PyObject* Infectious::get_sampling_rate() {
+boost::python::list Infectious::get_sampling_rate() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         data.append(boost::python::object(sampling_rates_[haplotype]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void Infectious::set_mutation_rate(double rate, uint64_t haplotype, uint64_t mutation) {
     mutation_rates_[getIndexSite(haplotype, mutation)] = rate;
 }
 
-PyObject* Infectious::get_mutation_rate() {
+boost::python::list Infectious::get_mutation_rate() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
@@ -162,14 +161,14 @@ PyObject* Infectious::get_mutation_rate() {
         data.append(str_data);
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void Infectious::set_mutation_probabilities(double rate, uint64_t haplotype, uint64_t mutation, uint64_t index) {
     sites_rates_[getIndexSite3(haplotype, mutation, index)] = rate;
 }
 
-PyObject* Infectious::get_mutation_probabilities() {
+boost::python::list Infectious::get_mutation_probabilities() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
@@ -184,14 +183,14 @@ PyObject* Infectious::get_mutation_probabilities() {
         data.append(str_data);
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void Infectious::set_susceptibility(double rate, uint64_t haplotype, uint64_t group) {
     susceptibility_[getIndexSus(haplotype, group)] = rate;
 }
 
-PyObject* Infectious::get_susceptibility() {
+boost::python::list Infectious::get_susceptibility() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
@@ -202,7 +201,7 @@ PyObject* Infectious::get_susceptibility() {
         data.append(str_data);
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 

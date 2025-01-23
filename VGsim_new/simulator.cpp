@@ -59,7 +59,7 @@ void Simulator::genealogy() {
     arg_.CalculateGenealogy();
 }
 
-PyObject* Simulator::get_flat_chain() {
+boost::python::list Simulator::get_flat_chain() {
     boost::python::list ret;
 
     for (uint64_t index = 0; index < chain_.GetSize(); ++index) {
@@ -71,7 +71,7 @@ PyObject* Simulator::get_flat_chain() {
         ret.append(boost::python::object(event.parameter4));
     }
 
-    return boost::python::incref(ret.ptr());
+    return ret;
 }
 
 boost::python::tuple Simulator::get_tree() {
@@ -90,7 +90,7 @@ boost::python::tuple Simulator::get_tree() {
     return boost::python::make_tuple(tree, times);
 }
 
-PyObject* Simulator::export_chain_events() {
+boost::python::list Simulator::export_chain_events() {
     boost::python::list ret;
 
     boost::python::list types;
@@ -117,7 +117,7 @@ PyObject* Simulator::export_chain_events() {
     ret.append(newHaplotypes);
     ret.append(newPopulations);
 
-    return boost::python::incref(ret.ptr());
+    return ret;
 }
 
 // Infectious
@@ -125,7 +125,7 @@ void Simulator::set_susceptibility_group(uint64_t group, uint64_t haplotype) {
     infectious_data_.set_susceptibility_group(group, haplotype);
 }
 
-PyObject* Simulator::get_susceptibility_group() {
+boost::python::list Simulator::get_susceptibility_group() {
     return infectious_data_.get_susceptibility_group();
 }
 
@@ -141,7 +141,7 @@ void Simulator::set_recovery_rate(double rate, uint64_t haplotype) {
     infectious_data_.set_recovery_rate(rate, haplotype);
 }
 
-PyObject* Simulator::get_recovery_rate() {
+boost::python::list Simulator::get_recovery_rate() {
     return infectious_data_.get_recovery_rate();
 }
 
@@ -149,7 +149,7 @@ void Simulator::set_sampling_rate(double rate, uint64_t haplotype) {
     infectious_data_.set_sampling_rate(rate, haplotype);
 }
 
-PyObject* Simulator::get_sampling_rate() {
+boost::python::list Simulator::get_sampling_rate() {
     return infectious_data_.get_sampling_rate();
 }
 
@@ -157,7 +157,7 @@ void Simulator::set_mutation_rate(double rate, uint64_t haplotype, uint64_t muta
     infectious_data_.set_mutation_rate(rate, haplotype, mutation);
 }
 
-PyObject* Simulator::get_mutation_rate() {
+boost::python::list Simulator::get_mutation_rate() {
     return infectious_data_.get_mutation_rate();
 }
 
@@ -165,7 +165,7 @@ void Simulator::set_mutation_probabilities(double rate, uint64_t haplotype, uint
     infectious_data_.set_mutation_probabilities(rate, haplotype, mutation, index);
 }
 
-PyObject* Simulator::get_mutation_probabilities() {
+boost::python::list Simulator::get_mutation_probabilities() {
     return infectious_data_.get_mutation_probabilities();
 }
 
@@ -173,7 +173,7 @@ void Simulator::set_susceptibility(double rate, uint64_t haplotype, uint64_t gro
     infectious_data_.set_susceptibility(rate, haplotype, group);
 }
 
-PyObject* Simulator::get_susceptibility() {
+boost::python::list Simulator::get_susceptibility() {
     return infectious_data_.get_susceptibility();
 }
 
@@ -182,7 +182,7 @@ void Simulator::set_immunity_transition(double rate, uint64_t source_group, uint
     susceptibles_data_.set_immunity_transition(rate, source_group, target_group);
 }
 
-PyObject* Simulator::get_immunity_transition() {
+boost::python::list Simulator::get_immunity_transition() {
     return susceptibles_data_.get_immunity_transition();
 }
 
@@ -191,7 +191,7 @@ void Simulator::set_population_size(uint64_t size, uint64_t population) {
     pool_.set_population_size(size, population);
 }
 
-PyObject* Simulator::get_population_size() {
+boost::python::list Simulator::get_population_size() {
     return pool_.get_population_size();
 }
 
@@ -199,7 +199,7 @@ void Simulator::set_contact_density(double value, uint64_t population) {
     pool_.set_contact_density(value, population);
 }
 
-PyObject* Simulator::get_contact_density() {
+boost::python::list Simulator::get_contact_density() {
     return pool_.get_contact_density();
 }
 
@@ -207,7 +207,7 @@ void Simulator::set_npi(double after, double start, double end, uint64_t populat
     pool_.set_npi(after, start, end, population);
 }
 
-PyObject* Simulator::get_npi() {
+boost::python::list Simulator::get_npi() {
     return pool_.get_npi();
 }
 
@@ -215,7 +215,7 @@ void Simulator::set_sampling_multiplier(double multiplier, uint64_t population) 
     pool_.set_sampling_multiplier(multiplier, population);
 }
 
-PyObject* Simulator::get_sampling_multiplier() {
+boost::python::list Simulator::get_sampling_multiplier() {
     return pool_.get_sampling_multiplier();
 }
 
@@ -223,7 +223,7 @@ void Simulator::set_migration_probability(double probability, uint64_t source_po
     pool_.set_migration_probability(probability, source_population, target_population);
 }
 
-PyObject* Simulator::get_migration_probability() {
+boost::python::list Simulator::get_migration_probability() {
     return pool_.get_migration_probability();
 }
 
@@ -261,6 +261,7 @@ boost::python::list Simulator::get_time_points(uint64_t step_number) {
 }
 
 
+// Private
 inline uint64_t Simulator::getNumberSites() const {
     return numbers_.sites;
 }

@@ -8,7 +8,7 @@ public:
     void Update();
 
     void set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group);
-    PyObject* get_immunity_transition();
+    boost::python::list get_immunity_transition();
 
     inline double GetSusceptibilityTransition(uint64_t source, uint64_t target) const;
     inline double* GetSusceptibilityTransitionBegin(uint64_t group) const;

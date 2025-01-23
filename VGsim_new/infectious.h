@@ -10,19 +10,19 @@ public:
     void Update();
 
     void set_susceptibility_group(uint64_t group, uint64_t haplotype);
-    PyObject* get_susceptibility_group();
+    boost::python::list get_susceptibility_group();
     void set_transmission_rate(double rate, uint64_t haplotype);
     boost::python::list get_transmission_rate();
     void set_recovery_rate(double rate, uint64_t haplotype);
-    PyObject* get_recovery_rate();
+    boost::python::list get_recovery_rate();
     void set_sampling_rate(double rate, uint64_t haplotype);
-    PyObject* get_sampling_rate();
+    boost::python::list get_sampling_rate();
     void set_mutation_rate(double rate, uint64_t haplotype, uint64_t mutation);
-    PyObject* get_mutation_rate();
+    boost::python::list get_mutation_rate();
     void set_mutation_probabilities(double rate, uint64_t haplotype, uint64_t mutation, uint64_t index);
-    PyObject* get_mutation_probabilities();
+    boost::python::list get_mutation_probabilities();
     void set_susceptibility(double rate, uint64_t haplotype, uint64_t group);
-    PyObject* get_susceptibility();
+    boost::python::list get_susceptibility();
 
     inline double GetMaxEffectiveTransmission() const;
     inline double GetTransmissionSusceptibility(uint64_t haplotype, uint64_t group) const;

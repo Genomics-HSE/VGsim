@@ -47,7 +47,7 @@ void Susceptibles::set_immunity_transition(double rate, uint64_t source_group, u
     susceptibility_transition_[getIndexSus(source_group, target_group)] = rate;
 }
 
-PyObject* Susceptibles::get_immunity_transition() {
+boost::python::list Susceptibles::get_immunity_transition() {
     boost::python::list data;
 
     for (uint64_t source = 0; source < getNumberSusceptibleGroups(); ++source) {
@@ -58,7 +58,7 @@ PyObject* Susceptibles::get_immunity_transition() {
         data.append(str_data);
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 

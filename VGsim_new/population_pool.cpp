@@ -170,28 +170,28 @@ void PopulationPool::set_population_size(uint64_t size, uint64_t population) {
     populations_[population].SetSize(size);
 }
 
-PyObject* PopulationPool::get_population_size() {
+boost::python::list PopulationPool::get_population_size() {
     boost::python::list data;
 
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         data.append(boost::python::object(sizes_[population]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void PopulationPool::set_contact_density(double value, uint64_t population) {
     populations_[population].SetContactDensityBefore(value);
 }
 
-PyObject* PopulationPool::get_contact_density() {
+boost::python::list PopulationPool::get_contact_density() {
     boost::python::list data;
 
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         data.append(boost::python::object(populations_[population].GetContactDensity()));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void PopulationPool::set_npi(double after, double start, double end, uint64_t population) {
@@ -200,7 +200,7 @@ void PopulationPool::set_npi(double after, double start, double end, uint64_t po
     populations_[population].SetEnd(end);
 }
 
-PyObject* PopulationPool::get_npi() {
+boost::python::list PopulationPool::get_npi() {
     boost::python::list data;
 
     boost::python::list str_data;
@@ -221,28 +221,28 @@ PyObject* PopulationPool::get_npi() {
     }
     data.append(str_data_3);
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void PopulationPool::set_sampling_multiplier(double multiplier, uint64_t population) {
     sampling_multiplier_[population] = multiplier;
 }
 
-PyObject* PopulationPool::get_sampling_multiplier() {
+boost::python::list PopulationPool::get_sampling_multiplier() {
     boost::python::list data;
 
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         data.append(boost::python::object(sampling_multiplier_[population]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void PopulationPool::set_migration_probability(double probability, uint64_t source_population, uint64_t target_population) {
     migration_probability_[getIndexPop(source_population, target_population)] = probability;
 }
 
-PyObject* PopulationPool::get_migration_probability() {
+boost::python::list PopulationPool::get_migration_probability() {
     boost::python::list data;
 
     for (uint64_t source = 0; source < getNumberPopulations(); ++source) {
@@ -253,7 +253,7 @@ PyObject* PopulationPool::get_migration_probability() {
         data.append(str_data);
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 uint64_t PopulationPool::check_migration_probability() {

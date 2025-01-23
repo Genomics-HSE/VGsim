@@ -28,41 +28,41 @@ public:
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
     void genealogy();
 
-    PyObject* get_flat_chain();
+    boost::python::list get_flat_chain();
     boost::python::tuple get_tree();
-    PyObject* export_chain_events();
+    boost::python::list export_chain_events();
 
     // Infectious
     void set_susceptibility_group(uint64_t group, uint64_t haplotype);
-    PyObject* get_susceptibility_group();
+    boost::python::list get_susceptibility_group();
     void set_transmission_rate(double rate, uint64_t haplotype);
     boost::python::list get_transmission_rate();
     void set_recovery_rate(double rate, uint64_t haplotype);
-    PyObject* get_recovery_rate();
+    boost::python::list get_recovery_rate();
     void set_sampling_rate(double rate, uint64_t haplotype);
-    PyObject* get_sampling_rate();
+    boost::python::list get_sampling_rate();
     void set_mutation_rate(double rate, uint64_t haplotype, uint64_t mutation);
-    PyObject* get_mutation_rate();
+    boost::python::list get_mutation_rate();
     void set_mutation_probabilities(double rate, uint64_t haplotype, uint64_t mutation, uint64_t index);
-    PyObject* get_mutation_probabilities();
+    boost::python::list get_mutation_probabilities();
     void set_susceptibility(double rate, uint64_t haplotype, uint64_t group);
-    PyObject* get_susceptibility();
+    boost::python::list get_susceptibility();
 
     // Susceptibles
     void set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group);
-    PyObject* get_immunity_transition();
+    boost::python::list get_immunity_transition();
 
     // Population pool
     void set_population_size(uint64_t size, uint64_t population);
-    PyObject* get_population_size();
+    boost::python::list get_population_size();
     void set_contact_density(double value, uint64_t population);
-    PyObject* get_contact_density();
+    boost::python::list get_contact_density();
     void set_npi(double after, double start, double end, uint64_t population);
-    PyObject* get_npi();
+    boost::python::list get_npi();
     void set_sampling_multiplier(double multiplier, uint64_t population);
-    PyObject* get_sampling_multiplier();
+    boost::python::list get_sampling_multiplier();
     void set_migration_probability(double probability, uint64_t source_population, uint64_t target_population);
-    PyObject* get_migration_probability();
+    boost::python::list get_migration_probability();
     uint64_t check_migration_probability();
 
     // Utility
