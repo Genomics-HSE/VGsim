@@ -429,7 +429,6 @@ class Simulator:
         for s in range(self._number_of_sites):
             field.append(f"M{s}")
             field.append(f"MW{s}")
-        data = [field]
 
         transmission_rate = self.get_transmission_rate()
         recovery_rate = self.get_recovery_rate()
@@ -438,6 +437,7 @@ class Simulator:
         mutation_rate = self.get_mutation_rate()
         mutation_probabilities = self.get_mutation_probabilities()
 
+        data = []
         for hn in range(self._number_of_haplotypes):
             row = [
                     self._calculate_string_from_haplotype(hn),
@@ -451,7 +451,7 @@ class Simulator:
                 row.append(self._calculate_colored_haplotype(mutation_probabilities, hn, s))
             data.append(row)
 
-        print(tabulate(data, headers="firstrow", tablefmt="fancy_grid", numalign="center", stralign="center"))
+        print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
         print("Legend:")
         print("H - haplotype")
         print("TR - transmission rate")
@@ -481,82 +481,97 @@ class Simulator:
         """
         if susceptibles or infectious:
             current_susceptible, current_infectious = self._simulator.get_current_individuals()
-            print(current_susceptible, current_infectious)
 
-        # if population:
-        #     table_populations = PrettyTable()
-        #     table_populations.field_names = ["ID", "Size", 'Actual size', "CD",'CDBLC', "CDALD", "SLD", "ELD", "SM"]
-        #     for pn in range(self.popNum):
-        #         table_populations.add_row([pn, self.sizes[pn], self.actualSizes[pn], self.contactDensity[pn], \
-        #             self.contactDensityBeforeLockdown[pn], self.contactDensityAfterLockdown[pn], self.startLD[pn], self.endLD[pn], \
-        #             self.samplingMultiplier[pn]])
+        if population:            
+            field = ["ID", "Size", 'Actual size', "CD",'CDBLC', "CDALD", "SLD", "ELD", "SM"]
 
-        #     print(table_populations)
-        #     print("Legend:")
-        #     print("ID - number of population")
-        #     print("Size - size of population")
-        #     print("Actual size - actual size of population")
-        #     print("CD - contact density")
-        #     print("CDBLD - contact density without lockdown")
-        #     print("CDALD - contact density at lockdown")
-        #     print("SLD - start of lockdown")
-        #     print("ELD - end of lockdown")
-        #     print("SM - sampling multiplier")
-        #     print()
+            sizes = self.get_population_size()
+            actual_sizes = self._simulator.get_actual_size()
+            contact_density = self.get_contact_density()
+            contact_density_before_lockdown = self._simulator.get_contact_density_before_lockdown()
+            contact_density_after_lockdown, start_lockdown, end_lockdown = self.get_npi()
+            sampling_multiplier = self.get_sampling_multiplier()
 
-        # if susceptibles:
-        #     table_susceptible = PrettyTable()
-        #     field = ["ST\\ID"]
-        #     for pn in range(self.popNum):
-        #         field.append(pn)
-        #     table_susceptible.field_names = field
-        #     for sn in range(self.susNum):
-        #         row = [sn]
-        #         for pn in range(self.popNum):
-        #             row.append(current_susceptible[pn][sn])
-        #         table_susceptible.add_row(row)
+            data = []
+            for pn in range(self._number_of_populations):
+                data.append([pn,
+                             sizes[pn],
+                             actual_sizes[pn],
+                             contact_density[pn],
+                             contact_density_before_lockdown[pn],
+                             contact_density_after_lockdown[pn],
+                             start_lockdown[pn],
+                             end_lockdown[pn],
+                             sampling_multiplier[pn]])
 
-        #     print(table_susceptible)
-        #     print("Legend:")
-        #     print("ID - ID population")
-        #     print("ST - susceptibility type")
-        #     print()
+            print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print("Legend:")
+            print("ID - number of population")
+            print("Size - size of population")
+            print("Actual size - actual size of population")
+            print("CD - contact density")
+            print("CDBLD - contact density without lockdown")
+            print("CDALD - contact density at lockdown")
+            print("SLD - start of lockdown")
+            print("ELD - end of lockdown")
+            print("SM - sampling multiplier")
+            print()
 
-        # if infectious:
-        #     table_infectious = PrettyTable()
-        #     field = ["H\\ID"]
-        #     for pn in range(self.popNum):
-        #         field.append(pn)
-        #     table_infectious.field_names = field
-        #     for hn in range(self.hapNum):
-        #         row = [self.calculate_string_from_haplotype(hn)]
-        #         for pn in range(self.popNum):
-        #             row.append(current_infectious[pn][hn])
-        #         table_infectious.add_row(row)
+        if susceptibles:
+            field = ["ST\\ID"]
+            for pn in range(self._number_of_populations):
+                field.append(pn)
 
-        #     print(table_infectious)
-        #     print("Legend:")
-        #     print("ID - ID population")
-        #     print("H - haplotype")
-        #     print()
+            data = []
+            for sn in range(self._number_of_susceptible_groups):
+                row = [sn]
+                for pn in range(self._number_of_populations):
+                    row.append(current_susceptible[pn][sn])
+                data.append(row)
 
-        # if migration:
-        #     table_migration = PrettyTable()
-        #     field = ["S\\T"]
-        #     for pn in range(self.popNum):
-        #         field.append(pn)
-        #     table_migration.field_names = field
-        #     for pn1 in range(self.popNum):
-        #         row = [pn1]
-        #         for pn2 in range(self.popNum):
-        #             row.append(self.migrationRates[pn1, pn2])
-        #         table_migration.add_row(row)
+            print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print("Legend:")
+            print("ID - ID population")
+            print("ST - susceptibility type")
+            print()
 
-        #     print(table_migration)
-        #     print("Legend:")
-        #     print("S - ID source population")
-        #     print("T - ID target population")
-        #     print()
+        if infectious:
+            field = ["H\\ID"]
+            for pn in range(self._number_of_populations):
+                field.append(pn)
+
+            data = []
+            for hn in range(self._number_of_haplotypes):
+                row = [self._calculate_string_from_haplotype(hn)]
+                for pn in range(self._number_of_populations):
+                    row.append(current_infectious[pn][hn])
+                data.append(row)
+
+            print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print("Legend:")
+            print("ID - ID population")
+            print("H - haplotype")
+            print()
+
+        if migration:
+            field = ["S\\T"]
+            for pn in range(self._number_of_populations):
+                field.append(pn)
+
+            migration_probability = self.get_migration_probability()
+
+            data = []
+            for pn1 in range(self._number_of_populations):
+                row = [pn1]
+                for pn2 in range(self._number_of_populations):
+                    row.append(migration_probability[pn1][pn2])
+                data.append(row)
+
+            print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print("Legend:")
+            print("S - ID source population")
+            print("T - ID target population")
+            print()
 
     def print_immunity_model(self, immunity=True, transition=True):
         """
@@ -572,17 +587,17 @@ class Simulator:
             field = ["H\\ST"]
             for sn in range(self._number_of_susceptible_groups):
                 field.append(f"S{sn}")
-            data = [field]
 
             susceptibility = self.get_susceptibility()
 
+            data = []
             for hn in range(self._number_of_haplotypes):
                 row = [self._calculate_string_from_haplotype(hn)]
                 for sn in range(self._number_of_susceptible_groups):
                     row.append(susceptibility[hn][sn])
                 data.append(row)
 
-            print(tabulate(data, headers="firstrow", tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
             print("Legend:")
             print("H - haplotype")
             print("ST - susceptibility type")
@@ -592,17 +607,17 @@ class Simulator:
             field = ["ID"]
             for sn in range(self._number_of_susceptible_groups):
                 field.append(sn)
-            data = [field]
 
             immunity_transition = self.get_immunity_transition()
 
+            data = []
             for sn1 in range(self._number_of_susceptible_groups):
                 row = [sn1]
                 for sn2 in range(self._number_of_susceptible_groups):
                     row.append(immunity_transition[sn1][sn2])
                 data.append(row)
 
-            print(tabulate(data, headers="firstrow", tablefmt="fancy_grid", numalign="center", stralign="center"))
+            print(tabulate(data, headers=field, tablefmt="fancy_grid", numalign="center", stralign="center"))
             print("Legend:")
             print("ID - ID susceptibility type")
             print()

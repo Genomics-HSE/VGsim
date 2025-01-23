@@ -121,9 +121,47 @@ void PopulationPool::Debug() {
 }
 
 boost::python::tuple PopulationPool::get_current_individuals() {
-    boost::python::list susceptiblies;
+    boost::python::list susceptibles;
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        uint64_t* susceptibles_data = populations_[population].GetSusceptiblesBegin();
+        boost::python::list data;
+        for (uint64_t group = 0; group < getNumberSusceptibleGroups(); ++group) {
+            data.append(boost::python::object(susceptibles_data[group]));
+        }
+        susceptibles.append(data);
+    }
+
     boost::python::list infected;
-    return boost::python::make_tuple(susceptiblies, infected);
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        uint64_t* infected_data = populations_[population].GetInfectedBegin();
+        boost::python::list data;
+        for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
+            data.append(boost::python::object(infected_data[haplotype]));
+        }
+        infected.append(data);
+    }
+
+    return boost::python::make_tuple(susceptibles, infected);
+}
+
+PyObject* PopulationPool::get_actual_size() {
+    boost::python::list data;
+
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        data.append(boost::python::object(actual_sizes_[population]));
+    }
+
+    return boost::python::incref(data.ptr());
+}
+
+PyObject* PopulationPool::get_contact_density_before_lockdown() {
+    boost::python::list data;
+
+    for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
+        data.append(boost::python::object(populations_[population].GetContactDensityBefore()));
+    }
+
+    return boost::python::incref(data.ptr());
 }
 
 void PopulationPool::set_population_size(uint64_t size, uint64_t population) {

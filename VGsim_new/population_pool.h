@@ -8,6 +8,8 @@ public:
     void Update();
 
     boost::python::tuple get_current_individuals();
+    PyObject* get_actual_size();
+    PyObject* get_contact_density_before_lockdown();
 
     void set_population_size(uint64_t size, uint64_t population);
     PyObject* get_population_size();

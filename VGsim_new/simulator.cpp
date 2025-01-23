@@ -63,6 +63,14 @@ boost::python::tuple Simulator::get_current_individuals() {
     return pool_.get_current_individuals();
 }
 
+PyObject* Simulator::get_actual_size() {
+    return pool_.get_actual_size();
+}
+
+PyObject* Simulator::get_contact_density_before_lockdown() {
+    return pool_.get_contact_density_before_lockdown();
+}
+
 PyObject* Simulator::get_flat_chain() {
     boost::python::list ret;
 

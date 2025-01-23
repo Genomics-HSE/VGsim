@@ -28,8 +28,8 @@ public:
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
     void genealogy();
     boost::python::tuple get_current_individuals();
-
-
+    PyObject* get_actual_size();
+    PyObject* get_contact_density_before_lockdown();
 
     PyObject* get_flat_chain();
     boost::python::tuple get_tree();
