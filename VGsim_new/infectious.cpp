@@ -108,14 +108,15 @@ void Infectious::set_transmission_rate(double rate, uint64_t haplotype) {
     transmission_rates_[haplotype] = rate;
 }
 
-PyObject* Infectious::get_transmission_rate() {
+boost::python::list Infectious::get_transmission_rate() {
     boost::python::list data;
 
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         data.append(boost::python::object(transmission_rates_[haplotype]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
+    // return boost::python::incref(data.ptr());
 }
 
 void Infectious::set_recovery_rate(double rate, uint64_t haplotype) {

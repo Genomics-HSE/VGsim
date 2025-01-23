@@ -144,24 +144,24 @@ boost::python::tuple PopulationPool::get_current_individuals() {
     return boost::python::make_tuple(susceptibles, infected);
 }
 
-PyObject* PopulationPool::get_actual_size() {
+boost::python::list PopulationPool::get_actual_size() {
     boost::python::list data;
 
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         data.append(boost::python::object(actual_sizes_[population]));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
-PyObject* PopulationPool::get_contact_density_before_lockdown() {
+boost::python::list PopulationPool::get_contact_density_before_lockdown() {
     boost::python::list data;
 
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         data.append(boost::python::object(populations_[population].GetContactDensityBefore()));
     }
 
-    return boost::python::incref(data.ptr());
+    return data;
 }
 
 void PopulationPool::set_population_size(uint64_t size, uint64_t population) {
@@ -447,6 +447,14 @@ inline uint64_t* PopulationPool::GetSusceptiblesPopSusBegin(uint64_t population)
 
 inline uint64_t PopulationPool::GetSusceptiblesPopSus(uint64_t population, uint64_t group) const {
     return populations_[population].GetSusceptibles(group);
+}
+
+uint64_t PopulationPool::GetStartNumberSusceptible(uint64_t population, uint64_t group) const {
+    return populations_[population].GetStartNumberSusceptible(group);
+}
+
+uint64_t PopulationPool::GetStartNumberInfected(uint64_t population, uint64_t haplotype) const {
+    return populations_[population].GetStartNumberInfected(haplotype);
 }
 
 

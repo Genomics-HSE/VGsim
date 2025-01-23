@@ -2,6 +2,7 @@ from random import randrange
 import sys
 import numpy as np
 from tabulate import tabulate
+import matplotlib.pyplot as plt
 
 import source_VGsim
 
@@ -24,6 +25,8 @@ class Simulator:
         self._seed = seed
         self._sampling_probability = sampling_probability
         self._first_simulation = False
+
+        self.fig = None
 
     def simulate(self, iterations=1000, sample_size=None, epidemic_time=0.0, method='direct', attempts=200):
         self._first_simulation = True
@@ -440,7 +443,7 @@ class Simulator:
         data = []
         for hn in range(self._number_of_haplotypes):
             row = [
-                    self._calculate_string_from_haplotype(hn),
+                    self._calculate_string_from_number_haplotype(hn),
                     transmission_rate[hn],
                     recovery_rate[hn],
                     sampling_rate[hn],
@@ -542,7 +545,7 @@ class Simulator:
 
             data = []
             for hn in range(self._number_of_haplotypes):
-                row = [self._calculate_string_from_haplotype(hn)]
+                row = [self._calculate_string_from_number_haplotype(hn)]
                 for pn in range(self._number_of_populations):
                     row.append(current_infectious[pn][hn])
                 data.append(row)
@@ -592,7 +595,7 @@ class Simulator:
 
             data = []
             for hn in range(self._number_of_haplotypes):
-                row = [self._calculate_string_from_haplotype(hn)]
+                row = [self._calculate_string_from_number_haplotype(hn)]
                 for sn in range(self._number_of_susceptible_groups):
                     row.append(susceptibility[hn][sn])
                 data.append(row)
@@ -672,13 +675,285 @@ class Simulator:
             self.print_immunity_model(immunity=immunity,
                                       transition=transition)
 
-    def _check_amount(self, amount, smth, zero=True):
-        if isinstance(amount, int) == False:
-            raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
+
+
+
+
+    def get_data_susceptible(self, population=None, susceptibility_group=None, step_number=100):
+        """
+        Returns the list with the amount of susceptible individuals for the populations and the haplotypes for the entire period of time.
+
+        :param population: Population to retrieve data from. By default - None.
+        :type population: int or list of int or None
+
+        :param susceptibility_group: Susceptibility group to retrieve data from. By default - None.
+        :type susceptibility_group: int or list of int or None
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :return: A list of a 3-tuple: population, susceptibility group and list of amount of susceptible individuals.
+        """
+        self._check_indexes(population, self._number_of_populations, 'population')
+        self._check_indexes(susceptibility_group, self._number_of_susceptible_groups, 'susceptibility group')
+        self._check_amount(step_number, 'step number', False)
+
+        populations = self._calculate_indexes(population, self._number_of_populations)
+        susceptibility_groups = self._calculate_indexes(susceptibility_group, self._number_of_susceptible_groups)
+
+        data = []
+        for pn in populations:
+            for sn in susceptibility_groups:
+                data.append((pn, sn, self._simulator.get_data_susceptible(pn, sn, step_number)))
+
+        return data
+
+    def get_data_infected(self, population=None, haplotype=None, step_number=100):
+        """
+        Returns the list with the amount of infected individuals for the populations and the haplotypes for the entire period of time.
+
+        :param population: Population to retrieve data from. By default - None.
+        :type population: int or list of int or None
+
+        :param haplotype: Haplotype to retrieve data from. By default - None.
+        :type haplotype: int or str or list of int and str or None
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :return: A list of a 3-tuple: population, haplotype and list of amount of infected individuals.
+        """
+        self._check_indexes(population, self._number_of_populations, 'population')
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype')
+        self._check_amount(step_number, 'step number', False)
+
+        populations = self._calculate_indexes(population, self._number_of_populations)
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
+
+        data = []
+        for pn in populations:
+            for hn in haplotypes:
+                data.append((pn, hn, self._simulator.get_data_infected(pn, hn, step_number)))
+
+        return data
+
+    def get_data_sample(self, population=None, haplotype=None, step_number=100):
+        """
+        Returns the list with the amount of sample individuals for the populations and the haplotypes for the entire period of time.
+
+        :param population: Population to retrieve data from. By default - None.
+        :type population: int or list of int or None
+
+        :param haplotype: Haplotype to retrieve data from. By default - None.
+        :type haplotype: int or str or list of int and str or None
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :return: A list of a 3-tuple: population, haplotype and list of amount of sample individuals.
+        """
+        self._check_indexes(population, self._number_of_populations, 'population')
+        self._check_indexes(haplotype, self._number_of_haplotypes, 'haplotype')
+        self._check_amount(step_number, 'step number', False)
+
+        populations = self._calculate_indexes(population, self._number_of_populations)
+        haplotypes = self._calculate_indexes(haplotype, self._number_of_haplotypes)
+
+        data = []
+        for pn in populations:
+            for hn in haplotypes:
+                data.append((pn, hn, self._simulator.get_data_sample(pn, hn, step_number)))
+
+        return data
+
+    def get_time_points(self, step_number=100):
+        """
+        Returns the list with the time points for the entire period of time.
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :return: List with the time points.
+        """
+        self._check_amount(step_number, 'step number', False)
+
+        return self._simulator.get_time_points(step_number)
+
+    # def get_lockdowns(self, population):
+    #     """
+    #     Returns the list with the information about lockdowns over some period of time.
+
+    #     :param population: Population to retrieve data from. By default - None.
+    #     :type population: int or list of int or None
+
+    #     :return: 3 lists - amounts of sample individuals on the time points, time points themselves at which we retrieve amounts of individuals, and lockdowns data for the current epidemiology
+    #     """
+    #     return self._simulator.get_lockdowns(population)
+
+    def add_plot_susceptible(self, population=None, susceptibility_group=None, step_number=100, label=None):
+        """
+        Add to plot the trajectories of the change of the amount of susceptible individuals over time.
+
+        :param population: Population id for the plot. By default - None.
+        :type population: int or list of int or None
+
+        :param susceptibility_group: Susceptibility group for the plot. By default - None.
+        :type susceptibility_group: int or list of int or None
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :param label: The label for the susceptible plot. If label is None then to use base label. By default - None.
+        :type label: str or None
+        """
+        if label is not None and not isinstance(label, str):
+            raise TypeError('Incorrect type of lable. Type should be string or None.')
+
+        self._create_base_plot()
+
+        time_points = self.get_time_points(step_number)
+
+        for data in self.get_data_susceptible(population, susceptibility_group, step_number):
+            if label is None:
+                label_susceptible = f'Susceptible pop: {data[0]}, sus: {data[1]}'
+            else:
+                label_susceptible = label
+
+            self.ax_2.plot(time_points, data[2], label=label_susceptible)
+
+    def add_plot_infected(self, population=None, haplotype=None, step_number=100, label=None):
+        """
+        Add to plot the trajectories of the change of the amount of infectious individuals over time.
+
+        :param population: Population id for the plot. By default - None.
+        :type population: int or list of int or None
+
+        :param haplotype: Haplotype for the plot. By default - None.
+        :type haplotype: int or str or list of int and str or None
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :param label: The label for the infected plot. If label is None then to use base label. By default - None.
+        :type label: str or None
+        """
+        if label is not None and not isinstance(label, str):
+            raise TypeError('Incorrect type of lable. Type should be string or None.')
+
+        self._create_base_plot()
+
+        time_points = self.get_time_points(step_number)
+
+        for data in self.get_data_infected(population, haplotype, step_number):
+            if label is None:
+                label_infected = f'Infected pop: {data[0]}, hap: {self._calculate_string_from_number_haplotype(data[1])}'
+            else:
+                label_infected = label
+
+            self.ax_2.plot(time_points, data[2], label=label_infected)
+
+    def add_plot_sample(self, population=None, haplotype=None, step_number=100, label=None):
+        """
+        Add to plot the trajectories of the change of the amount of sample individuals over time.
+
+        :param population: Population id for the plot. By default - None.
+        :type population: int or list of int or None
+
+        :param haplotype: Haplotype for the plot. By default - None.
+        :type haplotype: int or str or list of int and str or None
+
+        :param step_number: Number of steps which split the epidemiology timeline. By default - 100.
+        :type step_number: int
+
+        :param label: The label for the sample plot. If label is None then to use base label. By default - None.
+        :type label: str or None
+        """
+        if label is not None and not isinstance(label, str):
+            raise TypeError('Incorrect type of lable. Type should be string or None.')
+
+        self._create_base_plot()
+
+        time_points = self.get_time_points(step_number)
+
+        for data in self.get_data_sample(population, haplotype, step_number):
+            if label is None:
+                label_sample = f'Sample pop: {data[0]}, hap: {self._calculate_string_from_number_haplotype(data[1])}'
+            else:
+                label_sample = label
+
+            self.ax.plot(time_points, data[2], label=label_sample)
+
+    # def add_plot_lockdowns(self, population):
+    #     """
+    #     Add information about lockdowns for populations
+
+    #     :param population: populaiton id for the plot
+    #     :type population: int
+    #     """
+    #     self._create_base_plot()
+    #     lockdowns = self.get_lockdowns(population)
+    #     if len(lockdowns) != 0:
+    #         point = 0
+    #         pointEnd = 0
+    #         for ld in range(0, len(lockdowns), 2):
+    #             if ld + 1 == len(lockdowns):
+    #                 while time_points[point] < lockdowns[ld][1]:
+    #                     point += 1
+    #                 plt.fill_between(time_points[point:], infections[point:], alpha=0.2)
+    #             else:
+    #                 while time_points[point] < lockdowns[ld][1]:
+    #                     point += 1
+    #                 while time_points[pointEnd] < lockdowns[ld + 1][1]:
+    #                     pointEnd += 1
+    #                 if pointEnd == point:
+    #                     continue
+    #                 plt.fill_between(time_points[point:pointEnd + 1], infections[point:pointEnd + 1], alpha=0.2)
+
+    def add_legend(self):
+        """
+        Add legend to the plot.
+        """
+        lines_1, labels_1 = self.ax.get_legend_handles_labels()
+        lines_2, labels_2 = self.ax_2.get_legend_handles_labels()
+        lines = lines_1 + lines_2
+        labels = labels_1 + labels_2
+        self.ax.legend(lines, labels, loc=0)
+
+    def add_title(self, title="Plot"):
+        """
+        Add plot title.
+
+        :param name: The title for the plot. By default - Plot.
+        :type title: str
+        """
+        if not isinstance(filename, str):
+            raise TypeError('Incorrect type of title. Type should be string.')
+
+        self.ax.set_title(title)
+
+    def plot(self, filename=None):
+        """
+        Show plot with all the trajectories added by other methods.
+
+        :param filename: The filename for file with plot. If filename is None then show plot. By default - None.
+        :type filename: str or None
+        """
+        if filename is not None and not isinstance(filename, str):
+            raise TypeError('Incorrect type of filename. Type should be string or None.')
+
+        if filename is None:
+            plt.show()
+        else:
+            plt.savefig(filename)
+        self.fig = None
+
+    def _check_amount(self, amount, type, zero=True):
+        if not isinstance(amount, int):
+            raise TypeError(f'Incorrect type of {type}. Type should be int.')
         elif amount <= 0 and zero:
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more 0.')
-        elif amount < 0 and zero == False:
-            raise ValueError('Incorrect value of ' + smth + '. Value should be more or equal 0.')
+            raise ValueError(f'Incorrect value of {type}. Value should be more 0.')
+        elif amount < 0 and not zero:
+            raise ValueError(f'Incorrect value of {type}. Value should be more or equal 0.')
 
     def _check_migration_probability(self):
         err = self._simulator.check_migration_probability()
@@ -687,15 +962,15 @@ class Simulator:
         elif err == 2:
             raise ValueError('Incorrect value of migration probability. Value of migration probability from source population to target population should be more 0.')
 
-    def _check_indexes(self, index, edge, smth, hap=False, none=True):
-        if isinstance(index, list):
-            for i in index:
-                self._check_index(i, edge, smth, hap=hap, none=none)
+    def _check_indexes(self, indexes, edge, smth, hap=False, none=True):
+        if isinstance(indexes, list):
+            for index in indexes:
+                self._check_index(index, edge, smth, hap=hap, none=none)
         else:
-            self._check_index(index, edge, smth, hap=hap, none=none)
+            self._check_index(indexes, edge, smth, hap=hap, none=none)
 
     def _check_index(self, index, edge, smth, hap=False, none=True):
-        if none == False and index is None:
+        if not none and index is None:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int.')
         elif isinstance(index, int):
             if index < 0 or index >= edge:
@@ -718,9 +993,9 @@ class Simulator:
             raise TypeError('Incorrect type of ' + smth + '. Type should be list.')
 
     def _check_value(self, value, smth, edge=None, none=False):
-        if none and isinstance(value, (int, float)) == False and value is not None:
+        if none and not isinstance(value, (int, float)) and value is not None:
             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float or None.')
-        elif not none and isinstance(value, (int, float)) == False:
+        elif not none and not isinstance(value, (int, float)):
             raise TypeError('Incorrect type of ' + smth + '. Type should be int or float.')
 
         if edge is None and isinstance(value, (int, float)) and value < 0:
@@ -734,23 +1009,11 @@ class Simulator:
             haplotype = haplotype // 4
         return allele
 
-    def _calculate_haplotype_from_string(self, string):
-        string = string[::-1]
-        haplotype = 0
-        for s in range(self._number_of_sites):
-            if string[s] == "T":
-                haplotype += (4**s)
-            elif string[s] == "C":
-                haplotype += 2*(4**s)
-            elif string[s] == "G":
-                haplotype += 3*(4**s)
-        return haplotype
-
     def _calculate_indexes(self, indexes_list, edge):
         if isinstance(indexes_list, list):
             indexes = set()
-            for i in indexes_list:
-                indexes.update(self._calculate_index(i, edge))
+            for index in indexes_list:
+                indexes.update(self._calculate_index(index, edge))
         else:
             indexes = set(self._calculate_index(indexes_list, edge))
         return indexes
@@ -770,16 +1033,41 @@ class Simulator:
                 if haplotypes[i].count("*") != 0:
                     haplotypes.remove(haplotypes[i])
             for i in range(len(haplotypes)):
-                haplotypes[i] = self._calculate_haplotype_from_string(haplotypes[i])
+                haplotypes[i] = self._calculate_number_haplotype_from_string(haplotypes[i])
 
             return haplotypes
         elif isinstance(index, int):
             return [index]
-        else:
+        elif index is None:
             return range(edge)
+        else:
+            raise TypeError(f'Unknown index type for calculate index - {type(index)}!')
+
+    def _calculate_string_from_number_haplotype(self, haplotype):
+        if self._number_of_sites == 0:
+            return 'no sites'
+
+        letters = ["A", "T", "C", "G"]
+        string = ""
+        for s in range(self._number_of_sites):
+            string = letters[haplotype%4] + string
+            haplotype = haplotype // 4
+        return string
+
+    def _calculate_number_haplotype_from_string(self, string):
+        string = string[::-1]
+        haplotype = 0
+        for s in range(self._number_of_sites):
+            if string[s] == "T":
+                haplotype += (4**s)
+            elif string[s] == "C":
+                haplotype += 2*(4**s)
+            elif string[s] == "G":
+                haplotype += 3*(4**s)
+        return haplotype
 
     def _calculate_colored_haplotype(self, mutation_probabilities, haplotype, site):
-        hap = self._calculate_string_from_haplotype(haplotype)
+        hap = self._calculate_string_from_number_haplotype(haplotype)
         haplotypes = [hap[:site] + "A" + hap[site+1:], hap[:site] + "T" + hap[site+1:], hap[:site] + "C" + hap[site+1:], \
         hap[:site] + "G" + hap[site+1:]]
         for i in range(4):
@@ -801,10 +1089,10 @@ class Simulator:
         str(mutation_probabilities[haplotype][site][2]) + "\n"
         return string
 
-    def _calculate_string_from_haplotype(self, haplotype):
-        letters = ["A", "T", "C", "G"]
-        string = ""
-        for s in range(self._number_of_sites):
-            string = letters[haplotype%4] + string
-            haplotype = haplotype // 4
-        return string
+    def _create_base_plot(self):
+        if self.fig is None:
+            self.fig, self.ax = plt.subplots(figsize=(8, 6))
+            self.ax.set_ylabel('Number of samples')
+            self.ax.set_xlabel('Time')
+            self.ax_2 = self.ax.twinx()
+            self.ax_2.set_ylabel('Number of individuals')

@@ -147,6 +147,16 @@ inline double Population::GetEnd() const {
 }
 
 
+// Utility
+uint64_t Population::GetStartNumberSusceptible(uint64_t group) const {
+    return susceptibles_save_[group];
+}
+
+uint64_t Population::GetStartNumberInfected(uint64_t haplotype) const {
+    return infected_save_[haplotype];
+}
+
+
 // Private
 inline uint64_t Population::getNumberHaplotypes() const {
     return number_of_haplotypes_;

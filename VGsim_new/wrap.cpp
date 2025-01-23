@@ -19,7 +19,7 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
         .def( "set_susceptibility_group", static_cast< void (Simulator::*)(uint64_t, uint64_t) > ( &Simulator::set_susceptibility_group ), args("group", "haplotype"))
         .def( "get_susceptibility_group", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_susceptibility_group ))
         .def( "set_transmission_rate", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_transmission_rate ), args("rate", "haplotype"))
-        .def( "get_transmission_rate", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_transmission_rate ))
+        .def( "get_transmission_rate", static_cast< boost::python::list (Simulator::*)() > ( &Simulator::get_transmission_rate ))
         .def( "set_recovery_rate", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_recovery_rate ), args("rate", "haplotype"))
         .def( "get_recovery_rate", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_recovery_rate ))
         .def( "set_sampling_rate", static_cast< void (Simulator::*)(double, uint64_t) > ( &Simulator::set_sampling_rate ), args("rate", "haplotype"))
@@ -50,7 +50,12 @@ BOOST_PYTHON_MODULE( source_VGsim ) {
 
         // Utility
         .def( "get_current_individuals", static_cast< boost::python::tuple (Simulator::*)() > ( &Simulator::get_current_individuals ))
-        .def( "get_actual_size", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_actual_size ))
-        .def( "get_contact_density_before_lockdown", static_cast< PyObject* (Simulator::*)() > ( &Simulator::get_contact_density_before_lockdown ))
+        .def( "get_actual_size", static_cast< boost::python::list (Simulator::*)() > ( &Simulator::get_actual_size ))
+        .def( "get_contact_density_before_lockdown", static_cast< boost::python::list (Simulator::*)() > ( &Simulator::get_contact_density_before_lockdown ))
+        
+        .def( "get_data_susceptible", static_cast< boost::python::list (Simulator::*)(uint64_t, uint64_t, uint64_t) > ( &Simulator::get_data_susceptible ))
+        .def( "get_data_infected", static_cast< boost::python::list (Simulator::*)(uint64_t, uint64_t, uint64_t) > ( &Simulator::get_data_infected ))
+        .def( "get_data_sample", static_cast< boost::python::list (Simulator::*)(uint64_t, uint64_t, uint64_t) > ( &Simulator::get_data_sample ))
+        .def( "get_time_points", static_cast< boost::python::list (Simulator::*)(uint64_t) > ( &Simulator::get_time_points ))
     ;
 }

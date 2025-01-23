@@ -44,6 +44,12 @@ public:
     Event GetEvent(uint64_t index);
     Multievent GetMultievent(uint64_t index);
 
+    // Utility
+    boost::python::list get_data_susceptible(uint64_t population, uint64_t group, uint64_t step_number, uint64_t start_amount);
+    boost::python::list get_data_infected(uint64_t population, uint64_t haplotype, uint64_t step_number, uint64_t start_amount);
+    boost::python::list get_data_sample(uint64_t population, uint64_t haplotype, uint64_t step_number);
+    boost::python::list get_time_points(uint64_t step_number);
+
 private:
     uint64_t calculateNumberEvents();
 

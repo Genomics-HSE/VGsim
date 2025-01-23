@@ -12,7 +12,7 @@ public:
     void set_susceptibility_group(uint64_t group, uint64_t haplotype);
     PyObject* get_susceptibility_group();
     void set_transmission_rate(double rate, uint64_t haplotype);
-    PyObject* get_transmission_rate();
+    boost::python::list get_transmission_rate();
     void set_recovery_rate(double rate, uint64_t haplotype);
     PyObject* get_recovery_rate();
     void set_sampling_rate(double rate, uint64_t haplotype);

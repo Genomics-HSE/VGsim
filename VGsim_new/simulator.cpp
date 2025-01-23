@@ -59,18 +59,6 @@ void Simulator::genealogy() {
     arg_.CalculateGenealogy();
 }
 
-boost::python::tuple Simulator::get_current_individuals() {
-    return pool_.get_current_individuals();
-}
-
-PyObject* Simulator::get_actual_size() {
-    return pool_.get_actual_size();
-}
-
-PyObject* Simulator::get_contact_density_before_lockdown() {
-    return pool_.get_contact_density_before_lockdown();
-}
-
 PyObject* Simulator::get_flat_chain() {
     boost::python::list ret;
 
@@ -132,6 +120,7 @@ PyObject* Simulator::export_chain_events() {
     return boost::python::incref(ret.ptr());
 }
 
+// Infectious
 void Simulator::set_susceptibility_group(uint64_t group, uint64_t haplotype) {
     infectious_data_.set_susceptibility_group(group, haplotype);
 }
@@ -144,7 +133,7 @@ void Simulator::set_transmission_rate(double rate, uint64_t haplotype) {
     infectious_data_.set_transmission_rate(rate, haplotype);
 }
 
-PyObject* Simulator::get_transmission_rate() {
+boost::python::list Simulator::get_transmission_rate() {
     return infectious_data_.get_transmission_rate();
 }
 
@@ -188,6 +177,7 @@ PyObject* Simulator::get_susceptibility() {
     return infectious_data_.get_susceptibility();
 }
 
+// Susceptibles
 void Simulator::set_immunity_transition(double rate, uint64_t source_group, uint64_t target_group) {
     susceptibles_data_.set_immunity_transition(rate, source_group, target_group);
 }
@@ -196,6 +186,7 @@ PyObject* Simulator::get_immunity_transition() {
     return susceptibles_data_.get_immunity_transition();
 }
 
+// Population pool
 void Simulator::set_population_size(uint64_t size, uint64_t population) {
     pool_.set_population_size(size, population);
 }
@@ -238,6 +229,35 @@ PyObject* Simulator::get_migration_probability() {
 
 uint64_t Simulator::check_migration_probability() {
     return pool_.check_migration_probability();
+}
+
+// Utility
+boost::python::tuple Simulator::get_current_individuals() {
+    return pool_.get_current_individuals();
+}
+
+boost::python::list Simulator::get_actual_size() {
+    return pool_.get_actual_size();
+}
+
+boost::python::list Simulator::get_contact_density_before_lockdown() {
+    return pool_.get_contact_density_before_lockdown();
+}
+
+boost::python::list Simulator::get_data_susceptible(uint64_t population, uint64_t group, uint64_t step_number) {
+    return chain_.get_data_susceptible(population, group, step_number, pool_.GetStartNumberSusceptible(population, group));
+}
+
+boost::python::list Simulator::get_data_infected(uint64_t population, uint64_t haplotype, uint64_t step_number) {
+    return chain_.get_data_infected(population, haplotype, step_number, pool_.GetStartNumberInfected(population, haplotype));
+}
+
+boost::python::list Simulator::get_data_sample(uint64_t population, uint64_t haplotype, uint64_t step_number) {
+    return chain_.get_data_sample(population, haplotype, step_number);
+}
+
+boost::python::list Simulator::get_time_points(uint64_t step_number) {
+    return chain_.get_time_points(step_number);
 }
 
 

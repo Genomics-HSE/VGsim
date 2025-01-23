@@ -36,6 +36,10 @@ public:
     inline void SetEnd(double end);
     inline double GetEnd() const;
 
+    // Utility
+    uint64_t GetStartNumberSusceptible(uint64_t group) const;
+    uint64_t GetStartNumberInfected(uint64_t haplotype) const;
+
 private:
     inline uint64_t getNumberHaplotypes() const;
     inline uint64_t getNumberSusceptibleGroups() const;

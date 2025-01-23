@@ -107,6 +107,152 @@ Multievent Chain::GetMultievent(uint64_t index) {
     return multievents_[index];
 }
 
+// Utility
+boost::python::list Chain::get_data_susceptible(uint64_t population, uint64_t group, uint64_t step_number, uint64_t start_amount) {
+    boost::python::list data;
+
+    double part_time = current_time_ / step_number;
+    uint64_t counter = 0;
+    for (uint64_t i = 0; i <= pointer_; ++i) {
+        Event current_event = events_[i];
+        while (part_time * counter < current_event.time) {
+            ++counter;
+            data.append(boost::python::object(start_amount));
+        }
+
+        switch (current_event.type) {
+            case TypeEvents::kTRANSMISSION:
+                if (current_event.parameter2 == population && current_event.parameter3 == group) {
+                    --start_amount;
+                }
+                break;
+            case TypeEvents::kRECOVERY:
+            case TypeEvents::kSAMPLING:
+                if (current_event.parameter2 == population && current_event.parameter3 == group) {
+                    ++start_amount;
+                }
+                break;
+            case TypeEvents::kMUTATION:
+                break;
+            case TypeEvents::kMIGRATION:
+                if (current_event.parameter4 == population && current_event.parameter3 == group) {
+                    --start_amount;
+                }
+                break;
+            case TypeEvents::kSUSCCHANGE:
+                if (current_event.parameter2 == population && current_event.parameter3 == group) {
+                    ++start_amount;
+                } else if (current_event.parameter2 == population && current_event.parameter1 == group) {
+                    --start_amount;
+                }
+                break;
+            case TypeEvents::kMULTITYPE:
+                break;
+        }
+    }
+    data.append(boost::python::object(start_amount));
+
+    return data;
+}
+
+boost::python::list Chain::get_data_infected(uint64_t population, uint64_t haplotype, uint64_t step_number, uint64_t start_amount) {
+    boost::python::list data;
+
+    double part_time = current_time_ / step_number;
+    uint64_t counter = 0;
+    for (uint64_t i = 0; i <= pointer_; ++i) {
+        Event current_event = events_[i];
+        while (part_time * counter < current_event.time) {
+            ++counter;
+            data.append(boost::python::object(start_amount));
+        }
+
+        switch (current_event.type) {
+            case TypeEvents::kTRANSMISSION:
+                if (current_event.parameter2 == population && current_event.parameter1 == haplotype) {
+                    ++start_amount;
+                }
+                break;
+            case TypeEvents::kRECOVERY:
+            case TypeEvents::kSAMPLING:
+                if (current_event.parameter2 == population && current_event.parameter1 == haplotype) {
+                    --start_amount;
+                }
+                break;
+            case TypeEvents::kMUTATION:
+                if (current_event.parameter2 == population && current_event.parameter3 == haplotype) {
+                    ++start_amount;
+                } else if (current_event.parameter2 == population && current_event.parameter1 == haplotype) {
+                    --start_amount;
+                }
+                break;
+            case TypeEvents::kMIGRATION:
+                if (current_event.parameter4 == population && current_event.parameter1 == haplotype) {
+                    ++start_amount;
+                }
+                break;
+            case TypeEvents::kSUSCCHANGE:
+                break;
+            case TypeEvents::kMULTITYPE:
+                break;
+        }
+    }
+    data.append(boost::python::object(start_amount));
+
+    return data;
+}
+
+boost::python::list Chain::get_data_sample(uint64_t population, uint64_t haplotype, uint64_t step_number) {
+    boost::python::list data;
+    uint64_t start_amount = 0;
+
+    double part_time = current_time_ / step_number;
+    uint64_t counter = 0;
+    for (uint64_t i = 0; i <= pointer_; ++i) {
+        Event current_event = events_[i];
+        while (part_time * counter < current_event.time) {
+            ++counter;
+            data.append(boost::python::object(start_amount));
+        }
+
+        switch (current_event.type) {
+            case TypeEvents::kTRANSMISSION:
+                break;
+            case TypeEvents::kRECOVERY:
+                break;
+            case TypeEvents::kSAMPLING:
+                if (current_event.parameter2 == population && current_event.parameter1 == haplotype) {
+                    ++start_amount;
+                }
+                break;
+            case TypeEvents::kMUTATION:
+                break;
+            case TypeEvents::kMIGRATION:
+                break;
+            case TypeEvents::kSUSCCHANGE:
+                break;
+            case TypeEvents::kMULTITYPE:
+                break;
+        }
+    }
+    data.append(boost::python::object(start_amount));
+
+    return data;
+}
+
+boost::python::list Chain::get_time_points(uint64_t step_number) {
+    boost::python::list data;
+
+    double part_time = current_time_ / step_number;
+    for (uint64_t step = 0; step <= step_number; ++step) {
+        data.append(boost::python::object(step * part_time));
+    }
+
+    return data;
+}
+
+
+// Private
 uint64_t Chain::calculateNumberEvents() {
     uint64_t transmission = numbers_.populations * numbers_.haplotypes * numbers_.susceptible_groups;
     uint64_t recovery = numbers_.populations * numbers_.haplotypes;

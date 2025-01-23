@@ -8,8 +8,8 @@ public:
     void Update();
 
     boost::python::tuple get_current_individuals();
-    PyObject* get_actual_size();
-    PyObject* get_contact_density_before_lockdown();
+    boost::python::list get_actual_size();
+    boost::python::list get_contact_density_before_lockdown();
 
     void set_population_size(uint64_t size, uint64_t population);
     PyObject* get_population_size();
@@ -52,6 +52,9 @@ public:
     inline double GetMultiplierMigrationProbability(uint64_t source, uint64_t target) const;
     inline double GetSamplingMultiplier(uint64_t population) const;
     inline double GetActualSize(uint64_t population) const;
+
+    uint64_t GetStartNumberSusceptible(uint64_t population, uint64_t group) const;
+    uint64_t GetStartNumberInfected(uint64_t population, uint64_t haplotype) const;
 
 private:
     void UpdateRates();

@@ -27,9 +27,6 @@ public:
 
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
     void genealogy();
-    boost::python::tuple get_current_individuals();
-    PyObject* get_actual_size();
-    PyObject* get_contact_density_before_lockdown();
 
     PyObject* get_flat_chain();
     boost::python::tuple get_tree();
@@ -39,7 +36,7 @@ public:
     void set_susceptibility_group(uint64_t group, uint64_t haplotype);
     PyObject* get_susceptibility_group();
     void set_transmission_rate(double rate, uint64_t haplotype);
-    PyObject* get_transmission_rate();
+    boost::python::list get_transmission_rate();
     void set_recovery_rate(double rate, uint64_t haplotype);
     PyObject* get_recovery_rate();
     void set_sampling_rate(double rate, uint64_t haplotype);
@@ -67,6 +64,15 @@ public:
     void set_migration_probability(double probability, uint64_t source_population, uint64_t target_population);
     PyObject* get_migration_probability();
     uint64_t check_migration_probability();
+
+    // Utility
+    boost::python::tuple get_current_individuals();
+    boost::python::list get_actual_size();
+    boost::python::list get_contact_density_before_lockdown();
+    boost::python::list get_data_susceptible(uint64_t population, uint64_t group, uint64_t step_number);
+    boost::python::list get_data_infected(uint64_t population, uint64_t haplotype, uint64_t step_number);
+    boost::python::list get_data_sample(uint64_t population, uint64_t haplotype, uint64_t step_number);
+    boost::python::list get_time_points(uint64_t step_number);
 
 private:
     inline uint64_t getNumberSites() const;
