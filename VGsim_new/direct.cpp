@@ -160,7 +160,7 @@ double Direct::BirthRate(uint64_t source, uint64_t haplotype) {
 }
 
 void Direct::TimeStep() {
-    chain_->AddTime(-(std::log(generator_->GetUniform()) / rate_));
+    chain_->AddTime(-(std::log(generator_->GetUniform()) / (rate_ + rate_migration_)));
 }
 
 void Direct::GenerateEvent() {

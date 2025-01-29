@@ -23,16 +23,12 @@ void Chain::Reserve(uint64_t add_size) {
         return;
     }
     Event* new_events = new Event[size_ + static_cast<uint64_t>(new_memory)];
-    Multievent* new_multievents = new Multievent[(size_ + static_cast<uint64_t>(new_memory)) * calculateNumberEvents()];
     for (uint64_t i = 0; i < size_; ++i) {
         new_events[i] = events_[i];
-        new_multievents[i] = multievents_[i];
     }
     delete[] events_;
-    delete[] multievents_;
     size_ += static_cast<uint64_t>(new_memory);
     events_ = new_events;
-    multievents_ = new_multievents;
 }
 
 void Chain::Restart() {
@@ -40,9 +36,7 @@ void Chain::Restart() {
     size_ = 0;
     current_time_ = 0.0;
     delete[] events_;
-    delete[] multievents_;
     events_ = new Event[size_];
-    multievents_ = new Multievent[size_ * calculateNumberEvents()];
 }
 
 void Chain::AddTime(double time) {
