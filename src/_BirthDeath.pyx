@@ -827,6 +827,9 @@ cdef class BirthDeathModel:
                         self.times[ptrTreeAndTime] = e_time
                         ptrTreeAndTime += 1
                     self.infectious[e_population, self.hapToNum[e_haplotype]] -= 1
+
+                    # Для тестов для статьи нужно это раскомментировать и убрать выше
+                    # self.infectious[e_population, self.hapToNum[e_haplotype] % 1024] -= 1
                 elif e_type_ == DEATH:
                     self.infectious[e_population, self.hapToNum[e_haplotype]] += 1
                 elif e_type_ == SAMPLING:
