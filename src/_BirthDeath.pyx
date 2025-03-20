@@ -34,7 +34,8 @@ cdef class BirthDeathModel:
         bint first_simulation, sampling_probability, memory_optimization
         Py_ssize_t user_seed, sites, hapNum, currentHapNum, maxHapNum, addMemoryNum, popNum,\
         susNum, bCounter, dCounter, sCounter, mCounter, iCounter, swapLockdown, migPlus,\
-        migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length
+        migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length,\
+        number_of_states_allele
         double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination
 
         Events events
@@ -68,7 +69,7 @@ cdef class BirthDeathModel:
         npy_int64[:,::1] infectiousDelta, susceptibleDelta
 
     def __init__(self, number_of_sites, populations_number, number_of_susceptible_groups, seed, sampling_probability, \
-        memory_optimization, genome_length, recombination_probability):
+        memory_optimization, genome_length, recombination_probability, number_of_states_allele):
         self.check_amount(seed, 'seed', zero=False)
         self.user_seed = seed
         self.seed = RndmWrapper(seed=(self.user_seed, 0))
@@ -83,7 +84,10 @@ cdef class BirthDeathModel:
 
         self.check_amount(number_of_sites, 'number of sites', zero=False)
         self.sites = number_of_sites
-        self.hapNum = int(4**self.sites)
+        self.check_amount(number_of_states_allele, 'number of allele states')
+        self.number_of_states_allele = number_of_states_allele
+
+        self.hapNum = int(self.number_of_states_allele**self.sites)
         self.check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         self.susNum = number_of_susceptible_groups
         self.check_amount(populations_number, 'populations number')
@@ -101,11 +105,10 @@ cdef class BirthDeathModel:
                 self.sitesPosition[s] = int(s * self.genome_length / (self.sites - 1))
             self.birthInf = np.zeros(self.hapNum, dtype=float)
 
-
         if self.memory_optimization:
             if self.sites > 2:
-                self.maxHapNum = int(4**(self.sites - 2))
-                self.addMemoryNum = int(4**(self.sites - 2))
+                self.maxHapNum = int(self.number_of_states_allele**(self.sites - 2))
+                self.addMemoryNum = int(self.number_of_states_allele**(self.sites - 2))
             else:
                 self.maxHapNum = 4
                 self.addMemoryNum = 4
@@ -160,7 +163,7 @@ cdef class BirthDeathModel:
         self.sRate = np.zeros(self.hapNum, dtype=float)
         self.mRate = np.zeros((self.hapNum, self.sites), dtype=float)
         self.susceptibility = np.zeros((self.hapNum, self.susNum), dtype=float)
-        self.hapMutType = np.ones((self.hapNum, self.sites, 3), dtype=float)
+        self.hapMutType = np.ones((self.hapNum, self.sites, self.number_of_states_allele-1), dtype=float)
 
         for hn in range(self.hapNum):
             self.bRate[hn] = 2.0
@@ -599,6 +602,11 @@ cdef class BirthDeathModel:
             # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, 0)
             self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.hapNum)
 
+            # Для тестов для статьи нужно это раскомментировать и убрать выше
+            # self.NewInfections(pi, si, hi % 1024)
+            # # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, 0)
+            # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.hapNum)
+
         self.immuneSourcePopRate[pi, si] = self.suscepCumulTransition[si]*self.susceptible[pi, si]
         self.UpdateRates(pi, True, True, True)
 
@@ -641,11 +649,14 @@ cdef class BirthDeathModel:
         cdef:
             bint check = True
             Py_ssize_t ohi, mi, DS, nhi
+            double sum_mutation
 
         ohi = self.numToHap[hi] # ohi - haplotype
         mi, self.rn = fastChoose(self.mRate[ohi], self.tmRate[hi], self.rn)
-        DS, self.rn = fastChoose(self.hapMutType[ohi, mi], self.hapMutType[ohi, mi, 0] + \
-            self.hapMutType[ohi, mi, 1] + self.hapMutType[ohi, mi, 2], self.rn)
+        sum_mutation = 0.0
+        for i in range(self.number_of_states_allele-1):
+            sum_mutation += self.hapMutType[ohi, mi, i]
+        DS, self.rn = fastChoose(self.hapMutType[ohi, mi], sum_mutation, self.rn)
         nhi = self.Mutate(ohi, mi, DS)
 
         if self.memory_optimization:
@@ -1241,11 +1252,16 @@ cdef class BirthDeathModel:
         return string
 
     def calculate_string_from_haplotype(self, hapNum):
-        letters = ["A", "T", "C", "G"]
-        string = ""
-        for s in range(self.sites):
-            string = letters[hapNum%4] + string
-            hapNum = hapNum // 4
+        variant_letters = { 2 : ["0", "1"],
+                            4 : ["A", "T", "C", "G"]}
+        if self.number_of_states_allele in variant_letters:
+            letters = variant_letters[self.number_of_states_allele]
+            string = ""
+            for s in range(self.sites):
+                string = letters[hapNum % self.number_of_states_allele] + string
+                hapNum = hapNum // self.number_of_states_allele
+        else:
+            string = str(hapNum)
         return string
 
     def calculate_haplotype_from_string(self, string):
@@ -1262,8 +1278,8 @@ cdef class BirthDeathModel:
 
     def calculate_allele(self, haplotype, site):
         for _ in range(self.sites-site):
-            allele = haplotype % 4
-            haplotype = haplotype // 4
+            allele = haplotype % self.number_of_states_allele
+            haplotype = haplotype // self.number_of_states_allele
         return allele
 
     @property
@@ -1281,6 +1297,10 @@ cdef class BirthDeathModel:
     @property
     def number_of_sites(self):
         return self.sites
+
+    @property
+    def number_of_states_allele(self):
+        return self.number_of_states_allele
 
     @property
     def haplotypes_number(self):
@@ -1490,10 +1510,10 @@ cdef class BirthDeathModel:
         return self.hapMutType 
 
     def set_mutation_probabilities(self, probabilities, haplotype, mutation):
-        self.check_list(probabilities, 'probabilities list', 4)
+        self.check_list(probabilities, 'probabilities list', self.number_of_states_allele)
         if isinstance(probabilities, list):
-            for i in range(4):
-                self.check_value(probabilities[i], 'mutation probabilities')
+            for probability in probabilities:
+                self.check_value(probability, 'mutation probabilities')
         self.check_indexes(haplotype, self.hapNum, 'haplotype', True)
         self.check_indexes(mutation, self.sites, 'mutation site')
         haplotypes = self.calculate_indexes(haplotype, self.hapNum)
@@ -1505,9 +1525,8 @@ cdef class BirthDeathModel:
                 del probabilities_allele[self.calculate_allele(hn, s)]
                 if sum(probabilities_allele) == 0:
                     raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
-                self.hapMutType[hn, s, 0] = probabilities_allele[0]
-                self.hapMutType[hn, s, 1] = probabilities_allele[1]
-                self.hapMutType[hn, s, 2] = probabilities_allele[2]
+                for i in range(self.number_of_states_allele-1):
+                    self.hapMutType[hn, s, i] = probabilities_allele[i]
 
     @property
     def mutation_position(self):
@@ -2258,7 +2277,7 @@ cdef class BirthDeathModel:
         print("hapMutType(const)----")
         for hn in range(self.currentHapNum):
             for s in range(self.sites):
-                for i in range(3):
+                for i in range(self.number_of_states_allele-1):
                     print(self.hapMutType[hn, s, i], end=" ")
                 print()
             print()
@@ -2396,7 +2415,7 @@ cdef class BirthDeathModel:
 
                 #Mutation
                 for s in range(self.sites):
-                    for i in range(3):
+                    for i in range(self.number_of_states_allele-1):
                         self.PropensitiesMutatations[pn, hn, s, i] = self.mRate[hn, s]*self.hapMutType[hn, s, i]/\
                         (self.hapMutType[hn, s, 0] + self.hapMutType[hn, s, 1] + self.hapMutType[hn, s, 2])*self.infectious[pn, hn]
 
@@ -2420,8 +2439,8 @@ cdef class BirthDeathModel:
     cdef Py_ssize_t Mutate(self, Py_ssize_t hi, Py_ssize_t s, Py_ssize_t DS):
         cdef Py_ssize_t digit4, AS
 
-        digit4 = int(4**(self.sites - s - 1))
-        AS = int(floor(hi / digit4) % 4)
+        digit4 = int(self.number_of_states_allele**(self.sites - s - 1))
+        AS = int(floor(hi / digit4) % self.number_of_states_allele)
         if DS >= AS:
             DS += 1
         return hi + (DS - AS) * digit4
@@ -2504,7 +2523,7 @@ cdef class BirthDeathModel:
 
                 #Mutation
                 for s in range(self.sites):
-                    for i in range(3):
+                    for i in range(self.number_of_states_allele-1):
                         event_num = self.DrawEventsNum(self.PropensitiesMutatations[pn, hn, s, i]*self.tau_l)
                         self.eventsMutatations[pn, hn, s, i] = event_num
                         
@@ -2577,7 +2596,7 @@ cdef class BirthDeathModel:
 
                 #Mutation
                 for s in range(self.sites):
-                    for i in range(3):
+                    for i in range(self.number_of_states_allele-1):
                         nhn = self.Mutate(hn, s, i)
                         event_num = self.eventsMutatations[pn, hn, s, i]
                         self.infectious[pn, nhn] += event_num

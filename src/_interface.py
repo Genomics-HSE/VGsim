@@ -35,7 +35,8 @@ class Simulator:
     :type recombination_probability: float
     """
     def __init__(self, number_of_sites=0, populations_number=1, number_of_susceptible_groups=1, seed=None, \
-        sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0):
+        sampling_probability=False, memory_optimization=False, genome_length=int(1e6), recombination_probability=0.0, \
+        number_of_states_allele=4):
         self.fig = None
         if seed == None:
             seed = int(randrange(sys.maxsize))
@@ -43,7 +44,8 @@ class Simulator:
 
         self.simulation = BirthDeathModel(number_of_sites=number_of_sites, populations_number=populations_number, \
             number_of_susceptible_groups=number_of_susceptible_groups, seed=seed, sampling_probability=sampling_probability, \
-            memory_optimization=memory_optimization, genome_length=genome_length, recombination_probability=recombination_probability)
+            memory_optimization=memory_optimization, genome_length=genome_length, recombination_probability=recombination_probability, \
+            number_of_states_allele=number_of_states_allele)
 
 
     def print_basic_parameters(self):
@@ -142,6 +144,10 @@ class Simulator:
     @property
     def number_of_sites(self):
         return self.simulation.number_of_sites
+
+    @property
+    def number_of_states_allele(self):
+        return self.simulation.number_of_states_allele
 
     @property
     def haplotypes_number(self):
