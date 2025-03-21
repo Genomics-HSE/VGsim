@@ -4,8 +4,16 @@
 
 constexpr double kTime = 1'000'000;
 
-Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, uint64_t number_of_susceptible_groups, uint64_t seed)
-    : numbers_({number_of_sites, static_cast<uint64_t>(std::pow(4, number_of_sites)), number_of_populations, number_of_susceptible_groups})
+Simulator::Simulator(uint64_t number_of_sites,
+                     uint64_t number_of_allele_states,
+                     uint64_t number_of_populations,
+                     uint64_t number_of_susceptible_groups,
+                     uint64_t seed)
+    : numbers_({number_of_sites,
+                number_of_allele_states,
+                static_cast<uint64_t>(std::pow(number_of_allele_states, number_of_sites)),
+                number_of_populations,
+                number_of_susceptible_groups})
     , seed_(seed)
     
     , counters_(Counters())
@@ -264,6 +272,10 @@ boost::python::list Simulator::get_time_points(uint64_t step_number) {
 // Private
 inline uint64_t Simulator::getNumberSites() const {
     return numbers_.sites;
+}
+
+inline uint64_t Simulator::getNumberAlleleStates() const {
+    return numbers_.allele_states;
 }
 
 inline uint64_t Simulator::getNumberHaplotypes() const {

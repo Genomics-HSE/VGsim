@@ -22,7 +22,11 @@
 
 class Simulator {
 public:
-    Simulator(uint64_t number_of_sites = 0, uint64_t number_of_populations = 1, uint64_t number_of_susceptible_groups = 1, uint64_t seed = 1234);
+    Simulator(uint64_t number_of_sites = 0,
+              uint64_t number_of_allele_states = 4,
+              uint64_t number_of_populations = 1,
+              uint64_t number_of_susceptible_groups = 1,
+              uint64_t seed = 1234);
     void Debug();
 
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
@@ -76,6 +80,7 @@ public:
 
 private:
     inline uint64_t getNumberSites() const;
+    inline uint64_t getNumberAlleleStates() const;
     inline uint64_t getNumberHaplotypes() const;
     inline uint64_t getNumberPopulations() const;
     inline uint64_t getNumberSusceptibleGroups() const;

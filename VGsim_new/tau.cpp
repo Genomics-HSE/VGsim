@@ -12,7 +12,7 @@ Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, 
     , events_transmission_(new uint64_t[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
     , events_recovery_(new uint64_t[getNumberPopulations() * getNumberHaplotypes()])
     , events_sampling_(new uint64_t[getNumberPopulations() * getNumberHaplotypes()])
-    , events_mutation_(new uint64_t[getNumberPopulations() * getNumberHaplotypes() * getNumberSites() * 3])
+    , events_mutation_(new uint64_t[getNumberPopulations() * getNumberHaplotypes() * getNumberSites() * (getNumberAlleleStates() - 1)])
     , events_migration_(new uint64_t[getNumberPopulations() * getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
     , events_immunity_(new uint64_t[getNumberPopulations() * getNumberSusceptibleGroups() * getNumberSusceptibleGroups()])
 
@@ -23,7 +23,7 @@ Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, 
     , propensities_transmission_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
     , propensities_recovery_(new double[getNumberPopulations() * getNumberHaplotypes()])
     , propensities_sampling_(new double[getNumberPopulations() * getNumberHaplotypes()])
-    , propensities_mutation_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSites() * 3])
+    , propensities_mutation_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSites() * (getNumberAlleleStates() - 1)])
     , propensities_migration_(new double[getNumberPopulations() * getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
     , propensities_immunity_(new double[getNumberPopulations() * getNumberSusceptibleGroups() * getNumberSusceptibleGroups()])
 
@@ -64,7 +64,7 @@ void Tau::Debug() {
     PrintArray3nd("Events Transmission", events_transmission_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
     PrintArray2nd("Events Recovery", events_recovery_, getNumberPopulations(), getNumberHaplotypes());
     PrintArray2nd("Events Sampling", events_sampling_, getNumberPopulations(), getNumberHaplotypes());
-    PrintArray4nd("Events Mutation", events_mutation_, getNumberPopulations(), getNumberHaplotypes(), getNumberSites(), 3);
+    PrintArray4nd("Events Mutation", events_mutation_, getNumberPopulations(), getNumberHaplotypes(), getNumberSites(), getNumberAlleleStates() - 1);
     PrintArray4nd("Events Migration", events_migration_, getNumberPopulations(), getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
     PrintArray3nd("Events Immunity", events_immunity_, getNumberPopulations(), getNumberSusceptibleGroups(), getNumberSusceptibleGroups());
 
@@ -73,7 +73,7 @@ void Tau::Debug() {
     PrintArray3nd("Propensities Transmission", propensities_transmission_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
     PrintArray2nd("Propensities Recovery", propensities_recovery_, getNumberPopulations(), getNumberHaplotypes());
     PrintArray2nd("Propensities Sampling", propensities_sampling_, getNumberPopulations(), getNumberHaplotypes());
-    PrintArray4nd("Propensities Mutation", propensities_mutation_, getNumberPopulations(), getNumberHaplotypes(), getNumberSites(), 3);
+    PrintArray4nd("Propensities Mutation", propensities_mutation_, getNumberPopulations(), getNumberHaplotypes(), getNumberSites(), getNumberAlleleStates() - 1);
     PrintArray4nd("Propensities Migration", propensities_migration_, getNumberPopulations(), getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
     PrintArray3nd("Propensities Immunity", propensities_immunity_, getNumberPopulations(), getNumberSusceptibleGroups(), getNumberSusceptibleGroups());
 }
@@ -162,7 +162,7 @@ void Tau::Propensities() {
         uint64_t* infected = pool_->GetInfectedPopHapBegin(population);
         for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
             for (uint64_t site = 0; site < getNumberSites(); ++site) {
-                for (uint64_t i = 0; i < 3; ++i) {
+                for (uint64_t i = 0; i < getNumberAlleleStates() - 1; ++i) {
                     propensities_mutation_[index_mutation] = mutation_rate[getIndexSit(haplotype, site)] * infected[haplotype] * infectious_data_->GetSitesRateHapSiteProbability(haplotype, site, i);
 
                     infectious_tau_[getIndexHap(population, GetNewHaplotype(haplotype, site, i, getNumberSites()))] += propensities_mutation_[index_mutation];
@@ -286,7 +286,7 @@ bool Tau::GenerateEvents() {
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
             for (uint64_t site = 0; site < getNumberSites(); ++site) {
-                for (uint64_t i = 0; i < 3; ++i) {
+                for (uint64_t i = 0; i < getNumberAlleleStates() - 1; ++i) {
                     events_mutation_[index_mutation] = generator_->GetPoisson(time_step_ * propensities_mutation_[index_mutation]);
 
                     infectious_delta_[getIndexHap(population, GetNewHaplotype(haplotype, site, i, getNumberSites()))] += events_mutation_[index_mutation];
@@ -393,7 +393,7 @@ void Tau::UpdateCompartmentCounts() {
     for (uint64_t population = 0; population < getNumberPopulations(); ++population) {
         for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
             for (uint64_t site = 0; site < getNumberSites(); ++site) {
-                for (uint64_t i = 0; i < 3; ++i) {
+                for (uint64_t i = 0; i < getNumberAlleleStates() - 1; ++i) {
                     if (events_mutation_[index_mutation] != 0) {
                         pool_->NewMutation(events_mutation_[index_mutation], haplotype, GetNewHaplotype(haplotype, site, i, getNumberSites()), population);
                         chain_->AddMultievent({{TypeEvents::kMUTATION, haplotype, population, GetNewHaplotype(haplotype, site, i, getNumberSites()), 0}, events_mutation_[index_mutation]});
@@ -449,6 +449,10 @@ void Tau::UpdateCompartmentCounts() {
 
 inline uint64_t Tau::getNumberSites() const {
     return numbers_.sites;
+}
+
+inline uint64_t Tau::getNumberAlleleStates() const {
+    return numbers_.allele_states;
 }
 
 inline uint64_t Tau::getNumberHaplotypes() const {

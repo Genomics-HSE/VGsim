@@ -251,7 +251,7 @@ uint64_t Chain::calculateNumberEvents() {
     uint64_t transmission = numbers_.populations * numbers_.haplotypes * numbers_.susceptible_groups;
     uint64_t recovery = numbers_.populations * numbers_.haplotypes;
     uint64_t sampling = numbers_.populations * numbers_.haplotypes;
-    uint64_t mutation = numbers_.populations * numbers_.haplotypes * numbers_.sites * 3;
+    uint64_t mutation = numbers_.populations * numbers_.haplotypes * numbers_.sites * (numbers_.allele_states - 1);
     uint64_t migration = numbers_.populations * (numbers_.populations - 1) * numbers_.haplotypes * numbers_.susceptible_groups;
     uint64_t suscchange = numbers_.populations * numbers_.susceptible_groups * (numbers_.susceptible_groups - 1);
     return transmission + recovery + sampling + mutation + migration + suscchange;

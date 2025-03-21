@@ -16,7 +16,7 @@ Direct::Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_
     , rate_pop_hap_(new double[getNumberPopulations() * getNumberHaplotypes()])
     , rate_pop_total_(new double[getNumberPopulations() * getNumberHaplotypes()])
     , rate_pop_sus_(new double[getNumberPopulations() * getNumberSusceptibleGroups()])
-    , rate_pop_hap_event_(new double[getNumberPopulations() * getNumberHaplotypes() * 4])
+    , rate_pop_hap_event_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberAlleleStates()])
     , suscept_hap_pop_rate_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
     , rate_migration_pop_(new double[getNumberPopulations()])
     , max_effective_transmission_migration_(new double[getNumberPopulations()])
@@ -76,7 +76,7 @@ void Direct::Debug() {
     PrintArray2nd("Rate pop hap:", rate_pop_hap_, getNumberPopulations(), getNumberHaplotypes());
     PrintArray2nd("Rate pop total:", rate_pop_total_, getNumberPopulations(), getNumberHaplotypes());
     PrintArray2nd("Rate pop sus:", rate_pop_sus_, getNumberPopulations(), getNumberSusceptibleGroups());
-    PrintArray3nd("Rate pop hap event:", rate_pop_hap_event_, getNumberPopulations(), getNumberHaplotypes(), 4);
+    PrintArray3nd("Rate pop hap event:", rate_pop_hap_event_, getNumberPopulations(), getNumberHaplotypes(), getNumberAlleleStates());
     PrintArray3nd("Suscept hap pop rate:", suscept_hap_pop_rate_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
 }
 
@@ -320,6 +320,10 @@ inline uint64_t Direct::getNumberSites() const {
     return numbers_.sites;
 }
 
+inline uint64_t Direct::getNumberAlleleStates() const {
+    return numbers_.allele_states;
+}
+
 inline uint64_t Direct::getNumberHaplotypes() const {
     return numbers_.haplotypes;
 }
@@ -341,7 +345,7 @@ inline uint64_t Direct::getIndexSus(uint64_t first, uint64_t second) const {
 }
 
 inline uint64_t Direct::getIndexHap4(uint64_t first, uint64_t second, uint64_t third) const {
-    return (first * getNumberHaplotypes() + second) * 4 + third;
+    return (first * getNumberHaplotypes() + second) * getNumberAlleleStates() + third;
 }
 
 inline uint64_t Direct::getIndexHapSus(uint64_t first, uint64_t second, uint64_t third) const {

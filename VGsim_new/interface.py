@@ -7,9 +7,16 @@ import matplotlib.pyplot as plt
 import source_VGsim
 
 class Simulator:
-    def __init__(self, number_of_sites=0, number_of_populations=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False):
+    def __init__(self,
+                 number_of_sites=0,
+                 number_of_allele_states=4,
+                 number_of_populations=1,
+                 number_of_susceptible_groups=1,
+                 seed=None,
+                 sampling_probability=False):
         print('Check')
         self._check_amount(number_of_sites, 'number of sites', zero=False)
+        self._check_amount(number_of_allele_states, 'number of allele states')
         self._check_amount(number_of_populations, 'populations number')
         self._check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         if not isinstance(sampling_probability, bool):
@@ -18,9 +25,12 @@ class Simulator:
             seed = int(randrange(sys.maxsize))
         self._check_amount(seed, 'seed', zero=False)
 
-        self._simulator = source_VGsim.Simulator(number_of_sites, number_of_populations, number_of_susceptible_groups, seed)
+        self._simulator = source_VGsim.Simulator(number_of_sites, number_of_allele_states,
+                                                 number_of_populations, number_of_susceptible_groups,
+                                                 seed)
         self._number_of_sites = number_of_sites
-        self._number_of_haplotypes = 4**number_of_sites
+        self._number_of_allele_states = number_of_allele_states
+        self._number_of_haplotypes = number_of_allele_states**number_of_sites
         self._number_of_populations = number_of_populations
         self._number_of_susceptible_groups = number_of_susceptible_groups
         self._seed = seed
@@ -52,6 +62,9 @@ class Simulator:
 
     def get_number_of_sites(self):
         return self._number_of_sites
+
+    def get_number_of_allele_states(self):
+        return self._number_of_allele_states
 
     def get_number_of_haplotypes(self):
         return self._number_of_haplotypes

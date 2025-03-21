@@ -10,16 +10,24 @@ import pytest
 def test_simulator_base():
     model = Simulator()
     assert model.get_number_of_sites() == 0
+    assert model.get_number_of_allele_states() == 4
     assert model.get_number_of_populations() == 1
     assert model.get_number_of_susceptible_groups() == 1
     assert model.get_sampling_probability() == False
 
-@pytest.mark.parametrize('number_of_sites, answer',
-                        [(2              , 2),
-                         (0              , 0)])
-def test_simulator_sites(number_of_sites, answer):
-    model = Simulator(number_of_sites=number_of_sites)
-    assert model.get_number_of_sites() == answer
+@pytest.mark.parametrize('number_of_sites, number_of_allele_states, sites, states, haplotypes',
+                        [(0              , 1                      , 0    , 1     , 1),
+                         (0              , 10                     , 0    , 10    , 1),
+                         (1              , 1                      , 1    , 1     , 1),
+                         (1              , 4                      , 1    , 4     , 4),
+                         (2              , 2                      , 2    , 2     , 4),
+                         (4              , 3                      , 4    , 3     , 81),
+                         (10             , 2                      , 10   , 2     , 1024)])
+def test_simulator_sites_and_states(number_of_sites, number_of_allele_states, sites, states, haplotypes):
+    model = Simulator(number_of_sites=number_of_sites, number_of_allele_states=number_of_allele_states)
+    assert model.get_number_of_sites() == sites
+    assert model.get_number_of_allele_states() == states
+    assert model.get_number_of_haplotypes() == haplotypes
 
 @pytest.mark.parametrize('number_of_sites, error     , text',
                         [(None           , TypeError , 'Incorrect type of number of sites. Type should be int.'),
@@ -28,6 +36,15 @@ def test_simulator_sites(number_of_sites, answer):
 def test_simulator_sites_err(number_of_sites, error, text):
     with pytest.raises(error, match=text):
         model = Simulator(number_of_sites=number_of_sites)
+
+@pytest.mark.parametrize('number_of_allele_states, error     , text',
+                        [(None                   , TypeError , 'Incorrect type of number of allele states. Type should be int.'),
+                         ('str'                  , TypeError , 'Incorrect type of number of allele states. Type should be int.'),
+                         (0                      , ValueError, 'Incorrect value of number of allele states. Value should be more 0.'),
+                         (-2                     , ValueError, 'Incorrect value of number of allele states. Value should be more 0.')])
+def test_simulator_states_err(number_of_allele_states, error, text):
+    with pytest.raises(error, match=text):
+        model = Simulator(number_of_allele_states=number_of_allele_states)
 
 @pytest.mark.parametrize('number_of_populations, answer',
                         [(2                    , 2)])

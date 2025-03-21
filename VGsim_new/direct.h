@@ -26,6 +26,7 @@ private:
     void Migration();
 
     inline uint64_t getNumberSites() const;
+    inline uint64_t getNumberAlleleStates() const;
     inline uint64_t getNumberHaplotypes() const;
     inline uint64_t getNumberPopulations() const;
     inline uint64_t getNumberSusceptibleGroups() const;
