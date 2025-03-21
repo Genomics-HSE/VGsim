@@ -16,8 +16,8 @@ Simulator::Simulator(uint64_t number_of_sites, uint64_t number_of_populations, u
     , generator_(RandomGenerator(seed_))
     , stopper_(ConditionStop(&counters_, &pool_, &chain_))
     , direct_(Direct(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_))
-    , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_)) {
-    // , arg_(ARG(numbers_, &chain_, &counters_, &pool_, &generator_)) {
+    , tau_(Tau(&counters_, &pool_, &infectious_data_, &susceptibles_data_, &chain_, &generator_, &stopper_, numbers_))
+    , arg_(ARG(numbers_, &chain_, &counters_, &pool_, &generator_)) {
 }
 
 void Simulator::Debug() {
@@ -55,9 +55,9 @@ void Simulator::simulate(uint64_t iterations, uint64_t sampling, double epidemic
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
 }
 
-// void Simulator::genealogy() {
-//     arg_.CalculateGenealogy();
-// }
+void Simulator::genealogy() {
+    arg_.CalculateGenealogy();
+}
 
 boost::python::list Simulator::get_flat_chain() {
     boost::python::list ret;
