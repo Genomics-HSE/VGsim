@@ -8,6 +8,7 @@ import source_VGsim
 
 class Simulator:
     def __init__(self, number_of_sites=0, number_of_populations=1, number_of_susceptible_groups=1, seed=None, sampling_probability=False):
+        print('Check')
         self._check_amount(number_of_sites, 'number of sites', zero=False)
         self._check_amount(number_of_populations, 'populations number')
         self._check_amount(number_of_susceptible_groups, 'number of susceptible groups')
