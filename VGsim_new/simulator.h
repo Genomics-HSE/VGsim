@@ -12,7 +12,7 @@
 #include "condition_stop.cpp"
 #include "direct.cpp"
 #include "tau.cpp"
-#include "arg.cpp"
+// #include "arg.cpp"
 
 #include <iostream>
 #include <random>
@@ -26,7 +26,7 @@ public:
     void Debug();
 
     void simulate(uint64_t iterations, uint64_t sampling, double time, std::string type, uint64_t number_attempts);
-    void genealogy();
+    // void genealogy();
 
     boost::python::list get_flat_chain();
     boost::python::tuple get_tree();
@@ -92,5 +92,5 @@ private:
     ConditionStop stopper_;
     Direct direct_;
     Tau tau_;
-    ARG arg_;
+    // ARG arg_;
 };

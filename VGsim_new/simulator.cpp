@@ -55,9 +55,9 @@ void Simulator::simulate(uint64_t iterations, uint64_t sampling, double epidemic
     std::cout << "Time: " << (end_time - start_time) / kTime << " s" << std::endl;
 }
 
-void Simulator::genealogy() {
-    arg_.CalculateGenealogy();
-}
+// void Simulator::genealogy() {
+//     arg_.CalculateGenealogy();
+// }
 
 boost::python::list Simulator::get_flat_chain() {
     boost::python::list ret;
