@@ -25,34 +25,34 @@ void ARG::CalculateGenealogy() {
     std::vector<uint64_t> infectiousDelta(getNumberPopulations() * getNumberHaplotypes(), 0);
 
 
-    uint64_t haplotype;
-    uint64_t population;
-    uint64_t oldHaplotype;
-    uint64_t newHaplotype;
-    uint64_t source_population;
-    uint64_t target_population;
-    uint64_t start;
-    uint64_t count;
-    uint64_t countBranches;
-    uint64_t countInfectious;
-    uint64_t countBranchesTarget;
-    uint64_t countBranchesSource;
+    uint64_t haplotype = 0;
+    uint64_t population = 0;
+    uint64_t oldHaplotype = 0;
+    uint64_t newHaplotype = 0;
+    uint64_t source_population = 0;
+    uint64_t target_population = 0;
+    uint64_t start = 0;
+    uint64_t count = 0;
+    uint64_t countBranches = 0;
+    uint64_t countInfectious = 0;
+    uint64_t countBranchesTarget = 0;
+    uint64_t countBranchesSource = 0;
 
-    uint64_t leftChildIndex;
-    uint64_t rightChildIndex;
-    uint64_t leftChild;
-    uint64_t rightChild;
-    uint64_t parent;
+    uint64_t leftChildIndex = 0;
+    uint64_t rightChildIndex = 0;
+    uint64_t leftChild = 0;
+    uint64_t rightChild = 0;
+    uint64_t parent = 0;
 
-    uint64_t node;
-    uint64_t nodeIndex;
-    uint64_t nodeTarget;
-    uint64_t nodeSource;
-    uint64_t targetChild;
-    uint64_t sourceChild;
+    uint64_t node = 0;
+    uint64_t nodeIndex = 0;
+    uint64_t nodeTarget = 0;
+    uint64_t nodeSource = 0;
+    uint64_t targetChild = 0;
+    uint64_t sourceChild = 0;
 
-    uint64_t mt_ev_num;
-    uint64_t mt_ev_num2;
+    uint64_t mt_ev_num = 0;
+    uint64_t mt_ev_num2 = 0;
 
     double probability;
 
