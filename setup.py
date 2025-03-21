@@ -20,5 +20,7 @@ setup(name='VGsim_new',
       ext_modules=[example_module],
       packages=['VGsim_new'],
       install_requires=[
-            'tabulate'
+            'tabulate',
+            'pytest',
+            'numpy'
       ])
