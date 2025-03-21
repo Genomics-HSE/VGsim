@@ -22,5 +22,6 @@ setup(name='VGsim_new',
       install_requires=[
             'tabulate',
             'pytest',
-            'numpy'
+            'numpy',
+            'matplotlib'
       ])
