@@ -27,7 +27,7 @@ jobs:
               libboost-python3-dev \
               build-essential \
               python3-dev
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
