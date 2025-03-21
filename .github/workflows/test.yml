@@ -24,7 +24,7 @@ jobs:
       run : |
           sudo apt-get update
           sudo apt-get install -y \
-              libboost-python3-dev \
+              libboost-python-dev \
               build-essential \
               python3-dev
     - uses: actions/setup-python@v5
