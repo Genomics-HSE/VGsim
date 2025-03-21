@@ -228,7 +228,7 @@ void ARG::CalculateGenealogy() {
                                     targetChild = liveBranches[target_population][haplotype][nodeTarget];
                                     sourceChild = liveBranches[source_population][haplotype][nodeSource];
                                     parent = currentNode++;
-                                    addNode(population, time, parent, leftChild, rightChild);
+                                    addNode(parent, time, parent, leftChild, rightChild);
                                     removeBranch(liveBranches, source_population, haplotype, nodeSource);
                                     removeBranch(liveBranches, target_population, haplotype, nodeTarget);
                                     newLineages[population][haplotype].push_back(parent);
