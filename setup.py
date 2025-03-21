@@ -1,8 +1,8 @@
 from setuptools import setup, Extension
 import sys
 
-boost_include = '/usr/local/include'
-boost_library = '/usr/local/lib'
+boost_include = '/opt/homebrew/include'
+boost_library = '/opt/homebrew/lib'
 python_version = sys.version_info
 boost_version = f'boost_python{python_version.major}{python_version.minor}'
 
@@ -18,4 +18,7 @@ setup(name='VGsim_new',
       version='1.0',
       description='VGsim is the fast viral genealogy simulator for world-wide pandemic scenarios.',
       ext_modules=[example_module],
-      packages=['VGsim_new'])
+      packages=['VGsim_new'],
+      install_requires=[
+            'tabulate'
+      ])

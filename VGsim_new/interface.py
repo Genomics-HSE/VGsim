@@ -217,7 +217,7 @@ class Simulator:
                 probabilities_base = list(probabilities)
                 del probabilities_base[self._calculate_base(hn, s)]
                 if sum(probabilities_base) == 0:
-                    raise ValueError('Incorrect probabilities list. The sum of three elements without mutation base should be more 0.')
+                    raise ValueError('Incorrect probabilities list. The sum of three elements without mutation allele should be more 0.')
                 for i in range(3):
                     self._simulator.set_mutation_probabilities(probabilities_base[i], hn, s, i)
 
