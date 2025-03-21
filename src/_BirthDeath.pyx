@@ -36,7 +36,8 @@ cdef class BirthDeathModel:
         susNum, bCounter, dCounter, sCounter, mCounter, iCounter, swapLockdown, migPlus,\
         migNonPlus, globalInfectious, countsPerStep, good_attempt, genome_length,\
         number_of_states_allele
-        double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination
+        double currentTime, totalRate, totalMigrationRate, rn, tau_l, recombination,\
+        propotion_infections
 
         Events events
         multiEvents multievents
@@ -231,6 +232,8 @@ cdef class BirthDeathModel:
         self.infectiousDelta = np.zeros((self.popNum, self.hapNum), dtype=np.int64)
         self.susceptibleDelta = np.zeros((self.popNum, self.susNum), dtype=np.int64)
 
+    def set_proportion_type_infections(self, proportion):
+        self.propotion_infections = proportion
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -598,14 +601,13 @@ cdef class BirthDeathModel:
             self.NewInfections(pi, si, nhi)
             self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.numToHap[hi2])
         else:
+            hi = hi % 1024
+            if self.rn < self.propotion_infections:
+                hi += 1024
+
             self.NewInfections(pi, si, hi)
             # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, 0)
             self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.hapNum)
-
-            # Для тестов для статьи нужно это раскомментировать и убрать выше
-            # self.NewInfections(pi, si, hi % 1024)
-            # # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, 0)
-            # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.hapNum)
 
         self.immuneSourcePopRate[pi, si] = self.suscepCumulTransition[si]*self.susceptible[pi, si]
         self.UpdateRates(pi, True, True, True)

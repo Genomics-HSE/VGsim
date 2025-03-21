@@ -47,6 +47,8 @@ class Simulator:
             memory_optimization=memory_optimization, genome_length=genome_length, recombination_probability=recombination_probability, \
             number_of_states_allele=number_of_states_allele)
 
+    def set_proportion_type_infections(self, proportion):
+        self.simulation.set_proportion_type_infections(proportion)
 
     def print_basic_parameters(self):
         """
