@@ -1637,7 +1637,7 @@ cdef class BirthDeathModel:
     def set_infectious(self, amount, source_type, target_haplotype, population):
         if self.first_simulation:
             raise ValueError('This function is available only before first simulation!')
-        self.check_amount(amount)
+        self.check_amount(amount, 'amount of infectious')
         self.check_index(source_type, self.susNum, 'susceptibility type')
         self.check_index(target_haplotype, self.hapNum, 'haplotype')
         self.check_indexes(population, self.popNum, 'population')
