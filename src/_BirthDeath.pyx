@@ -601,9 +601,8 @@ cdef class BirthDeathModel:
             self.NewInfections(pi, si, nhi)
             self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, self.numToHap[hi2])
         else:
-            hi = hi % 1024
             if self.rn < self.propotion_infections:
-                hi += 1024
+                hi -= 1024
 
             self.NewInfections(pi, si, hi)
             # self.events.AddEvent(self.currentTime, BIRTH, self.numToHap[hi], pi, si, 0)
