@@ -21,7 +21,7 @@ class Simulator:
         self._check_amount(number_of_susceptible_groups, 'number of susceptible groups')
         if not isinstance(sampling_probability, bool):
             raise ValueError('Incorrect value of sampling probability. Value of sampling probability should be True or False.')
-        if seed == None:
+        if seed is None:
             seed = int(randrange(sys.maxsize))
         self._check_amount(seed, 'seed', zero=False)
 
@@ -217,7 +217,7 @@ class Simulator:
         :param mutation: the id of position on the haplotype where mutation arises.
         :type mutation: int or None
         """
-        self._check_list(probabilities, 'probabilities list', 4)
+        self._check_list(probabilities, 'probabilities list', self._number_of_allele_states)
         if isinstance(probabilities, list):
             for probability in probabilities:
                 self._check_value(probability, 'mutation probabilities')
