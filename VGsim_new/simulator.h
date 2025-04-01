@@ -1,18 +1,18 @@
 #pragma once
 
-#include "additional_information.cpp"
-#include "utils.cpp"
-#include "numbers.cpp"
-#include "chain.cpp"
-#include "population_pool.cpp"
-#include "infectious.cpp"
-#include "susceptibles.cpp"
-#include "counters.cpp"
-#include "random_generator.cpp"
-#include "condition_stop.cpp"
-#include "direct.cpp"
-#include "tau.cpp"
-#include "arg.cpp"
+#include "utils/additional_information.cpp"
+#include "utils/utils.cpp"
+#include "utils/numbers.cpp"
+#include "data/chain.cpp"
+#include "population/population_pool.cpp"
+#include "data/infectious.cpp"
+#include "data/susceptibles.cpp"
+#include "utils/counters.cpp"
+#include "utils/random_generator.cpp"
+#include "utils/condition_stop.cpp"
+#include "algorithm/direct.cpp"
+#include "algorithm/tau.cpp"
+#include "algorithm/arg.cpp"
 
 #include <iostream>
 #include <random>
