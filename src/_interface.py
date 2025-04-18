@@ -244,6 +244,20 @@ class Simulator:
         self.simulation.set_sampling_rate(rate, haplotype)
 
     @property
+    def sample_rate(self):
+        return self.simulation.sample_rate
+
+    def set_sample_rate(self, rate, haplotype=None):
+        """
+        :param rate: sampling rate value.
+        :type rate: float
+
+        :param haplotype: haplotypes for which the new value is being set. `See for details <https://vg-sim.readthedocs.io/en/latest/Haplotypes.html>`_.
+        :type haplotype: int(0 or 4) or string('T*' or 'AC') or int and string list([0, 4, 'T*']) or None
+        """
+        self.simulation.set_sample_rate(rate, haplotype)
+
+    @property
     def mutation_rate(self):
         return self.simulation.mutation_rate
     

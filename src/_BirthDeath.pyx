@@ -53,7 +53,7 @@ cdef class BirthDeathModel:
         double[::1] bRate, dRate, sRate, tmRate, maxEffectiveBirthMigration, suscepCumulTransition,\
         immunePopRate, infectPopRate, popRate, migPopRate, actualSizes, contactDensity, \
         contactDensityBeforeLockdown, contactDensityAfterLockdown, startLD, endLD,\
-        samplingMultiplier, times, birthInf
+        samplingMultiplier, times, birthInf, sampleRate
         double[:,::1] mRate, susceptibility, tEventHapPopRate, suscepTransition,\
         immuneSourcePopRate, hapPopRate, migrationRates, effectiveMigration
         double[:,:,::1] hapMutType, eventHapPopRate, susceptHapPopRate
@@ -155,13 +155,14 @@ cdef class BirthDeathModel:
         self.tmRate = np.zeros(self.maxHapNum, dtype=float)
         self.tEventHapPopRate = np.zeros((self.popNum, self.maxHapNum), dtype=float)
         self.hapPopRate = np.zeros((self.popNum, self.maxHapNum), dtype=float)
-        self.eventHapPopRate = np.zeros((self.popNum, self.maxHapNum, 4), dtype=float)
+        self.eventHapPopRate = np.zeros((self.popNum, self.maxHapNum, 5), dtype=float)
         self.susceptHapPopRate = np.zeros((self.popNum, self.maxHapNum, self.susNum), dtype=float)
 
         self.suscType = np.zeros(self.hapNum, dtype=np.int64)
         self.bRate = np.zeros(self.hapNum, dtype=float)
         self.dRate = np.zeros(self.hapNum, dtype=float)
         self.sRate = np.zeros(self.hapNum, dtype=float)
+        self.sampleRate = np.zeros(self.hapNum, dtype=float)
         self.mRate = np.zeros((self.hapNum, self.sites), dtype=float)
         self.susceptibility = np.zeros((self.hapNum, self.susNum), dtype=float)
         self.hapMutType = np.ones((self.hapNum, self.sites, self.number_of_states_allele-1), dtype=float)
@@ -275,7 +276,7 @@ cdef class BirthDeathModel:
         self.tmRate = np.concatenate((self.tmRate, np.zeros(self.addMemoryNum, dtype=float)))
         self.tEventHapPopRate = np.concatenate((self.tEventHapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
         self.hapPopRate = np.concatenate((self.hapPopRate, np.zeros((self.popNum, self.addMemoryNum), dtype=float)), axis=1)
-        self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, 4), dtype=float)), axis=1)
+        self.eventHapPopRate = np.concatenate((self.eventHapPopRate, np.zeros((self.popNum, self.addMemoryNum, 5), dtype=float)), axis=1)
         self.susceptHapPopRate = np.concatenate((self.susceptHapPopRate, np.zeros((self.popNum, self.addMemoryNum, self.susNum), dtype=float)), axis=1)
         self.maxHapNum += self.addMemoryNum
 
@@ -318,8 +319,10 @@ cdef class BirthDeathModel:
                 self.eventHapPopRate[pn, hn, 2] = self.sRate[self.numToHap[hn]] * \
                     self.samplingMultiplier[pn]
                 self.eventHapPopRate[pn, hn, 3] = self.tmRate[hn]
+                self.eventHapPopRate[pn, hn, 4] = self.sampleRate[self.numToHap[hn]] * \
+                    self.samplingMultiplier[pn]
                 self.tEventHapPopRate[pn, hn] = 0
-                for i in range(4):
+                for i in range(5):
                     self.tEventHapPopRate[pn, hn] += self.eventHapPopRate[pn, hn, i]
                 self.hapPopRate[pn, hn] = self.tEventHapPopRate[pn, hn] * self.infectious[pn, hn]
                 self.infectPopRate[pn] += self.hapPopRate[pn, hn]
@@ -510,8 +513,10 @@ cdef class BirthDeathModel:
                     self.Death(pi, hi)
                 elif ei == SAMPLING:
                     self.Sampling(pi, hi)
-                else:
+                elif ei == MUTATION:
                     self.Mutation(pi, hi)
+                elif ei == SAMPLE:
+                    self.Sample(pi, hi)
         else:
             self.rn = (choose - self.totalRate) / self.totalMigrationRate
             pi = self.GenerateMigration()
@@ -528,7 +533,8 @@ cdef class BirthDeathModel:
                 tmp = (self.eventHapPopRate[pi, hn, 0] +
                        self.eventHapPopRate[pi, hn, 1] +
                        self.eventHapPopRate[pi, hn, 2] +
-                       self.eventHapPopRate[pi, hn, 3] )
+                       self.eventHapPopRate[pi, hn, 3] +
+                       self.eventHapPopRate[pi, hn, 4])
                 self.tEventHapPopRate[pi, hn] = tmp
                 self.hapPopRate[pi, hn] = self.tEventHapPopRate[pi, hn] * self.infectious[pi, hn]
                 self.infectPopRate[pi] += self.hapPopRate[pi, hn]
@@ -677,6 +683,11 @@ cdef class BirthDeathModel:
 
         self.mCounter += 1
         self.events.AddEvent(self.currentTime, MUTATION, ohi, pi, nhi, 0)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void Sample(self, Py_ssize_t pi, Py_ssize_t hi): # hi - program number
+        self.events.AddEvent(self.currentTime, SAMPLE, self.numToHap[hi], pi, 0, 0)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -852,6 +863,21 @@ cdef class BirthDeathModel:
                         self.mut.AddMutation(id1, e_haplotype, e_newHaplotype, e_time)
                     self.infectious[e_population, e_newHaplotype] -= 1
                     self.infectious[e_population, e_haplotype] += 1
+                elif e_type_ == SAMPLE:
+                    lbs = liveBranchesS[e_population][e_newHaplotype].size()
+                    p = float(lbs)/self.infectious[e_population, e_newHaplotype]
+                    if self.seed.uniform() < p:
+                        n1 = int(floor( lbs*self.seed.uniform() ))
+                        id1 = liveBranchesS[e_population][e_haplotype][n1]
+                        id2 = ptrTreeAndTime
+                        liveBranchesS[e_population][e_haplotype][n1] = id2
+                        self.tree[id1] = id2
+                    else:
+                        liveBranchesS[e_population][e_haplotype].push_back( ptrTreeAndTime )
+                    self.tree[ptrTreeAndTime] = -1
+                    self.tree_pop[ptrTreeAndTime] = e_population
+                    self.times[ptrTreeAndTime] = e_time
+                    ptrTreeAndTime += 1
                 elif e_type_ == SUSCCHANGE:
                     pass
                 elif e_type_ == MIGRATION:
@@ -1493,6 +1519,19 @@ cdef class BirthDeathModel:
 
             for hn in haplotypes:
                 self.sRate[hn] = rate
+
+    @property
+    def sample_rate(self):
+        return self.sampleRate
+
+    def set_sample_rate(self, rate, haplotype):
+        self.check_indexes(haplotype, self.hapNum, 'haplotype', True)
+        haplotypes = self.calculate_indexes(haplotype, self.hapNum)
+
+        self.check_value(rate, 'sample rate')
+
+        for hn in haplotypes:
+            self.sampleRate[hn] = rate
 
     @property
     def mutation_rate(self):
@@ -2171,6 +2210,10 @@ cdef class BirthDeathModel:
         print("Sampling rate(const): ", sep="", end="")
         for hn in range(self.hapNum):
             print(self.sRate[hn], end=" ")
+        print()
+        print("Sample rate(const): ", sep="", end="")
+        for hn in range(self.hapNum):
+            print(self.sampleRate[hn], end=" ")
         print()
         print("tmRate(const): ", sep="", end="")
         for hn in range(self.currentHapNum):

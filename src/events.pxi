@@ -6,6 +6,7 @@ DEF MUTATION = 3
 DEF SUSCCHANGE = 4
 DEF MIGRATION = 5
 DEF MULTITYPE = 6
+DEF SAMPLE = 7
 
 cdef class Event:
     cdef:

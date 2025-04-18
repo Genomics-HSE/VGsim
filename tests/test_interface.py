@@ -308,6 +308,33 @@ def test_set_sampling_rate_err(rate, haplotype, error, text):
     with pytest.raises(error, match=text):
         model.set_sampling_rate(rate=rate, haplotype=haplotype)
 
+#SAMPLE RATE
+@pytest.mark.parametrize('rate , haplotype    , answer',
+                        [(0    , None         , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (0.002, 'A*'         , [0.002, 0.002, 0.002, 0.002, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (0.003, 'AT'         , [0, 0.003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (0.004, 0            , [0.004, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+                         (0.005, 15           , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.005]),
+                         (0.006, [0, 15, 'T*'], [0.006, 0, 0, 0, 0.006, 0.006, 0.006, 0.006, 0, 0, 0, 0, 0, 0, 0, 0.006]),
+                         (0.007, []           , [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])])
+def test_set_sample_rate(rate, haplotype, answer):
+    model = Simulator(number_of_sites=2)
+    model.set_sample_rate(rate=rate, haplotype=haplotype)
+    assert_allclose(model.sample_rate, np.asarray(answer), atol=1e-14)
+
+@pytest.mark.parametrize('rate , haplotype, error     , text',
+                        [(None , None     , TypeError , 'Incorrect type of sample rate. Type should be int or float.'),
+                         ('str', None     , TypeError , 'Incorrect type of sample rate. Type should be int or float.'),
+                         (-1   , None     , ValueError, 'Incorrect value of sample rate. Value should be more or equal 0.'),
+                         (0.01 , -1       , IndexError, 'There are no such haplotype!'),
+                         (0.01 , 16       , IndexError, 'There are no such haplotype!'),
+                         (0.01 , 'str'    , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.'),
+                         (0.01 , 'AAA'    , ValueError, r'Incorrect haplotype. Haplotype should contain only \"A\", \"T\", \"C\", \"G\", \"\*\" and length of haplotype should be equal number of mutations sites.')]) 
+def test_set_sample_rate_err(rate, haplotype, error, text):
+    model = Simulator(number_of_sites=2)
+    with pytest.raises(error, match=text):
+        model.set_sample_rate(rate=rate, haplotype=haplotype)
+
 #MUTATION RATE
 @pytest.mark.parametrize('rate , haplotype    , mutation, answer',
                         [(0.001, None         , None    , [[0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001], [0.001, 0.001]]),
