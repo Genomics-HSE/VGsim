@@ -145,7 +145,7 @@ cdef class BirthDeathModel:
 
         self.events = Events()
         self.multievents = multiEvents()
-        self.mut = Mutations()
+        self.mut = Mutations(self.number_of_sites, self.number_of_states_allele)
         self.mig = Migrations()
         self.loc = Lockdowns()
         self.rec = Recombination()
@@ -1798,7 +1798,8 @@ cdef class BirthDeathModel:
         times_dict = {self.events.times[i]: i for i in range(len(self.events.times))}
         populations = {}
         for time in self.times:
-            populations[time] = self.events.populations[times_dict[time]]
+            if time in times_dict:
+                populations[time] = self.events.populations[times_dict[time]]
 
         return self.tree, self.times, mut, populations
 

@@ -141,26 +141,25 @@ def read_matrix(fn):
             matrix.append( [float(v) for v in line] )
     return matrix
 
-def writeMutations(mut, len_prufer, name_file, file_path):
+def writeMutations(mut, len_prufer, name_file, file_path, number_alleles):
     #digits replacement
-    alleles = ["A","T","C","G"]
+    alphabet = {4: ["A","T","C","G"],
+                2: ["F", "T"]}
+    alleles = alphabet[number_alleles]
     for i in [1,3]:
         for j in range(len(mut[i])):
             mut[i][j] = alleles[mut[i][j]]
 
     mutations_dict = {}
-    for nodeId in mut[0]:
+    for i, nodeId in enumerate(mut[0]):
         if nodeId in mutations_dict: #adding mutation for existing node
-            mutations_dict[nodeId] += str(mut[1][mut[0].index(nodeId)]) \
-                                      + str(mut[2][mut[0].index(nodeId)]) \
-                                      + str(mut[3][mut[0].index(nodeId)])+','
+            mutations_dict[nodeId] += ', '+str(mut[1][i]) \
+                                      + str(mut[2][i]) \
+                                      + str(mut[3][i])
         else:
-            mutations_dict[nodeId] = str(mut[1][mut[0].index(nodeId)]) \
-                                     + str(mut[2][mut[0].index(nodeId)]) \
-                                     + str(mut[3][mut[0].index(nodeId)])+','
-    #removing extra comma
-    for nodeId in mutations_dict:
-        mutations_dict[nodeId] = mutations_dict[nodeId][:-1]
+            mutations_dict[nodeId] = str(mut[1][i]) \
+                                     + str(mut[2][i]) \
+                                     + str(mut[3][i])
 
     if file_path != None:
         f_mut = open(file_path + '/' + name_file + ".tsv", 'w')

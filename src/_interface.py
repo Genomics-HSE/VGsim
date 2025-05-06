@@ -541,7 +541,7 @@ class Simulator:
         :type file_path: str
         """
         pruferSeq, times, mut, populations = self.simulation.output_tree_mutations()
-        writeMutations(mut, len(pruferSeq), file_template, file_path)
+        writeMutations(mut, len(pruferSeq), file_template, file_path, self.number_of_states_allele)
 
     def export_migrations(self, file_template=None, file_path = None):
         """

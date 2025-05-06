@@ -3,8 +3,11 @@ cdef class Mutations:
         vector[Py_ssize_t] nodeId, AS, DS, site
         vector[double] time
 
-    def __init__(self):#AS = ancestral state, DS = derived state
-        pass
+        Py_ssize_t number_of_sites, number_of_states_allele
+
+    def __init__(self, number_of_sites, number_of_states_allele):#AS = ancestral state, DS = derived state
+        self.number_of_sites = number_of_sites
+        self.number_of_states_allele = number_of_states_allele
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -14,15 +17,17 @@ cdef class Mutations:
             Py_ssize_t ASDSdigit4, site, digit4
 
         ASDSdigit4 = int(abs(newHaplotype - haplotype))
-        site = 0
-        while ASDSdigit4 >= 4:
-            ASDSdigit4 = ASDSdigit4 / 4
-            site += 1
-        digit4 = int(4**site)
+        site = self.number_of_sites - 1
+
+        while ASDSdigit4 >= self.number_of_states_allele:
+            ASDSdigit4 /= self.number_of_states_allele
+            site -= 1
+
+        digit4 = int(self.number_of_states_allele**(self.number_of_sites - site - 1))
         self.nodeId.push_back(nodeId)
-        self.DS.push_back(int(floor(newHaplotype/digit4) % 4))
-        self.AS.push_back(int(floor(haplotype/digit4) % 4))
-        self.site.push_back(int(site))
+        self.DS.push_back(newHaplotype // digit4 % self.number_of_states_allele)
+        self.AS.push_back(haplotype // digit4 % self.number_of_states_allele)
+        self.site.push_back(site)
         self.time.push_back(time)
 
     def get_mutation(self, id_mut):
