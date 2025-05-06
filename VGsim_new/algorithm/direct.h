@@ -6,7 +6,6 @@
 class Direct {
 public:
     Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers);
-    ~Direct();
     void Debug();
 
     void Simulate();
@@ -40,16 +39,16 @@ private:
     double rn_;
     double rate_;
     double rate_migration_;
-    double* rate_pop_;
-    double* rate_infection_;
-    double* rate_immunity_;
-    double* rate_pop_hap_;
-    double* rate_pop_total_;
-    double* rate_pop_sus_;
-    double* rate_pop_hap_event_;
-    double* suscept_hap_pop_rate_;
-    double* rate_migration_pop_;
-    double* max_effective_transmission_migration_;
+    ArrayBase<double> rate_pop_;
+    ArrayBase<double> rate_infection_;
+    ArrayBase<double> rate_immunity_;
+    ArrayBase<double> rate_pop_hap_;
+    ArrayBase<double> rate_pop_total_;
+    ArrayBase<double> rate_pop_sus_;
+    ArrayBase<double> rate_pop_hap_event_;
+    ArrayBase<double> suscept_hap_pop_rate_;
+    ArrayBase<double> rate_migration_pop_;
+    ArrayBase<double> max_effective_transmission_migration_;
 
     Counters* counters_;
     PopulationPool* pool_;

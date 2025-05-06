@@ -284,5 +284,5 @@ inline uint64_t Infectious::getIndexSus(uint64_t first, uint64_t second) const {
 }
 
 inline uint64_t Infectious::getIndexSite3(uint64_t first, uint64_t second, uint64_t third) const {
-    return (first * getNumberSites() + second) * 3 + third;
+    return getIndexSite(first, second) * 3 + third;
 }

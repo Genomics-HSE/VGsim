@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../utils/utils.cpp"
-
 #include "direct.h"
 
 Direct::Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers)
@@ -10,16 +8,16 @@ Direct::Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_
     , rn_(0.0)
     , rate_(0.0)
     , rate_migration_(0.0)
-    , rate_pop_(new double[getNumberPopulations()])
-    , rate_infection_(new double[getNumberPopulations()])
-    , rate_immunity_(new double[getNumberPopulations()])
-    , rate_pop_hap_(new double[getNumberPopulations() * getNumberHaplotypes()])
-    , rate_pop_total_(new double[getNumberPopulations() * getNumberHaplotypes()])
-    , rate_pop_sus_(new double[getNumberPopulations() * getNumberSusceptibleGroups()])
-    , rate_pop_hap_event_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberAlleleStates()])
-    , suscept_hap_pop_rate_(new double[getNumberPopulations() * getNumberHaplotypes() * getNumberSusceptibleGroups()])
-    , rate_migration_pop_(new double[getNumberPopulations()])
-    , max_effective_transmission_migration_(new double[getNumberPopulations()])
+    , rate_pop_(ArrayBase<double>(1, getNumberPopulations()))
+    , rate_infection_(ArrayBase<double>(1, getNumberPopulations()))
+    , rate_immunity_(ArrayBase<double>(1, getNumberPopulations()))
+    , rate_pop_hap_(ArrayBase<double>(getNumberPopulations(), getNumberHaplotypes()))
+    , rate_pop_total_(ArrayBase<double>(getNumberPopulations(), getNumberHaplotypes()))
+    , rate_pop_sus_(ArrayBase<double>(getNumberPopulations(), getNumberSusceptibleGroups()))
+    , rate_pop_hap_event_(ArrayBase<double>(getNumberPopulations() * getNumberHaplotypes(), getNumberAlleleStates()))
+    , suscept_hap_pop_rate_(ArrayBase<double>(getNumberPopulations() * getNumberHaplotypes(), getNumberSusceptibleGroups()))
+    , rate_migration_pop_(ArrayBase<double>(1, getNumberPopulations()))
+    , max_effective_transmission_migration_(ArrayBase<double>(1, getNumberPopulations()))
     
     , counters_(counters)
     , pool_(pool)
@@ -28,19 +26,6 @@ Direct::Direct(Counters* counters, PopulationPool* pool, Infectious* infectious_
     , chain_(chain) 
     , generator_(generator)
     , stopper_(stopper) {
-}
-
-Direct::~Direct() {
-    delete[] rate_pop_;
-    delete[] rate_infection_;
-    delete[] rate_immunity_;
-    delete[] rate_pop_hap_;
-    delete[] rate_pop_total_;
-    delete[] rate_pop_sus_;
-    delete[] rate_pop_hap_event_;
-    delete[] suscept_hap_pop_rate_;
-    delete[] rate_migration_pop_;
-    delete[] max_effective_transmission_migration_;
 }
 
 void Direct::Simulate() {
@@ -68,16 +53,16 @@ void Direct::Debug() {
     std::cout << "Rn: " << rn_ << std::endl;
     std::cout << "Rate: " << rate_ << std::endl;
     std::cout << "Rate migration: " << rate_migration_ << std::endl;
-    PrintArray1nd("Rate pop:", rate_pop_, getNumberPopulations());
-    PrintArray1nd("Rate infection:", rate_infection_, getNumberPopulations());
-    PrintArray1nd("Rate immunity:", rate_immunity_, getNumberPopulations());
-    PrintArray1nd("Rate migration pop:", rate_migration_pop_, getNumberPopulations());
-    PrintArray1nd("Max effective transmission migration:", max_effective_transmission_migration_, getNumberPopulations());
-    PrintArray2nd("Rate pop hap:", rate_pop_hap_, getNumberPopulations(), getNumberHaplotypes());
-    PrintArray2nd("Rate pop total:", rate_pop_total_, getNumberPopulations(), getNumberHaplotypes());
-    PrintArray2nd("Rate pop sus:", rate_pop_sus_, getNumberPopulations(), getNumberSusceptibleGroups());
-    PrintArray3nd("Rate pop hap event:", rate_pop_hap_event_, getNumberPopulations(), getNumberHaplotypes(), getNumberAlleleStates());
-    PrintArray3nd("Suscept hap pop rate:", suscept_hap_pop_rate_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
+    // PrintArray1nd("Rate pop:", rate_pop_, getNumberPopulations());
+    // PrintArray1nd("Rate infection:", rate_infection_, getNumberPopulations());
+    // PrintArray1nd("Rate immunity:", rate_immunity_, getNumberPopulations());
+    // PrintArray1nd("Rate migration pop:", rate_migration_pop_, getNumberPopulations());
+    // PrintArray1nd("Max effective transmission migration:", max_effective_transmission_migration_, getNumberPopulations());
+    // PrintArray2nd("Rate pop hap:", rate_pop_hap_, getNumberPopulations(), getNumberHaplotypes());
+    // PrintArray2nd("Rate pop total:", rate_pop_total_, getNumberPopulations(), getNumberHaplotypes());
+    // PrintArray2nd("Rate pop sus:", rate_pop_sus_, getNumberPopulations(), getNumberSusceptibleGroups());
+    // PrintArray3nd("Rate pop hap event:", rate_pop_hap_event_, getNumberPopulations(), getNumberHaplotypes(), getNumberAlleleStates());
+    // PrintArray3nd("Suscept hap pop rate:", suscept_hap_pop_rate_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
 }
 
 
@@ -168,15 +153,15 @@ void Direct::GenerateEvent() {
     double choose = rn_ * (rate_ + rate_migration_);
     if (rate_ > choose) {
         rn_ = choose / rate_;
-        uint64_t population = fastChoose(rate_pop_, rate_, &rn_);
+        uint64_t population = rate_pop_.fastChoose(0, rate_, &rn_);
         choose = rn_ * rate_pop_[population];
         if (rate_immunity_[population] > choose) {
             rn_ = choose / rate_immunity_[population];
             ImmunityTransition(population);
         } else {
             rn_ = (choose - rate_immunity_[population]) / rate_infection_[population];
-            uint64_t haplotype = fastChoose(&rate_pop_hap_[getIndexHap(population, 0)], rate_infection_[population], &rn_);
-            uint64_t event = fastChoose(&rate_pop_hap_event_[getIndexHap4(population, haplotype, 0)], rate_pop_total_[getIndexHap(population, haplotype)], &rn_);
+            uint64_t haplotype = rate_pop_hap_.fastChoose(population, rate_infection_[population], &rn_);
+            uint64_t event = rate_pop_hap_event_.fastChoose(getIndexHap(population, haplotype), rate_pop_total_[getIndexHap(population, haplotype)], &rn_);
             switch (static_cast<TypeEvents>(event)) {
                 case TypeEvents::kTRANSMISSION: Transmission(population, haplotype); break;
                 case TypeEvents::kRECOVERY: Recovery(population, haplotype); break;
@@ -246,7 +231,7 @@ void Direct::UpdateRates(uint64_t population, bool infection, bool immunity, boo
 } 
 
 void Direct::ImmunityTransition(uint64_t population) {
-    uint64_t source_type = fastChoose(&rate_pop_sus_[getIndexSus(population, 0)], rate_immunity_[population], &rn_);
+    uint64_t source_type = rate_pop_sus_.fastChoose(population, rate_immunity_[population], &rn_);
     uint64_t target_type = fastChoose(susceptibles_data_->GetSusceptibilityTransitionBegin(source_type), susceptibles_data_->GetSusceptibilityCumulTransition(source_type), &rn_);
     pool_->NewImmunity(1, source_type, target_type, population);
 
@@ -260,7 +245,7 @@ void Direct::Transmission(uint64_t population, uint64_t haplotype) {
     for (uint64_t group = 0; group < getNumberSusceptibleGroups(); ++group) {
         sum += suscept_hap_pop_rate_[getIndexHapSus(population, haplotype, group)];
     }
-    uint64_t group = fastChoose(&suscept_hap_pop_rate_[getIndexHapSus(population, haplotype, 0)], sum, &rn_);
+    uint64_t group = suscept_hap_pop_rate_.fastChoose(getIndexHap(population, haplotype), sum, &rn_);
     pool_->NewInfections(1, haplotype, group, population);
 
     UpdateRates(population, true, true, true);
@@ -298,7 +283,7 @@ void Direct::Mutation(uint64_t population, uint64_t haplotype) {
 }
 
 void Direct::Migration() {
-    uint64_t target_population = fastChoose(rate_migration_pop_, rate_migration_, &rn_);
+    uint64_t target_population = rate_migration_pop_.fastChoose(0, rate_migration_, &rn_);
     uint64_t source_population = fastChooseSkip(pool_->GetInfectedPopBegin(), pool_->GetInfected() - pool_->GetInfectedPop(target_population), &rn_, target_population);
     uint64_t haplotype = fastChoose(pool_->GetInfectedPopHapBegin(source_population), pool_->GetInfectedPop(source_population), &rn_);
     uint64_t group = fastChoose(pool_->GetSusceptiblesPopSusBegin(target_population), pool_->GetSusceptiblesPop(target_population), &rn_);
@@ -345,9 +330,9 @@ inline uint64_t Direct::getIndexSus(uint64_t first, uint64_t second) const {
 }
 
 inline uint64_t Direct::getIndexHap4(uint64_t first, uint64_t second, uint64_t third) const {
-    return (first * getNumberHaplotypes() + second) * getNumberAlleleStates() + third;
+    return getIndexHap(first, second) * getNumberAlleleStates() + third;
 }
 
 inline uint64_t Direct::getIndexHapSus(uint64_t first, uint64_t second, uint64_t third) const {
-    return (first * getNumberHaplotypes() + second) * getNumberSusceptibleGroups() + third;
+    return getIndexHap(first, second) * getNumberSusceptibleGroups() + third;
 }

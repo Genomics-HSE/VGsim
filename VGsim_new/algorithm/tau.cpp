@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../utils/utils.cpp"
-
 #include "tau.h"
 
 Tau::Tau(Counters* counters, PopulationPool* pool, Infectious* infectious_data, Susceptibles* susceptibles_data, Chain* chain, RandomGenerator* generator, ConditionStop* stopper, Numbers numbers)

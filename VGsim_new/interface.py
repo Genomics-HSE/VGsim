@@ -14,7 +14,6 @@ class Simulator:
                  number_of_susceptible_groups=1,
                  seed=None,
                  sampling_probability=False):
-        print('Check')
         self._check_amount(number_of_sites, 'number of sites', zero=False)
         self._check_amount(number_of_allele_states, 'number of allele states')
         self._check_amount(number_of_populations, 'populations number')
