@@ -29,11 +29,11 @@ Simulator::Simulator(uint64_t number_of_sites,
 }
 
 void Simulator::Debug() {
-    // std::cout << "Number of sites: " << getNumberSites() << std::endl;
-    // std::cout << "Number of haplotypes: " << getNumberHaplotypes() << std::endl;
-    // std::cout << "Number of populations: " << getNumberPopulations() << std::endl;
-    // std::cout << "Number of susceptible groups: " << getNumberSusceptibleGroups() << std::endl;
-    // std::cout << "Seed: " << seed_ << std::endl;
+    std::cout << "Number of sites: " << getNumberSites() << std::endl;
+    std::cout << "Number of haplotypes: " << getNumberHaplotypes() << std::endl;
+    std::cout << "Number of populations: " << getNumberPopulations() << std::endl;
+    std::cout << "Number of susceptible groups: " << getNumberSusceptibleGroups() << std::endl;
+    std::cout << "Seed: " << seed_ << std::endl;
     counters_.Debug();
     // pool_.Debug();
     // infectious_data_.Debug();

@@ -15,6 +15,7 @@ ConditionStop::ConditionStop(Counters* counters, PopulationPool* pool, Chain* ch
 }
 
 void ConditionStop::SetAttempts(uint64_t attempts) {
+    current_attempts_ = 0;
     attempts_ = attempts;
 }
 
@@ -31,7 +32,6 @@ void ConditionStop::SetEpidemicTime(double epidemic_time) {
 }
 
 void ConditionStop::Restart() {
-    current_attempts_ = 0;
     current_iterations_ = 0;
 }
 

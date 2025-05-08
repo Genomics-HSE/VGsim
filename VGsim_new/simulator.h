@@ -1,5 +1,14 @@
 #pragma once
 
+// uncomment to disable assert()
+// #define NDEBUG
+#include <cassert>
+#include <iostream>
+#include <random>
+#include <cmath>
+#include <ctime>
+#include <string>
+
 #include "structure/array_base.cpp"
 #include "utils/additional_information.cpp"
 #include "utils/utils.cpp"
@@ -14,12 +23,6 @@
 #include "algorithm/direct.cpp"
 #include "algorithm/tau.cpp"
 #include "algorithm/arg.cpp"
-
-#include <iostream>
-#include <random>
-#include <cmath>
-#include <ctime>
-#include <string>
 
 class Simulator {
 public:

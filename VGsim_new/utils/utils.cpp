@@ -88,6 +88,61 @@ void PrintArray4nd(std::string text, T* array, uint64_t size1, uint64_t size2, u
     }
 }
 
+template<class T>
+void PrintArray1nd(std::string text, ArrayBase<T>& array, uint64_t size) {
+    uint64_t index = 0;
+    std::cout << text;
+    for (uint64_t _ = 0; _ < size; ++_) {
+        std::cout << " " << array[index++];
+    }
+    std::cout << std::endl;
+}
+
+template<class T>
+void PrintArray2nd(std::string text, ArrayBase<T>& array, uint64_t size1, uint64_t size2) {
+    uint64_t index = 0;
+    std::cout << text << std::endl;
+    for (uint64_t _ = 0; _ < size1; ++_) {
+        for (uint64_t _ = 0; _ < size2; ++_) {
+            std::cout << array[index++] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+template<class T>
+void PrintArray3nd(std::string text, ArrayBase<T>& array, uint64_t size1, uint64_t size2, uint64_t size3) {
+    uint64_t index = 0;
+    std::cout << text << std::endl;
+    for (uint64_t _ = 0; _ < size1; ++_) {
+        for (uint64_t _ = 0; _ < size2; ++_) {
+            for (uint64_t _ = 0; _ < size3; ++_) {
+                std::cout << array[index++] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+}
+
+template<class T>
+void PrintArray4nd(std::string text, ArrayBase<T>& array, uint64_t size1, uint64_t size2, uint64_t size3, uint64_t size4) {
+    uint64_t index = 0;
+    std::cout << text << std::endl;
+    for (uint64_t _ = 0; _ < size1; ++_) {
+        for (uint64_t _ = 0; _ < size2; ++_) {
+            for (uint64_t _ = 0; _ < size3; ++_) {
+                for (uint64_t _ = 0; _ < size4; ++_) {
+                    std::cout << array[index++] << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+}
+
 void PrintMutation(const Mutation& mutation) {
     std::cout << "Node: " << mutation.node
               << ", site: " << mutation.site

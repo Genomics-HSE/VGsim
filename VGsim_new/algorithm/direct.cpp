@@ -41,9 +41,9 @@ void Direct::Simulate() {
         }
         if (stopper_->CheckRestart()) {
             Restart();
-        } else {
-            break;
+            continue;
         }
+        break;
     }
 }
 
@@ -53,16 +53,16 @@ void Direct::Debug() {
     std::cout << "Rn: " << rn_ << std::endl;
     std::cout << "Rate: " << rate_ << std::endl;
     std::cout << "Rate migration: " << rate_migration_ << std::endl;
-    // PrintArray1nd("Rate pop:", rate_pop_, getNumberPopulations());
-    // PrintArray1nd("Rate infection:", rate_infection_, getNumberPopulations());
-    // PrintArray1nd("Rate immunity:", rate_immunity_, getNumberPopulations());
-    // PrintArray1nd("Rate migration pop:", rate_migration_pop_, getNumberPopulations());
-    // PrintArray1nd("Max effective transmission migration:", max_effective_transmission_migration_, getNumberPopulations());
-    // PrintArray2nd("Rate pop hap:", rate_pop_hap_, getNumberPopulations(), getNumberHaplotypes());
-    // PrintArray2nd("Rate pop total:", rate_pop_total_, getNumberPopulations(), getNumberHaplotypes());
-    // PrintArray2nd("Rate pop sus:", rate_pop_sus_, getNumberPopulations(), getNumberSusceptibleGroups());
-    // PrintArray3nd("Rate pop hap event:", rate_pop_hap_event_, getNumberPopulations(), getNumberHaplotypes(), getNumberAlleleStates());
-    // PrintArray3nd("Suscept hap pop rate:", suscept_hap_pop_rate_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
+    PrintArray1nd("Rate pop:", rate_pop_, getNumberPopulations());
+    PrintArray1nd("Rate infection:", rate_infection_, getNumberPopulations());
+    PrintArray1nd("Rate immunity:", rate_immunity_, getNumberPopulations());
+    PrintArray1nd("Rate migration pop:", rate_migration_pop_, getNumberPopulations());
+    PrintArray1nd("Max effective transmission migration:", max_effective_transmission_migration_, getNumberPopulations());
+    PrintArray2nd("Rate pop hap:", rate_pop_hap_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray2nd("Rate pop total:", rate_pop_total_, getNumberPopulations(), getNumberHaplotypes());
+    PrintArray2nd("Rate pop sus:", rate_pop_sus_, getNumberPopulations(), getNumberSusceptibleGroups());
+    PrintArray3nd("Rate pop hap event:", rate_pop_hap_event_, getNumberPopulations(), getNumberHaplotypes(), getNumberAlleleStates());
+    PrintArray3nd("Suscept hap pop rate:", suscept_hap_pop_rate_, getNumberPopulations(), getNumberHaplotypes(), getNumberSusceptibleGroups());
 }
 
 

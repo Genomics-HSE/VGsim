@@ -25,6 +25,7 @@ public:
     }
 
     void debug() {
+        std::cout << "Data address - " << data_ << std::endl;
         for (uint64_t array = 0; array < count_array_; ++array) {
             for (uint64_t element = 0; element < size_array_; ++element) {
                 std::cout << data_[array * size_array_ + element] << " ";

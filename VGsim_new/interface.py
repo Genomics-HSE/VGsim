@@ -45,6 +45,9 @@ class Simulator:
         self._simulator.simulate(iterations, sample_size, epidemic_time, method, attempts)
         self._simulator.Debug()
 
+    def debug(self):
+        self._simulator.Debug()
+
     def genealogy(self, seed):
         self._simulator.genealogy()
 

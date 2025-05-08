@@ -34,7 +34,7 @@ public:
     void AddEvent(Event event);
     void AddMultievent(Multievent event);
     uint64_t Size();
-    void Debug();
+    const void Debug() const;
     double GetLastTime();
     void LastTime();
 

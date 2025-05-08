@@ -25,6 +25,19 @@ void PrintArray3nd(std::string text, T* array, uint64_t size1, uint64_t size2, u
 template<class T>
 void PrintArray4nd(std::string text, T* array, uint64_t size1, uint64_t size2, uint64_t size3, uint64_t size4);
 
+// Print data
+template<class T>
+void PrintArray1nd(std::string text, ArrayBase<T>& array, uint64_t size);
+
+template<class T>
+void PrintArray2nd(std::string text, ArrayBase<T>& array, uint64_t size1, uint64_t size2);
+
+template<class T>
+void PrintArray3nd(std::string text, ArrayBase<T>& array, uint64_t size1, uint64_t size2, uint64_t size3);
+
+template<class T>
+void PrintArray4nd(std::string text, ArrayBase<T>& array, uint64_t size1, uint64_t size2, uint64_t size3, uint64_t size4);
+
 void PrintMutation(const Mutation& mutation);
 void PrintMingration(uint64_t node, const Migration& migration);
 

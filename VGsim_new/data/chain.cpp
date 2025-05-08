@@ -56,19 +56,13 @@ uint64_t Chain::Size() {
     return size_;
 }
 
-void Chain::Debug() {
+const void Chain::Debug() const {
     std::cout << "CHAIN" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Pointer: " << pointer_ << std::endl;
     std::cout << "Size: " << size_ << std::endl;
     for (uint64_t i = 0; i < pointer_; ++i) {
-        std::cout << static_cast<int64_t>(events_[i].type) << ", "
-                  << events_[i].parameter1 << ", "
-                  << events_[i].parameter2 << ", "
-                  << events_[i].parameter3 << ", "
-                  << events_[i].parameter4 << ", "
-                  << events_[i].time << std::endl;
-        // DebugEvent(times_[i], events_[i]);
+        DebugEvent(events_[i]);
     }
     std::cout << std::endl;
 }
