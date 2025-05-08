@@ -8,16 +8,16 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
     : number_of_sites_(number_of_sites)
     , number_of_haplotypes_(std::pow(4, number_of_sites))
     , number_of_susceptible_groups_(number_of_susceptible_groups)
-    , susceptibility_groups_(new uint64_t[number_of_haplotypes_])
+    , susceptibility_groups_(ArrayBase<uint64_t>(1, number_of_haplotypes_))
     , max_effective_transmission_(2.5)
-    , transmission_rates_(new double[number_of_haplotypes_])
-    , recovery_rates_(new double[number_of_haplotypes_])
-    , sampling_rates_(new double[number_of_haplotypes_])
-    , total_mutation_rates_(new double[number_of_haplotypes_])
-    , mutation_rates_(new double[number_of_haplotypes_ * number_of_sites_])
-    , total_sites_rates_(new double[number_of_haplotypes_ * number_of_sites_])
-    , susceptibility_(new double[number_of_haplotypes_ * number_of_susceptible_groups_])
-    , sites_rates_(new double[number_of_haplotypes_ * number_of_sites_ * 3]) {
+    , transmission_rates_(ArrayBase<double>(1, number_of_haplotypes_))
+    , recovery_rates_(ArrayBase<double>(1, number_of_haplotypes_))
+    , sampling_rates_(ArrayBase<double>(1, number_of_haplotypes_))
+    , total_mutation_rates_(ArrayBase<double>(1, number_of_haplotypes_))
+    , mutation_rates_(ArrayBase<double>(number_of_haplotypes_, number_of_sites_))
+    , total_sites_rates_(ArrayBase<double>(number_of_haplotypes_, number_of_sites_))
+    , susceptibility_(ArrayBase<double>(number_of_haplotypes_, number_of_susceptible_groups_))
+    , sites_rates_(ArrayBase<double>(number_of_haplotypes_ * number_of_sites_, 3)) {
     double mutation = 0.01;
     for (uint64_t haplotype = 0; haplotype < getNumberHaplotypes(); ++haplotype) {
         susceptibility_groups_[haplotype] = 0;
@@ -38,18 +38,6 @@ Infectious::Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_
             susceptibility_[getIndexSus(haplotype, group)] = 0.0;
         }
     }
-}
-
-Infectious::~Infectious() {
-    delete[] susceptibility_groups_;
-    delete[] transmission_rates_;
-    delete[] recovery_rates_;
-    delete[] sampling_rates_;
-    delete[] total_mutation_rates_;
-    delete[] mutation_rates_;
-    delete[] total_sites_rates_;
-    delete[] susceptibility_;
-    delete[] sites_rates_;
 }
 
 void Infectious::Debug() {
@@ -219,23 +207,23 @@ inline uint64_t Infectious::GetSusceptibilityTypes(uint64_t haplotype) const {
 }
 
 inline double* Infectious::GetTransmissionRateBegin() const {
-    return transmission_rates_;
+    return transmission_rates_.getData();
 }
 
 inline double* Infectious::GetRecoveryRateBegin() const {
-    return recovery_rates_;
+    return recovery_rates_.getData();
 }
 
 inline double* Infectious::GetSamplingRateBegin() const {
-    return sampling_rates_;
+    return sampling_rates_.getData();
 }
 
 inline double* Infectious::GetMutationRateHapBegin(uint64_t haplotype) const {
-    return &mutation_rates_[getIndexSite(haplotype, 0)];
+    return mutation_rates_.getDataArray(haplotype);
 }
 
 inline double* Infectious::GetMutationRateBegin() const {
-    return mutation_rates_;
+    return mutation_rates_.getData();
 }
 
 inline double Infectious::GetTotalMutationRateHap(uint64_t haplotype) const {
@@ -243,7 +231,7 @@ inline double Infectious::GetTotalMutationRateHap(uint64_t haplotype) const {
 }
 
 inline double* Infectious::GetTotalMutationRateBegin() const {
-    return total_mutation_rates_;
+    return total_mutation_rates_.getData();
 }
 
 inline double Infectious::GetSitesRateHapSiteProbability(uint64_t haplotype, uint64_t site, uint64_t index) const {
@@ -251,7 +239,7 @@ inline double Infectious::GetSitesRateHapSiteProbability(uint64_t haplotype, uin
 }
 
 inline double* Infectious::GetSitesRateHapSiteBegin(uint64_t haplotype, uint64_t site) const {
-    return &sites_rates_[getIndexSite3(haplotype, site, 0)];
+    return sites_rates_.getDataArray(getIndexSite(haplotype, site));
 }
 
 inline double Infectious::GetTotalSitesRateHapSite(uint64_t haplotype, uint64_t site) const {

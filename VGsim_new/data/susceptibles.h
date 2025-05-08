@@ -3,7 +3,6 @@
 class Susceptibles {
 public:
     Susceptibles(uint64_t number_of_susceptible_groups);
-    ~Susceptibles();
     void Debug();
     void Update();
 
@@ -20,6 +19,6 @@ private:
 
     uint64_t number_of_susceptible_groups_;
 
-    double* susceptibility_cumul_transition_;
-    double* susceptibility_transition_;
+    ArrayBase<double> susceptibility_cumul_transition_;
+    ArrayBase<double> susceptibility_transition_;
 };

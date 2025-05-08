@@ -74,6 +74,14 @@ public:
         return;
     }
 
+    T* getData() const {
+        return data_;
+    }
+
+    T* getDataArray(uint64_t array) const {
+        return &data_[array * size_array_];
+    }
+
     T getSum(uint64_t array) {
         T sum = 0;
         for (uint64_t index = array * size_array_; index < (array + 1) * size_array_; ++index) {

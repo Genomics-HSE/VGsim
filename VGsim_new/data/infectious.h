@@ -5,7 +5,6 @@
 class Infectious {
 public:
     Infectious(uint64_t number_of_sites, uint64_t number_of_susceptible_groups);
-    ~Infectious();
     void Debug();
     void Update();
 
@@ -52,14 +51,14 @@ private:
     uint64_t number_of_haplotypes_;
     uint64_t number_of_susceptible_groups_;
 
-    uint64_t* susceptibility_groups_;
+    ArrayBase<uint64_t> susceptibility_groups_;
     double max_effective_transmission_;
-    double* transmission_rates_;
-    double* recovery_rates_;
-    double* sampling_rates_;
-    double* total_mutation_rates_;
-    double* mutation_rates_;
-    double* total_sites_rates_;
-    double* susceptibility_;
-    double* sites_rates_;
+    ArrayBase<double> transmission_rates_;
+    ArrayBase<double> recovery_rates_;
+    ArrayBase<double> sampling_rates_;
+    ArrayBase<double> total_mutation_rates_;
+    ArrayBase<double> mutation_rates_;
+    ArrayBase<double> total_sites_rates_;
+    ArrayBase<double> susceptibility_;
+    ArrayBase<double> sites_rates_;
 };

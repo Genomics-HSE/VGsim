@@ -6,8 +6,8 @@
 
 Susceptibles::Susceptibles(uint64_t number_of_susceptible_groups)
     : number_of_susceptible_groups_(number_of_susceptible_groups)
-    , susceptibility_cumul_transition_(new double[number_of_susceptible_groups_])
-    , susceptibility_transition_(new double[number_of_susceptible_groups_ * number_of_susceptible_groups_]) {
+    , susceptibility_cumul_transition_(ArrayBase<double>(1, number_of_susceptible_groups_))
+    , susceptibility_transition_(ArrayBase<double>(number_of_susceptible_groups_, number_of_susceptible_groups_)) {
     double transition = 0.0;
     for (uint64_t source = 0; source < getNumberSusceptibleGroups(); ++source) {
         susceptibility_cumul_transition_[source] = transition * (getNumberSusceptibleGroups() - 1);
@@ -15,11 +15,6 @@ Susceptibles::Susceptibles(uint64_t number_of_susceptible_groups)
             susceptibility_transition_[getIndexSus(source, target)] = source == target ? 0.0 : transition;
         }
     }
-}
-
-Susceptibles::~Susceptibles() {
-    delete[] susceptibility_cumul_transition_;
-    delete[] susceptibility_transition_;
 }
 
 void Susceptibles::Debug() {
@@ -67,7 +62,7 @@ inline double Susceptibles::GetSusceptibilityTransition(uint64_t source, uint64_
 }
 
 inline double* Susceptibles::GetSusceptibilityTransitionBegin(uint64_t group) const {
-    return &susceptibility_transition_[getIndexSus(group, 0)];
+    return susceptibility_transition_.getDataArray(group);
 }
 
 inline double Susceptibles::GetSusceptibilityCumulTransition(uint64_t group) const {
