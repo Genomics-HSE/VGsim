@@ -606,9 +606,9 @@ cdef class BirthDeathModel:
 
     def print_recomb(self, left, right):
         for i in range(left, right):
-            print('hi(', self.calculate_string(self.rec.his[i]),  ') = ', self.rec.his[i], \
-                ', hi2(', self.calculate_string(self.rec.hi2s[i]),  ') = ', self.rec.hi2s[i], \
-                ', nhi(', self.calculate_string(self.rec.nhis[i]),  ') = ', self.rec.nhis[i], \
+            print('hi(', self.calculate_string_from_haplotype(self.rec.his[i]),  ') = ', self.rec.his[i], \
+                ', hi2(', self.calculate_string_from_haplotype(self.rec.hi2s[i]),  ') = ', self.rec.hi2s[i], \
+                ', nhi(', self.calculate_string_from_haplotype(self.rec.nhis[i]),  ') = ', self.rec.nhis[i], \
                 ', pos = ', self.rec.posRecombs[i], sep='')
 
     @cython.boundscheck(False)
@@ -1864,7 +1864,7 @@ cdef class BirthDeathModel:
                 file.write(" M" + str(s))
             file.write("\n")
             for hn in range(self.hapNum):
-                file.write(self.calculate_string(hn) + " " + str(self.bRate[hn]) + " " + str(self.dRate[hn]) + " " + str(self.sRate[hn]) + ' ')
+                file.write(self.calculate_string_from_haplotype(hn) + " " + str(self.bRate[hn]) + " " + str(self.dRate[hn]) + " " + str(self.sRate[hn]) + ' ')
                 for s in range(self.sites):
                     file.write(str(self.mRate[hn, s]) + "," + str(self.hapMutType[hn, s, 0]) + "," + str(self.hapMutType[hn, s, 1]) + "," + str(self.hapMutType[hn, s, 2]) + " ")
                 file.write("\n")
@@ -1890,7 +1890,7 @@ cdef class BirthDeathModel:
                 file.write(" S" + str(sn))
             file.write("\n")
             for hn in range(self.hapNum):
-                file.write(self.calculate_string(hn) + " " + str(self.suscType[hn]))
+                file.write(self.calculate_string_from_haplotype(hn) + " " + str(self.suscType[hn]))
                 for sn in range(self.susNum):
                     file.write(" " + str(self.susceptibility[hn, sn]))
                 file.write("\n")
@@ -1979,7 +1979,7 @@ cdef class BirthDeathModel:
 
             if self.events.types[i] == BIRTH and self.events.populations[i] == pop and self.events.haplotypes[i] == hap:
                 Data[point] += 1
-            elif self.events.types[i] == DEATH or self.events.types[i] == SAMPLING or self.events.types[i] == MUTATION and self.events.populations[i] == pop and self.events.haplotypes[i] == hap:
+            elif (self.events.types[i] == DEATH or self.events.types[i] == SAMPLING or self.events.types[i] == MUTATION) and self.events.populations[i] == pop and self.events.haplotypes[i] == hap:
                 Data[point] -= 1
                 if self.events.types[i] == SAMPLING:
                     Sample[point] += 1
@@ -1988,6 +1988,7 @@ cdef class BirthDeathModel:
             elif self.events.types[i] == MIGRATION and self.events.newPopulations[i] == pop and self.events.haplotypes[i] == hap:
                 Data[point] += 1
             elif self.events.types[i] == MULTITYPE:
+            # Тут специально баг, чтобы потом вспомнить, проверить и починить
                 for j in range(self.events.haplotypes[i], self.events.populations[i]):
                     if self.multievents.types[j] == BIRTH and self.multievents.haplotypes[j] == hap and self.multievents.populations[j] == pop:
                         Data[point] += self.multievents.num[j]

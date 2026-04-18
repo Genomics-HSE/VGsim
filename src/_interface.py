@@ -125,7 +125,7 @@ class Simulator:
 
 
     def get_indexes_from_haplotype(self, haplotype):
-        return np.array(self.simulation.create_list_for_cycles(haplotype, self.simulation.haplotype_number))
+        return np.array(self.simulation.calculate_indexes(haplotype, self.simulation.haplotypes_number))
 
     @property
     def seed(self):
@@ -661,7 +661,7 @@ class Simulator:
         if isinstance(haplotype, int) == True:
             self.plot_infectious(population, haplotype, step_num, label_infectious, label_samples)
         elif isinstance(haplotype, str) == True:
-            haplotypes = self.simulation.create_list_for_cycles(haplotype, self.simulation.haplotype_number)
+            haplotypes = self.simulation.calculate_indexes(haplotype, self.simulation.haplotypes_number)
             for hi in haplotypes:
                 self.plot_infectious(population, hi, step_num, label_infectious, label_samples)
         else:
@@ -688,14 +688,14 @@ class Simulator:
         """
         infections, sample, time_points, lockdowns = self.simulation.get_data_infectious(population, haplotype, step_num)
         if label_infectious == None:
-            self.ax_2.plot(time_points, infections, label='Infectious pop:' + str(population) + ' hap:' + self.simulation.calculate_string(haplotype))
+            self.ax_2.plot(time_points, infections, label='Infectious pop:' + str(population) + ' hap:' + self.simulation.calculate_string_from_haplotype(haplotype))
         elif isinstance(label_infectious, str) == True:
             self.ax_2.plot(time_points, infections, label=label_infectious)
         else:
             print("#TODO")
 
         if label_samples == None:
-            self.ax.plot(time_points, sample, "--", label='Samples pop:' + str(population) + ' hap:' + self.simulation.calculate_string(haplotype))
+            self.ax.plot(time_points, sample, "--", label='Samples pop:' + str(population) + ' hap:' + self.simulation.calculate_string_from_haplotype(haplotype))
         elif isinstance(label_samples, str) == True:
             self.ax.plot(time_points, sample, "--", label=label_samples)
         else:
